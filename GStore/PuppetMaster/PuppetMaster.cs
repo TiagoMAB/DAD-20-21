@@ -1,13 +1,7 @@
 ﻿using System;
 using System.IO;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+using PuppetMaster.Exceptions;
 
 namespace PuppetMaster
 {
@@ -18,22 +12,35 @@ namespace PuppetMaster
             InitializeComponent();
         }
 
-        private void loadPMFileClick(object sender, EventArgs e)
+        private void LoadPMFileClick(object sender, EventArgs e)
         {
-            string path = PMFile.Text;
+            string path = PMFile.Text.Trim();
             
             if(path.Equals(""))
             {
-                // TODO: Handle error
-                return;
+                MessageBox.Show("Path cannot be empty", "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else if(!File.Exists(path))
             {
-                // TODO: Handle error
-                return;
+                MessageBox.Show(String.Format("File \"{0}\" does not exist", path), "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
-            Parser.parseScript(path).Execute();
+            try
+            {
+                Parser.parseScript(path).Execute();
+            }
+            catch (PartitionParameterNumberMismatchException ex)
+            {
+                MessageBox.Show(String.Format("Partition command expected {0} server ids, but {1} were given", ex.Expected, ex.Given), "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (UnknownCommandException ex)
+            {
+                MessageBox.Show(String.Format("Unknown command '{0}' in given file", ex.Command), "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (WrongArgumentNumberException ex)
+            {
+                MessageBox.Show(String.Format("Command '{0}' is executed with {1} parameters, but {2} were given", ex.Command, ex.Expected, ex.Given), "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
     }
 }

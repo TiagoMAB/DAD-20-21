@@ -20,6 +20,7 @@
             this.label1 = new System.Windows.Forms.Label();
             this.PMFile = new System.Windows.Forms.TextBox();
             this.btnLoadPMFile = new System.Windows.Forms.Button();
+            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.SuspendLayout();
             // 
             // label1
@@ -46,7 +47,11 @@
             this.btnLoadPMFile.TabIndex = 2;
             this.btnLoadPMFile.Text = "Load";
             this.btnLoadPMFile.UseVisualStyleBackColor = true;
-            this.btnLoadPMFile.Click += new System.EventHandler(this.loadPMFileClick);
+            this.btnLoadPMFile.Click += new System.EventHandler(this.LoadPMFileClick);
+            // 
+            // openFileDialog1
+            // 
+            this.openFileDialog1.FileName = "openFileDialog1";
             // 
             // PuppetMaster
             // 
@@ -68,6 +73,7 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox PMFile;
         private System.Windows.Forms.Button btnLoadPMFile;
+        private System.Windows.Forms.OpenFileDialog openFileDialog1;
     }
 }
 

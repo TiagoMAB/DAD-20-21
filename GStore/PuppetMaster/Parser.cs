@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 using PuppetMaster.Commands;
+using PuppetMaster.Exceptions;
 
 namespace PuppetMaster
 {
@@ -26,29 +27,27 @@ namespace PuppetMaster
                 {
                     if (command.Length != 2)
                     {
-                        // TODO: Handle error
-                        throw new NotImplementedException();
+                        throw new WrongArgumentNumberException(command[0], 2, command.Length);
                     }
 
                     script.AddCommand(new Wait(Int32.Parse(command[1])));
                     continue;
                 }
 
-                script.AddCommand(parse(command));
+                script.AddCommand(Parse(command));
             }
 
             return script;
         }
 
-        public static Command parse(string[] command)
+        public static Command Parse(string[] command)
         {
             switch (command[0])
             {
                 case "Client":
                     if (command.Length != 4)
                     {
-                        // TODO: Handle error
-                        throw new NotImplementedException();
+                        throw new WrongArgumentNumberException(command[0], 4, command.Length);
                     }
 
                     return new Client(command[1], command[2], command[3]);
@@ -56,8 +55,7 @@ namespace PuppetMaster
                 case "Crash":
                     if (command.Length != 2)
                     {
-                        // TODO: Handle error
-                        throw new NotImplementedException();
+                        throw new WrongArgumentNumberException(command[0], 2, command.Length);
                     }
 
                     return new Crash(command[1]);
@@ -65,8 +63,7 @@ namespace PuppetMaster
                 case "Freeze":
                     if (command.Length != 2)
                     {
-                        // TODO: Handle error
-                        throw new NotImplementedException();
+                        throw new WrongArgumentNumberException(command[0], 2, command.Length);
                     }
 
                     return new Freeze(command[1]);
@@ -74,8 +71,7 @@ namespace PuppetMaster
                 case "Partition":
                     if (command.Length < 4)
                     {
-                        // TODO: Handle error
-                        throw new NotImplementedException();
+                        throw new WrongArgumentNumberException(command[0], 4, command.Length);
                     }
 
                     return new Partition(Int32.Parse(command[1]), command[2], command.Skip(3));
@@ -83,8 +79,7 @@ namespace PuppetMaster
                 case "ReplicationFactor":
                     if (command.Length != 2)
                     {
-                        // TODO: Handle error
-                        throw new NotImplementedException();
+                        throw new WrongArgumentNumberException(command[0], 2, command.Length);
                     }
 
                     return new ReplicationFactor(Int32.Parse(command[1]));
@@ -92,8 +87,7 @@ namespace PuppetMaster
                 case "Server":
                     if (command.Length != 5)
                     {
-                        // TODO: Handle error
-                        throw new NotImplementedException();
+                        throw new WrongArgumentNumberException(command[0], 5, command.Length);
                     }
 
                     return new Server(command[1], command[2], Int32.Parse(command[3]), Int32.Parse(command[4]));
@@ -101,8 +95,7 @@ namespace PuppetMaster
                 case "Status":
                     if (command.Length != 1)
                     {
-                        // TODO: Handle error
-                        throw new NotImplementedException();
+                        throw new WrongArgumentNumberException(command[0], 1, command.Length);
                     }
 
                     return new Status();
@@ -110,15 +103,13 @@ namespace PuppetMaster
                 case "Unfreeze":
                     if (command.Length != 2)
                     {
-                        // TODO: Handle error
-                        throw new NotImplementedException();
+                        throw new WrongArgumentNumberException(command[0], 2, command.Length);
                     }
 
                     return new Unfreeze(command[1]);
 
                 default:
-                    // TODO: Handle error
-                    throw new NotImplementedException();
+                    throw new UnknownCommandException(command[0]);
             }
 
         }
