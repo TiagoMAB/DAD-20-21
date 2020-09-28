@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package gstore;
+
+service PuppetMaster {
+	rpc Client(ClientRequest) returns (ClientResponse);
+	rpc Crash(CrashRequest) returns (CrashResponse);
+	rpc Freeze(FreezeRequest) returns (FreezeResponse);
+	rpc Partition(PartitionRequest) returns (PartitionResponse);
+	rpc Replication(ReplicationRequest) returns (ReplicationResponse);
+	rpc Server(ServerRequest) returns (ServerResponse);
+	rpc Status(StatusRequest) returns (StatusResponse);
+	rpc Unfreeze(UnfreezeRequest) returns (UnfreezeResponse);
+}
+
+message ClientRequest {
+	string id = 1;
+	string script = 2;
+}
+message ClientResponse {}
+
+message CrashRequest {
+	string id = 1;
+}
+message CrashResponse {}
+
+message FreezeRequest {
+	string id = 1;
+}
+message FreezeResponse {}
+
+message PartitionRequest {
+	int32 replicas = 1;
+	string name = 2;
+	repeated string ids = 3;
+}
+message PartitionResponse {}
+
+message ReplicationRequest {
+	int32 factor = 1;
+}
+message ReplicationResponse {}
+
+message ServerRequest {
+	string id = 1;
+	int64 min_delay = 2;
+	int64 max_delay = 3;
+}
+message ServerResponse {}
+
+message StatusRequest {}
+message StatusResponse {}
+
+message UnfreezeRequest {
+	string id = 1;
+}
+message UnfreezeResponse {}
