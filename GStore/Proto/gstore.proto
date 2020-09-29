@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package gstore;
+
+
+// WRITE operation request and response
+message WriteRequest {
+  // Skeleton
+}
+
+message WriteReply {
+  // Skeleton
+}
+
+// READ operation request and response
+message ReadRequest {
+  // Skeleton
+}
+
+message ReadReply {
+  // Skeleton
+}
+
+service GStore {
+  rpc read (ReadRequest) returns (ReadReply);
+  rpc write (WriteRequest) returns (WriteReply);
+}
