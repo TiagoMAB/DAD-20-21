@@ -14,11 +14,12 @@ message WriteReply {
 
 // READ operation request and response
 message ReadRequest {
-  // Skeleton
+	string partitionId = 1;
+	string objectId = 2;
 }
 
 message ReadReply {
-  // Skeleton
+	string value = 1;
 }
 
 service GStore {
