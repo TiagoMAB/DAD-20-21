@@ -1,32 +1,30 @@
 syntax = "proto3";
 
-package gstore;
+package GStore;
+
+service PCS {
+	rpc Client(ClientRequest) returns (ClientResponse);
+	rpc Server(ServerRequest) returns (ServerResponse);
+}
 
 service PuppetMaster {
-	rpc Client(ClientRequest) returns (ClientResponse);
 	rpc Crash(CrashRequest) returns (CrashResponse);
 	rpc Freeze(FreezeRequest) returns (FreezeResponse);
 	rpc Partition(PartitionRequest) returns (PartitionResponse);
 	rpc Replication(ReplicationRequest) returns (ReplicationResponse);
-	rpc Server(ServerRequest) returns (ServerResponse);
 	rpc Status(StatusRequest) returns (StatusResponse);
 	rpc Unfreeze(UnfreezeRequest) returns (UnfreezeResponse);
 }
 
 message ClientRequest {
-	string id = 1;
-	string script = 2;
+	string script = 1;
 }
 message ClientResponse {}
 
-message CrashRequest {
-	string id = 1;
-}
+message CrashRequest {}
 message CrashResponse {}
 
-message FreezeRequest {
-	string id = 1;
-}
+message FreezeRequest {}
 message FreezeResponse {}
 
 message PartitionRequest {
@@ -51,7 +49,5 @@ message ServerResponse {}
 message StatusRequest {}
 message StatusResponse {}
 
-message UnfreezeRequest {
-	string id = 1;
-}
+message UnfreezeRequest {}
 message UnfreezeResponse {}
