@@ -24,7 +24,6 @@ namespace Client.Commands
             var channel = GrpcChannel.ForAddress("https://localhost:5001"); //server ports?
             var client = new GStore.GStoreClient(channel);
 
-            // TODO: Change server in case of errors
             var response = client.read(new ReadRequest { PartitionId = this.partitionId, ObjectId = this.objectId } );
 
             Console.WriteLine(response.Value);

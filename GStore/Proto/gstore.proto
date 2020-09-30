@@ -5,7 +5,9 @@ package gstore;
 
 // WRITE operation request and response
 message WriteRequest {
-  // Skeleton
+	string partitionId = 1;
+	string objectId = 2;
+	string value = 3;
 }
 
 message WriteReply {
@@ -22,7 +24,24 @@ message ReadReply {
 	string value = 1;
 }
 
+// LIST SERVER objects
+message ListServerRequest {
+}
+
+
+
+message ListServerReply {
+	repeated ListValue values = 1;
+
+	message ListValue {
+		string value = 1;
+		bool isMaster = 2;
+		//maybe add the partitionId
+	}
+}
+
 service GStore {
   rpc read (ReadRequest) returns (ReadReply);
   rpc write (WriteRequest) returns (WriteReply);
+  rpc listServer (ListServerRequest) returns (ListServerReply);
 }

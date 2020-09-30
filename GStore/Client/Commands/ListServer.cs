@@ -1,6 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Linq;
+using Grpc.Net.Client;
+using Gstore;
 
 namespace Client.Commands
 {
@@ -15,8 +16,17 @@ namespace Client.Commands
 
         public void Execute()
         {
-            // TODO: Implement
             System.Diagnostics.Debug.WriteLine(String.Format("List objects stored in server {0}", this.serverId));
+
+            var channel = GrpcChannel.ForAddress("https://localhost:5001"); //server ports?
+            var client = new GStore.GStoreClient(channel);
+
+            var response = client.listServer(new ListServerRequest {} );
+
+            Console.WriteLine("  Is Master?\tValue");
+
+            foreach (var value in response.Values)
+                Console.WriteLine("  {1}\t{2}", (value.IsMaster)? "true":"false", value.Value);
         }
     }
 }

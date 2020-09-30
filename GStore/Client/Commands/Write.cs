@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using Grpc.Net.Client;
+using Gstore;
 
 namespace Client.Commands
 {
@@ -21,6 +21,15 @@ namespace Client.Commands
         {
             // TODO: Implement
             System.Diagnostics.Debug.WriteLine(String.Format("Write in partition {0} with object id {1} and value {2}", this.partitionId, this.objectId, this.value));
+
+            var channel = GrpcChannel.ForAddress("https://localhost:5001"); //server ports?
+            var client = new GStore.GStoreClient(channel);
+
+            // TODO: Change to the master replica server
+            // write calls can be made asynchronously 
+            client.write(new WriteRequest { PartitionId = this.partitionId, ObjectId = this.objectId, Value = this.value } );
+
+            Console.WriteLine();
         }
     }
 }
