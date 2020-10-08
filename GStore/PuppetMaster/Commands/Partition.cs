@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using PuppetMaster.Exceptions;
 
 namespace PuppetMaster.Commands
 {
@@ -16,10 +16,8 @@ namespace PuppetMaster.Commands
 
             if(num != this.replicas.Count)
             {
-                // TODO: Handle error
-                throw new NotImplementedException();
+                throw new PartitionParameterNumberMismatchException(num, this.replicas.Count);
             }
-
         }
 
         public void Execute()
