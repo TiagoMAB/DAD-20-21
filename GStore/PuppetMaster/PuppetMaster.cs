@@ -28,10 +28,5 @@ namespace PuppetMaster {
                 MessageBox.Show(String.Format("Command '{0}' is executed with {1} parameters, but {2} were given", ex.Command, ex.Expected, ex.Given), "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
-        private void PMFile_TextChanged(object sender, EventArgs e)
-        {
-
-        }
     }
 }

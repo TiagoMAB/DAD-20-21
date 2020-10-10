@@ -38,7 +38,6 @@
             this.PMFile.Name = "PMFile";
             this.PMFile.Size = new System.Drawing.Size(268, 23);
             this.PMFile.TabIndex = 1;
-            this.PMFile.TextChanged += new System.EventHandler(this.PMFile_TextChanged);
             // 
             // btnLoadPMFile
             // 

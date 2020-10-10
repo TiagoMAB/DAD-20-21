@@ -15,6 +15,8 @@ namespace PuppetMaster.Commands {
         }
 
         public void Execute() {
+            ConnectionInfo.AddClient(this.username, this.URL);
+
             Channel channel = new Channel(this.URL, ChannelCredentials.Insecure);
 
             PCS.PCSClient client = new PCS.PCSClient(channel);
