@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package gstore;
+package GStore;
 
 
 // WRITE operation request and response

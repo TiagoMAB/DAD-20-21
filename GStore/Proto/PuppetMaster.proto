@@ -47,7 +47,10 @@ message ServerRequest {
 message ServerResponse {}
 
 message StatusRequest {}
-message StatusResponse {}
+message StatusResponse {
+	bool isClient = 1;
+	bool isProcessComplete = 2;
+}
 
 message UnfreezeRequest {}
 message UnfreezeResponse {}

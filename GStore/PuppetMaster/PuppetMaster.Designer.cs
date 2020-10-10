@@ -48,7 +48,7 @@
             this.btnLoadPMFile.TabIndex = 2;
             this.btnLoadPMFile.Text = "Load";
             this.btnLoadPMFile.UseVisualStyleBackColor = true;
-            this.btnLoadPMFile.Click += new System.EventHandler(this.loadPMFileClick);
+            this.btnLoadPMFile.Click += new System.EventHandler(this.LoadPMFileClick);
             // 
             // openFileDialog1
             // 

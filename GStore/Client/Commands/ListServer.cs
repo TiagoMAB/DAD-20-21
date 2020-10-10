@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Linq;
 using Grpc.Net.Client;
-using Gstore;
+using GStore;
 
 namespace Client.Commands
 {
@@ -19,7 +18,7 @@ namespace Client.Commands
             System.Diagnostics.Debug.WriteLine(String.Format("List objects stored in server {0}", this.serverId));
 
             var channel = GrpcChannel.ForAddress("https://localhost:5001"); //server ports?
-            var client = new GStore.GStoreClient(channel);
+            var client = new GStore.GStore.GStoreClient(channel);
 
             var response = client.listServer(new ListServerRequest {} );
 

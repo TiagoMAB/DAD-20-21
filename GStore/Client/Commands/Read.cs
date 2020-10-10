@@ -1,6 +1,6 @@
 ﻿using System;
 using Grpc.Net.Client;
-using Gstore;
+using GStore;
 
 namespace Client.Commands
 {
@@ -22,7 +22,7 @@ namespace Client.Commands
             System.Diagnostics.Debug.WriteLine(String.Format("Read in partition {0} for object {1} with optional fetch server {2}", this.partitionId, this.objectId, this.serverId));
 
             var channel = GrpcChannel.ForAddress("https://localhost:5001"); //server ports?
-            var client = new GStore.GStoreClient(channel);
+            var client = new GStore.GStore.GStoreClient(channel);
 
             var response = client.read(new ReadRequest { PartitionId = this.partitionId, ObjectId = this.objectId } );
 

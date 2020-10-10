@@ -1,6 +1,6 @@
 ﻿using System;
 using Grpc.Net.Client;
-using Gstore;
+using GStore;
 
 namespace Client.Commands
 {
@@ -23,7 +23,7 @@ namespace Client.Commands
             System.Diagnostics.Debug.WriteLine(String.Format("Write in partition {0} with object id {1} and value {2}", this.partitionId, this.objectId, this.value));
 
             var channel = GrpcChannel.ForAddress("https://localhost:5001"); //server ports?
-            var client = new GStore.GStoreClient(channel);
+            var client = new GStore.GStore.GStoreClient(channel);
 
             // TODO: Change to the master replica server
             // write calls can be made asynchronously 
