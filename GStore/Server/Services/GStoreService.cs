@@ -1,29 +1,26 @@
 using System.Threading.Tasks;
-using Gstore;
 using Grpc.Core;
-using Microsoft.Extensions.Logging;
+using System;
 
 namespace Server
 {
-    public class GStoreService : GStore.GStoreBase
+    public class GStoreService : GStore.GStore.GStoreBase
     {
-        private readonly ILogger _logger;
 
-        public GStoreService(ILoggerFactory loggerFactory)
+        public GStoreService()
         {
-            _logger = loggerFactory.CreateLogger<GStoreService>();
         }
 
-        public override Task<WriteReply> write(WriteRequest request, ServerCallContext context)
+        public override Task<GStore.WriteReply> write(GStore.WriteRequest request, ServerCallContext context)
         {
-            _logger.LogInformation("Write");
-            return Task.FromResult(new WriteReply());
+            Console.WriteLine("Read");
+            return Task.FromResult(new GStore.WriteReply());
         }
 
-        public override Task<ReadReply> read(ReadRequest request, ServerCallContext context)
+        public override Task<GStore.ReadReply> read(GStore.ReadRequest request, ServerCallContext context)
         {
-            _logger.LogInformation("Read");
-            return Task.FromResult(new ReadReply());
+            Console.WriteLine("Reply");
+            return Task.FromResult(new GStore.ReadReply());
         }
     }
 }
