@@ -7,8 +7,10 @@ namespace Client
     sealed class ServerInfo
     {
         static ServerInfo serverInfo = null;
-        public string Host { get; set; }
-        public int Port { get; set; }
+        public string CurrentHost { get; set; }
+        public int CurrentPort { get; set; }
+
+        public bool ExecFinish { get; set; }
 
         public static ServerInfo Instance()
         {

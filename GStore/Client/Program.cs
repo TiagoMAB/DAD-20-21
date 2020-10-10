@@ -14,9 +14,9 @@ namespace Client
         public override Task<StatusResponse> Status(
             StatusRequest request, ServerCallContext context)
         {
-            //TODO: return according to to the script commands yet to be executed
-            //its still hardcoded with false, but it will be changed
-            return Task.FromResult(new StatusResponse { IsClient = true, IsProcessComplete = false } );
+            ServerInfo server = ServerInfo.Instance();
+
+            return Task.FromResult(new StatusResponse { IsClient = true, IsProcessComplete = server.ExecFinish } );
         }
     }
 
@@ -27,6 +27,8 @@ namespace Client
             Script script;
             Server server;
             ServerInfo serverInfo;
+
+            /*TODO: Probably args still needed when only clients and servers exist ||| for example, number of replicas, etc etc*/
 
             /*
              clientHost: host name required for status commands (client is actually the server in this operation)
@@ -43,8 +45,9 @@ namespace Client
 
             serverInfo = ServerInfo.Instance();
 
-            serverInfo.Host = args[2];
-            serverInfo.Port = int.Parse(args[2]);
+            serverInfo.CurrentHost = args[2];
+            serverInfo.CurrentPort = int.Parse(args[2]);
+            serverInfo.ExecFinish = false;
 
             server = new Server
             {
@@ -80,6 +83,8 @@ namespace Client
             }
 
             script.Execute();
+
+            serverInfo.ExecFinish = true;
 
             Console.WriteLine("Press any key to stop the client.");
             Console.ReadKey();
