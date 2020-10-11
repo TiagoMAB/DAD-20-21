@@ -54,9 +54,28 @@ message ServerInfoReply {
 	}
 }
 
+message HandshakeRequest {
+	
+	string id = 1;
+	string url = 2;
+
+}
+
+message HandshakeReply {
+
+	repeated Info network = 1;
+
+	message Info {
+		string id = 1;
+		string url = 2;
+	}
+
+}
+
 service GStore {
   rpc read (ReadRequest) returns (ReadReply);
   rpc write (WriteRequest) returns (WriteReply);
   rpc listServer (ListServerRequest) returns (ListServerReply);
   rpc serverInfo (ServerInfoRequest) returns (ServerInfoReply);
+  rpc handshake(HandshakeRequest) returns (HandshakeReply);
 }
