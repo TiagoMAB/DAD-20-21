@@ -8,13 +8,14 @@ namespace Server
     {
         static void Main(string[] args)
         {
-            string id = null, URL = null, otherURL = null, host = null;
+            string id = null, URL = null, otherId = null, otherURL = null, host = null;
             Int64 min_delay = 0, max_delay = 0;
             int port = 0;
 
-            if (args.Length != 4 && args.Length != 5) 
+            if (args.Length != 4 && args.Length != 6) 
             {
-                Console.WriteLine("Wrong format. Should be: id url min_delay max_delay [otherURL]\n otherURL is an optional argument used to connect to a pre-existing network.");    
+                Console.WriteLine("Wrong format. Should be: id url min_delay max_delay [otherId otherURL]\n otherId and otherURL are optional arguments used to connect to a pre-existing network."); 
+                //TO DO: exit ?
             }
             
             id = args[0];
@@ -28,14 +29,15 @@ namespace Server
             host = details[0];
             port = int.Parse(details[1]);
            
-            if (args.Length == 5) 
+            if (args.Length == 6) 
             {
-                otherURL = args[4];
+                otherId = args[4];
+                otherURL = args[5];
             }
 
             Grpc.Core.Server server = new Grpc.Core.Server
             {
-                Services = { GStore.GStore.BindService(new GStoreService(id, URL, otherURL))},
+                Services = { GStore.GStore.BindService(new GStoreService(id, URL, otherId, otherURL))},
                 Ports = { new ServerPort(host, port, ServerCredentials.Insecure) }
             };
 

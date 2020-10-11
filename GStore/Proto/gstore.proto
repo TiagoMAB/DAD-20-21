@@ -72,10 +72,23 @@ message HandshakeReply {
 
 }
 
+message RegisterRequest {
+	
+	string id = 1;
+	string url = 2;
+
+}
+
+message RegisterReply {
+
+	bool ok = 1;
+}
+
 service GStore {
   rpc read (ReadRequest) returns (ReadReply);
   rpc write (WriteRequest) returns (WriteReply);
   rpc listServer (ListServerRequest) returns (ListServerReply);
   rpc serverInfo (ServerInfoRequest) returns (ServerInfoReply);
   rpc handshake(HandshakeRequest) returns (HandshakeReply);
+  rpc register(RegisterRequest) returns (RegisterReply);
 }
