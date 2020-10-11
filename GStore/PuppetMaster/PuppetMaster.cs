@@ -9,7 +9,7 @@ namespace PuppetMaster {
             InitializeComponent();
         }
 
-        private void LoadPMFileClick(object sender, EventArgs e) {
+        private async void LoadPMFileClick(object sender, EventArgs e) {
             string path = PMFile.Text.Trim();
 
             if (path.Equals("")) {
@@ -19,7 +19,7 @@ namespace PuppetMaster {
             }
 
             try {
-                Parser.parseScript(path).Execute();
+                await Parser.parseScript(this, path).Execute();
             } catch (PartitionParameterNumberMismatchException ex) {
                 MessageBox.Show(String.Format("Partition command expected {0} server ids, but {1} were given", ex.Expected, ex.Given), "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Error);
             } catch (UnknownCommandException ex) {
@@ -27,6 +27,18 @@ namespace PuppetMaster {
             } catch (WrongArgumentNumberException ex) {
                 MessageBox.Show(String.Format("Command '{0}' is executed with {1} parameters, but {2} were given", ex.Command, ex.Expected, ex.Given), "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        private void SelectPMFileClick(object sender, EventArgs e) {
+            SelectPMFile.ShowDialog();
+        }
+
+        private void SelectedPMFile(object sender, System.ComponentModel.CancelEventArgs e) {
+            PMFile.Text = SelectPMFile.FileName;
+        }
+
+        public void Log(string entry) {
+            Logs.Items.Add(String.Format("[{0}] {1}", DateTime.Now.ToString(), entry));
         }
     }
 }

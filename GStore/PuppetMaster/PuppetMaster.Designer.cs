@@ -20,7 +20,10 @@
             this.label1 = new System.Windows.Forms.Label();
             this.PMFile = new System.Windows.Forms.TextBox();
             this.btnLoadPMFile = new System.Windows.Forms.Button();
-            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
+            this.SelectPMFile = new System.Windows.Forms.OpenFileDialog();
+            this.btnSelectPMFile = new System.Windows.Forms.Button();
+            this.label2 = new System.Windows.Forms.Label();
+            this.Logs = new System.Windows.Forms.ListBox();
             this.SuspendLayout();
             // 
             // label1
@@ -41,7 +44,7 @@
             // 
             // btnLoadPMFile
             // 
-            this.btnLoadPMFile.Location = new System.Drawing.Point(365, 32);
+            this.btnLoadPMFile.Location = new System.Drawing.Point(446, 32);
             this.btnLoadPMFile.Name = "btnLoadPMFile";
             this.btnLoadPMFile.Size = new System.Drawing.Size(77, 23);
             this.btnLoadPMFile.TabIndex = 2;
@@ -49,15 +52,48 @@
             this.btnLoadPMFile.UseVisualStyleBackColor = true;
             this.btnLoadPMFile.Click += new System.EventHandler(this.LoadPMFileClick);
             // 
-            // openFileDialog1
+            // SelectPMFile
             // 
-            this.openFileDialog1.FileName = "openFileDialog1";
+            this.SelectPMFile.FileOk += new System.ComponentModel.CancelEventHandler(this.SelectedPMFile);
+            // 
+            // btnSelectPMFile
+            // 
+            this.btnSelectPMFile.Location = new System.Drawing.Point(365, 32);
+            this.btnSelectPMFile.Name = "btnSelectPMFile";
+            this.btnSelectPMFile.Size = new System.Drawing.Size(75, 23);
+            this.btnSelectPMFile.TabIndex = 3;
+            this.btnSelectPMFile.Text = "Select";
+            this.btnSelectPMFile.UseVisualStyleBackColor = true;
+            this.btnSelectPMFile.Click += new System.EventHandler(this.SelectPMFileClick);
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.label2.Location = new System.Drawing.Point(13, 300);
+            this.label2.Name = "label2";
+            this.label2.RightToLeft = System.Windows.Forms.RightToLeft.No;
+            this.label2.Size = new System.Drawing.Size(30, 15);
+            this.label2.TabIndex = 5;
+            this.label2.Text = "Log:";
+            // 
+            // Logs
+            // 
+            this.Logs.FormattingEnabled = true;
+            this.Logs.ItemHeight = 15;
+            this.Logs.Location = new System.Drawing.Point(12, 318);
+            this.Logs.Name = "Logs";
+            this.Logs.Size = new System.Drawing.Size(571, 229);
+            this.Logs.TabIndex = 6;
             // 
             // PuppetMaster
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.ClientSize = new System.Drawing.Size(595, 560);
+            this.Controls.Add(this.Logs);
+            this.Controls.Add(this.label2);
+            this.Controls.Add(this.btnSelectPMFile);
             this.Controls.Add(this.btnLoadPMFile);
             this.Controls.Add(this.PMFile);
             this.Controls.Add(this.label1);
@@ -73,7 +109,10 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox PMFile;
         private System.Windows.Forms.Button btnLoadPMFile;
-        private System.Windows.Forms.OpenFileDialog openFileDialog1;
+        private System.Windows.Forms.OpenFileDialog SelectPMFile;
+        private System.Windows.Forms.Button btnSelectPMFile;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.ListBox Logs;
     }
 }
 

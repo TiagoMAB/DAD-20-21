@@ -2,21 +2,17 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace PuppetMaster.Commands
-{
-    public class Wait : Command
-    {
+namespace PuppetMaster.Commands {
+    public class Wait : Command {
         private readonly int milliseconds;
 
-        public Wait(int amount)
-        {
+        public Wait(PuppetMaster form, int amount) : base(form) {
             this.milliseconds = amount;
         }
 
-        public override Task Execute()
-        {
-            System.Diagnostics.Debug.WriteLine(String.Format("Wait {0} milliseconds", this.milliseconds));
-            Thread.Sleep(this.milliseconds);
+        public override Task Execute() {
+            Log(String.Format("Waiting {0} milliseconds", this.milliseconds));
+            Task.Delay(this.milliseconds).Wait();
 
             return null;
         }

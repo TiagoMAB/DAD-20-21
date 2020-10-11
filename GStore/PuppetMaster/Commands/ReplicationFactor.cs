@@ -5,12 +5,12 @@ namespace PuppetMaster.Commands {
     public class ReplicationFactor : Command {
         private readonly int factor;
 
-        public ReplicationFactor(int factor) {
+        public ReplicationFactor(PuppetMaster form, int factor) : base(form) {
             this.factor = factor;
         }
 
         protected override void DoWork() {
-            System.Diagnostics.Debug.WriteLine(String.Format("ReplicationFactor of {0}", this.factor));
+            Log(String.Format("ReplicationFactor set to {0}", this.factor));
         }
     }
 }

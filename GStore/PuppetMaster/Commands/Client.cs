@@ -1,7 +1,7 @@
 ﻿using Grpc.Core;
 using GStore;
 using System;
-using System.Threading.Tasks;
+using System.Threading;
 
 namespace PuppetMaster.Commands {
     public class Client : Command {
@@ -9,7 +9,7 @@ namespace PuppetMaster.Commands {
         private readonly string URL;
         private readonly string file;
 
-        public Client(string username, string URL, string file) {
+        public Client(PuppetMaster form, string username, string URL, string file) : base(form) {
             this.username = username;
             this.URL = URL;
             this.file = file;
@@ -30,7 +30,8 @@ namespace PuppetMaster.Commands {
             }
 
             channel.ShutdownAsync().Wait();
-            System.Diagnostics.Debug.WriteLine(String.Format("[{0}] DONE", DateTime.Now.ToString()));
+
+            Log(String.Format("Client '{0}' started", this.username));
         }
     }
 }

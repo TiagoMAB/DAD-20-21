@@ -9,7 +9,7 @@ namespace PuppetMaster.Commands {
         private readonly int minDelay;
         private readonly int maxDelay;
 
-        public Server(string id, string URL, int minDelay, int maxDelay) {
+        public Server(PuppetMaster form, string id, string URL, int minDelay, int maxDelay) : base(form) {
             this.id = id;
             this.URL = URL;
             this.minDelay = minDelay;
@@ -31,8 +31,8 @@ namespace PuppetMaster.Commands {
             }
 
             channel.ShutdownAsync().Wait();
-            System.Diagnostics.Debug.WriteLine(String.Format("[{0}] DONE", DateTime.Now.ToString()));
 
+            Log(String.Format("Server '{0}' listening at '{1}'", this.id, this.URL));
         }
     }
 }
