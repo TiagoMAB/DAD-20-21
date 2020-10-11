@@ -7,9 +7,15 @@ namespace Client
     sealed class ServerInfo
     {
         static ServerInfo serverInfo = null;
-        public string CurrentHost { get; set; }
-        public int CurrentPort { get; set; }
 
+        readonly Dictionary<string, string> serverURL = new Dictionary<string, string>(); // <serverId, URL>
+
+        readonly Dictionary<string, string> masterURL = new Dictionary<string, string>(); // <partitionId, URL>
+
+        //TODO: maybe not needed
+        readonly Dictionary<string, List<string>> serverReplicas = new Dictionary<string, List<string>>(); // <url, partitionIds>
+
+        public string CurrentServerURL { get; set; }
         public bool ExecFinish { get; set; }
 
         public static ServerInfo Instance()
@@ -20,6 +26,16 @@ namespace Client
                 return serverInfo;
         }
 
-        //TODO: save information about all the servers and their addresses, serverId, replicas here
+        public void AddServer(string serverId, string url, List<string> masterPartitionId, List<string> partitions) {
+            serverURL.Add(serverId, url);
+
+            if (masterPartitionId.Count != 0)
+            {
+                foreach (string part in masterPartitionId)
+                    masterURL.Add(part, url);
+            }
+
+            serverReplicas.Add(url, partitions);
+        }
     }
 }

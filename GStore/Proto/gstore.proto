@@ -28,8 +28,6 @@ message ReadReply {
 message ListServerRequest {
 }
 
-
-
 message ListServerReply {
 	repeated ListValue values = 1;
 
@@ -40,8 +38,25 @@ message ListServerReply {
 	}
 }
 
+// LIST information about each server
+//masterPartitionId is only filled for servers that are master replicas
+message ServerInfoRequest {
+}
+
+message ServerInfoReply {
+	repeated Server servers = 1;
+
+	message Server {
+		string serverId = 1;
+		string url = 2;
+		repeated string masterPartitionId = 3;
+		repeated string partitions = 4;
+	}
+}
+
 service GStore {
   rpc read (ReadRequest) returns (ReadReply);
   rpc write (WriteRequest) returns (WriteReply);
   rpc listServer (ListServerRequest) returns (ListServerReply);
+  rpc serverInfo (ServerInfoRequest) returns (ServerInfoReply);
 }
