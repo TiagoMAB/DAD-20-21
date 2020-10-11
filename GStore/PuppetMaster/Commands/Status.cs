@@ -6,7 +6,7 @@ namespace PuppetMaster.Commands
 {
     public class Status : Command
     {
-        public void Execute()
+        protected override void DoWork()
         {
             // TODO: Implement
             System.Diagnostics.Debug.WriteLine("Status");

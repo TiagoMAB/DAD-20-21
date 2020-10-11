@@ -1,20 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Threading.Tasks;
 
-namespace PuppetMaster.Commands
-{
-    public class ReplicationFactor : Command
-    {
+namespace PuppetMaster.Commands {
+    public class ReplicationFactor : Command {
         private readonly int factor;
 
-        public ReplicationFactor(int factor)
-        {
+        public ReplicationFactor(int factor) {
             this.factor = factor;
         }
 
-        public void Execute()
-        {
+        protected override void DoWork() {
             System.Diagnostics.Debug.WriteLine(String.Format("ReplicationFactor of {0}", this.factor));
         }
     }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace PuppetMaster.Commands
 {
@@ -12,10 +13,15 @@ namespace PuppetMaster.Commands
             this.milliseconds = amount;
         }
 
-        public void Execute()
+        public override Task Execute()
         {
             System.Diagnostics.Debug.WriteLine(String.Format("Wait {0} milliseconds", this.milliseconds));
             Thread.Sleep(this.milliseconds);
+
+            return null;
+        }
+
+        protected override void DoWork() {
         }
     }
 }

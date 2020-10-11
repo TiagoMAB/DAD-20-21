@@ -16,7 +16,7 @@ namespace PuppetMaster.Commands {
             this.maxDelay = maxDelay;
         }
 
-        public void Execute() {
+        protected override void DoWork() {
             ConnectionInfo.AddServer(this.id, this.URL);
 
             Channel channel = new Channel(this.URL, ChannelCredentials.Insecure);
@@ -24,13 +24,13 @@ namespace PuppetMaster.Commands {
             PCS.PCSClient client = new PCS.PCSClient(channel);
 
             try {
-                client.ServerAsync(new ServerRequest { Id = this.id, MaxDelay = this.maxDelay, MinDelay = this.minDelay });
+                client.Server(new ServerRequest { Id = this.id, MaxDelay = this.maxDelay, MinDelay = this.minDelay });
             } catch (RpcException e) {
                 // TODO: Improve error handling
                 System.Diagnostics.Debug.WriteLine(e);
             }
 
-            channel.ShutdownAsync();
+            channel.ShutdownAsync().Wait();
             System.Diagnostics.Debug.WriteLine(String.Format("[{0}] DONE", DateTime.Now.ToString()));
 
         }

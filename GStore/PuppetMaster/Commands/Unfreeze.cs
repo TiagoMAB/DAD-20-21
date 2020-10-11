@@ -13,7 +13,7 @@ namespace PuppetMaster.Commands
             this.id = id;
         }
 
-        public void Execute()
+        protected override void DoWork()
         {
             // TODO: Implement
             System.Diagnostics.Debug.WriteLine(String.Format("Unfreeze {0}", this.id));
