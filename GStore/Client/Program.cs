@@ -4,7 +4,9 @@ using Client.Commands;
 using Client.Exceptions;
 using GStore;
 using Grpc.Core;
+using Grpc.Net.Client;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace Client
 {
@@ -14,9 +16,9 @@ namespace Client
         public override Task<StatusResponse> Status(
             StatusRequest request, ServerCallContext context)
         {
-            //TODO: return according to to the script commands yet to be executed
-            //its still hardcoded with false, but it will be changed
-            return Task.FromResult(new StatusResponse { IsClient = true, IsProcessComplete = false } );
+            ServerInfo server = ServerInfo.Instance();
+
+            return Task.FromResult(new StatusResponse { IsClient = true, IsProcessComplete = server.ExecFinish } );
         }
     }
 
@@ -31,10 +33,9 @@ namespace Client
             /*
              clientHost: host name required for status commands (client is actually the server in this operation)
              clientPort: port number required for status command (client is actually the server in this operation)
-             serverHost: first host name being contacted by the server
-             serverPort: first port number being contacted by the server
+             serverHost: first server URL being contacted by the client
              */
-            if (args.Length != 4)
+            if (args.Length != 3)
             {
                 Console.WriteLine("Incorrect arguments\n" +
                     "Correct arguments' format: clientHost clientPort serverHost serverPort");
@@ -43,8 +44,8 @@ namespace Client
 
             serverInfo = ServerInfo.Instance();
 
-            serverInfo.Host = args[2];
-            serverInfo.Port = int.Parse(args[2]);
+            serverInfo.CurrentServerURL = args[2];
+            serverInfo.ExecFinish = false;
 
             server = new Server
             {
@@ -79,12 +80,31 @@ namespace Client
                 return;
             }
 
+            GetServerInfo();
+
             script.Execute();
+
+            serverInfo.ExecFinish = true;
 
             Console.WriteLine("Press any key to stop the client.");
             Console.ReadKey();
 
             server.ShutdownAsync().Wait();
+        }
+
+        private static void GetServerInfo()
+        {
+            ServerInfo server = ServerInfo.Instance();
+
+            //Ask other servers' details
+            var channel = GrpcChannel.ForAddress(server.CurrentServerURL);
+            var client = new GStore.GStore.GStoreClient(channel);
+
+            var response = client.serverInfo( new ServerInfoRequest {} );
+
+            foreach (var value in response.Servers) {
+                server.AddServer(value.ServerId, value.Url, value.MasterPartitionId.ToList(), value.Partitions.ToList());
+            }
         }
     }
 }
