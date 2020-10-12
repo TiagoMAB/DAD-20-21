@@ -1,29 +1,36 @@
 ﻿using Grpc.Core;
 using GStore;
 using System;
-using System.Threading;
 
 namespace PuppetMaster.Commands {
     public class Client : Command {
         private readonly string username;
-        private readonly string URL;
+        private readonly string host;
+        private readonly string port;
         private readonly string file;
 
         public Client(PuppetMaster form, string username, string URL, string file) : base(form) {
+            string[] address = URL.Split(':');
+
+            // TODO: Assert correct format of address
+
             this.username = username;
-            this.URL = URL;
+            this.host = address[0];
+            this.port = address[1];
             this.file = file;
         }
 
         protected override void DoWork() {
-            ConnectionInfo.AddClient(this.username, this.URL);
+            string URL = this.host + ":" + this.port;
 
-            Channel channel = new Channel(this.URL, ChannelCredentials.Insecure);
+            ConnectionInfo.AddClient(this.username, URL);
+
+            Channel channel = new Channel(this.host + ":10000", ChannelCredentials.Insecure);
 
             PCS.PCSClient client = new PCS.PCSClient(channel);
 
             try {
-                client.Client(new ClientRequest { Script = this.file });
+                client.Client(new ClientRequest { ClientUrl = URL, Script = this.file, ServerUrl = ConnectionInfo.GetRandomServer() });
             } catch (RpcException e) {
                 // TODO: Improve error handling
                 System.Diagnostics.Debug.WriteLine(e);

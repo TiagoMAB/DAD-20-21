@@ -1,6 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
+using System;
+using System.Runtime.CompilerServices;
+using System.Xml.Serialization;
 
 namespace PuppetMaster {
     static class ConnectionInfo {
@@ -13,6 +16,21 @@ namespace PuppetMaster {
 
         public static void AddServer(string name, string url) {
             servers.TryAdd(name, url);
+        }
+
+        public static string GetRandomServer() {
+            Random r = new Random();
+            int i = r.Next(0, servers.Count);
+
+            foreach(var server in servers) {
+                if(i == 0) {
+                    return server.Value;
+                }
+
+                i--;
+            }
+
+            return null;
         }
 
         public static string GetServer(string name) {

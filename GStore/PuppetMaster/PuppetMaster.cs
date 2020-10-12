@@ -39,6 +39,7 @@ namespace PuppetMaster {
 
         public void Log(string entry) {
             Logs.Items.Add(String.Format("[{0}] {1}", DateTime.Now.ToString(), entry));
+            Logs.SelectedIndex = Logs.Items.Count - 1;
         }
     }
 }

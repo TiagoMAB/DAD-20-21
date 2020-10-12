@@ -14,7 +14,8 @@ namespace Server
 
             if (args.Length != 4 && args.Length != 6) 
             {
-                Console.WriteLine("Wrong format. Should be: id url min_delay max_delay [otherId otherURL]\n otherId and otherURL are optional arguments used to connect to a pre-existing network."); 
+                Console.WriteLine("Wrong format. Should be: id url min_delay max_delay [otherId otherURL]\n otherId and otherURL are optional arguments used to connect to a pre-existing network.");
+                Console.ReadLine();
                 //TO DO: exit ?
             }
             
@@ -23,8 +24,7 @@ namespace Server
             min_delay = Int64.Parse(args[2]);
             max_delay = Int64.Parse(args[3]);
             
-            string[] details = URL.Split("//");
-            details = details[1].Split(':');
+            string[] details = URL.Split(':');
 
             host = details[0];
             port = int.Parse(details[1]);
