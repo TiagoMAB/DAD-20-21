@@ -1,22 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Threading.Tasks;
 
-namespace PuppetMaster.Commands
-{
-    public class Crash : Command
-    {
+namespace PuppetMaster.Commands {
+    public class Crash : Command {
         private readonly string id;
 
-        public Crash(string id)
-        {
+        public Crash(PuppetMaster form, string id) : base(form) {
             this.id = id;
         }
 
-        public void Execute()
-        {
+        protected override void DoWork() {
             // TODO: implement
-            System.Diagnostics.Debug.WriteLine(String.Format("Crash {0}", this.id));
+
+            Log(String.Format("Crashed server '{0}'", this.id));
         }
     }
 }

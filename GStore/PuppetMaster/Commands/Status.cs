@@ -6,10 +6,12 @@ namespace PuppetMaster.Commands
 {
     public class Status : Command
     {
-        public void Execute()
+        public Status(PuppetMaster form) : base(form) { }
+
+        protected override void DoWork()
         {
             // TODO: Implement
-            System.Diagnostics.Debug.WriteLine("Status");
+            Log("All status received");
         }
     }
 }

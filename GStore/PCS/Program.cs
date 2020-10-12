@@ -1,12 +1,37 @@
-﻿using System;
+﻿using Grpc.Core;
+using System;
 
 namespace PCS
 {
     class Program
     {
+        const int port = 10000;
+
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            if(args.Length != 2) {
+                Console.WriteLine("Usage: PCS.exe <path to client> <path to server>");
+                Console.WriteLine("Press any key to shutdown...");
+                Console.ReadKey();
+                return;
+            }
+
+            string clientPath = args[0];
+            string serverPath = args[1];
+
+            Server server = new Server
+            {
+                Services = { GStore.PCS.BindService(new PCSImpl(clientPath, serverPath)) },
+                Ports    = { new ServerPort("localhost", port, ServerCredentials.Insecure) }
+            };
+
+            server.Start();
+
+            Console.WriteLine("PCS running on port " + port);
+            Console.WriteLine("Press any key to shutdown...");
+            Console.ReadKey();
+
+            server.ShutdownAsync().Wait();
         }
     }
 }

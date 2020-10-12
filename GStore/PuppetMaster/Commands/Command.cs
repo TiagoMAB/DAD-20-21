@@ -1,11 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Threading.Tasks;
 
-namespace PuppetMaster.Commands
-{
-    public interface Command
-    {
-        public void Execute();
+namespace PuppetMaster.Commands {
+    public abstract class Command {
+        private delegate void Logger(string s);
+        private readonly Logger logger;
+        private readonly PuppetMaster form;
+
+        protected Command(PuppetMaster form) {
+            this.logger = new Logger(form.Log);
+            this.form = form;
+        }
+
+        public async virtual Task Execute() {
+            await Task.Run(DoWork);
+        }
+        protected abstract void DoWork();
+
+        protected void Log(string s) {
+            this.form.Invoke(this.logger, s);
+        }
     }
 }

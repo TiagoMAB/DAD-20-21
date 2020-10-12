@@ -1,20 +1,16 @@
 ﻿using System;
+using System.Threading.Tasks;
 
-namespace PuppetMaster.Commands
-{
-    public class Freeze : Command
-    {
+namespace PuppetMaster.Commands {
+    public class Freeze : Command {
         private readonly string id;
 
-        public Freeze(string id)
-        {
+        public Freeze(PuppetMaster form, string id) : base(form) {
             this.id = id;
         }
-
-        public void Execute()
-        {
+        protected override void DoWork() {
             // TODO: Implement
-            System.Diagnostics.Debug.WriteLine(String.Format("Freeze {0}", id));
+            Log(String.Format("Freezed server '{0}'", this.id));
         }
     }
 }
