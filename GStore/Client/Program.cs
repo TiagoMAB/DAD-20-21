@@ -4,9 +4,7 @@ using Client.Commands;
 using Client.Exceptions;
 using GStore;
 using Grpc.Core;
-using Grpc.Net.Client;
 using System.Threading.Tasks;
-using System.Linq;
 
 namespace Client
 {
@@ -35,29 +33,34 @@ namespace Client
              clientPort: port number required for status command (client is actually the server in this operation)
              serverHost: first server URL being contacted by the client
              */
-            if (args.Length != 3)
+            if (args.Length != 6)
             {
                 Console.WriteLine("Incorrect arguments\n" +
-                    "Correct arguments' format: clientHost clientPort serverHost serverPort");
+                    "Correct arguments' format: username clientHost clientPort scriptPath serverId serverURL");
                 return;
             }
 
+            //USERNAME
+            Console.WriteLine("Client with username \"{0}\" started.", args[0]);
+
             serverInfo = ServerInfo.Instance();
 
-            serverInfo.CurrentServerURL = args[2];
+            serverInfo.AddServerURL(args[4], args[5]);
+            serverInfo.UserName = args[0];
+            serverInfo.CurrentServerURL = args[5];
             serverInfo.ExecFinish = false;
 
             server = new Server
             {
                 Services = { PuppetMaster.BindService(new ServerService()) },
-                Ports = { new ServerPort(args[0], int.Parse(args[1]), ServerCredentials.Insecure) }
+                Ports = { new ServerPort(args[1], int.Parse(args[2]), ServerCredentials.Insecure) }
             };
 
             server.Start();
 
             try
             {
-                script = Parser.ParseScript();
+                script = Parser.ParseScript(args[3]);
             }
             catch (FileNotFoundException e)
             {
@@ -80,7 +83,7 @@ namespace Client
                 return;
             }
 
-            GetServerInfo();
+            serverInfo.GetServerInfo();
 
             script.Execute();
 
@@ -90,21 +93,6 @@ namespace Client
             Console.ReadKey();
 
             server.ShutdownAsync().Wait();
-        }
-
-        private static void GetServerInfo()
-        {
-            ServerInfo server = ServerInfo.Instance();
-
-            //Ask other servers' details
-            var channel = GrpcChannel.ForAddress(server.CurrentServerURL);
-            var client = new GStore.GStore.GStoreClient(channel);
-
-            var response = client.serverInfo( new ServerInfoRequest {} );
-
-            foreach (var value in response.Servers) {
-                server.AddServer(value.ServerId, value.Url, value.MasterPartitionId.ToList(), value.Partitions.ToList());
-            }
         }
     }
 }
