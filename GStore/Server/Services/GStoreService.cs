@@ -20,7 +20,7 @@ namespace Server
             this.URL = URL;
 
             //if server is the first in the network, handshake is not called
-            if (otherURL == null) 
+            if (otherId == null) 
             {
                 return;
             }
