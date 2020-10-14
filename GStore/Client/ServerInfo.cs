@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Grpc.Net.Client;
 using System.Linq;
+using Grpc.Core;
 
 namespace Client
 {
@@ -28,6 +29,21 @@ namespace Client
                 return serverInfo;
         }
 
+        public List<string> GetPartitionsByURL(string url)
+        {
+            List<string> value;
+            if (serverReplicas.TryGetValue(url, out value))
+                return value;
+            else return null;
+        }
+        public string GetURLByServerId(string serverId)
+        {
+            string value;
+            if (serverURL.TryGetValue(serverId, out value))
+                return value;
+            else return null;
+        }
+
         public void AddServerURL(string serverId, string url)
         {
             serverURL.Add(serverId, url);
@@ -47,15 +63,43 @@ namespace Client
 
         public void GetServerInfo()
         {
-            //Ask other servers' details
-            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-            var channel = GrpcChannel.ForAddress(CurrentServerURL);
-            var client = new GStore.GStore.GStoreClient(channel);
+            Random random = new Random();
+            List<string> urls = serverURL.Values.ToList();
 
-            var response = client.serverInfo( new GStore.ServerInfoRequest {} );
+            //Drop current network information
+            serverURL.Clear();
+            masterURL.Clear();
+            serverReplicas.Clear();
 
-            foreach (var value in response.Servers) {
-                RegisterServer(value.ServerId, value.Url, value.MasterPartitionId.ToList(), value.Partitions.ToList());
+            while (true)
+            {
+                //Get random server from the list of known servers
+                string url = urls[random.Next(urls.Count)];
+                var channel = GrpcChannel.ForAddress(url);
+                var client = new GStore.GStore.GStoreClient(channel);
+
+                try
+                {
+                    //TODO: maybe add a variable for waiting time
+                    var response = client.serverInfo(
+                        new GStore.ServerInfoRequest { },
+                        //TODO: maybe use deadline: context.Deadline in server
+                        deadline: DateTime.UtcNow.AddMilliseconds(5000));
+
+                    foreach (var value in response.Servers)
+                        RegisterServer(value.ServerId, value.Url, value.MasterPartitionId.ToList(), value.Partitions.ToList());
+
+                    CurrentServerURL = url;
+                    return;
+                }
+                catch (RpcException e) when (e.StatusCode == StatusCode.DeadlineExceeded)
+                {
+                    System.Diagnostics.Debug.WriteLine(String.Format("Server {0} exceeded response time.", url));
+                }
+                catch (RpcException e) when (e.StatusCode == StatusCode.Unavailable)
+                {
+                    System.Diagnostics.Debug.WriteLine(String.Format("Server {0} not available.", url));
+                }
             }
         }
     }

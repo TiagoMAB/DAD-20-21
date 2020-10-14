@@ -50,6 +50,8 @@ namespace Client
             serverInfo.CurrentServerURL = args[5];
             serverInfo.ExecFinish = false;
 
+            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+
             server = new Server
             {
                 Services = { PuppetMaster.BindService(new ServerService()) },
@@ -85,7 +87,19 @@ namespace Client
 
             serverInfo.GetServerInfo();
 
-            script.Execute();
+            try
+            {
+                script.Execute();
+            }
+            catch (NonExistentServerException e)
+            {
+                Console.WriteLine(e.Message);
+                return;
+            } 
+            catch (RpcException e) when (e.StatusCode == StatusCode.Unavailable)
+            {
+                return;
+            }
 
             serverInfo.ExecFinish = true;
 
