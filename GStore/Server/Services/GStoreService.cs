@@ -6,6 +6,7 @@ using Grpc.Core;
 using Grpc.Net.Client;
 using GStore;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Server
 {
@@ -13,7 +14,9 @@ namespace Server
     {
         private readonly string id;
         private readonly string URL;
-        private Dictionary<string, string> network = new Dictionary<string, string>();  // Dictionary<server_id, URL>
+        private Dictionary<string, string> network = new Dictionary<string, string>();                  // Dictionary<server_id, URL>
+        private Dictionary<string, List<string>> partitions = new Dictionary<string, List<string>>();   // Dictionary<partition_id, List<server_id>>
+        private Dictionary<string, string> masters = new Dictionary<string, string>();                  // Dictionary<partition_id, master_id>
         private bool frozen = false;
         private static Mutex m = new Mutex();
 
@@ -124,6 +127,63 @@ namespace Server
             m.ReleaseMutex();
             frozen = false;
             Console.WriteLine("Frozen = false");
+        }
+
+        public void crash()
+        {
+            Console.WriteLine("Process about to die");
+            Environment.Exit(-1);
+        }
+
+        public void partition(PartitionRequest request)
+        {
+            string partition_name = request.Name;
+            string master_id = request.Ids.First();
+            List<string> server_ids = request.Ids.ToList();
+
+            if (partitions.ContainsKey(partition_name))
+            {
+                return;
+            }
+
+            masters.Add(partition_name, master_id);
+            partitions.Add(partition_name, server_ids);
+
+            foreach (string id in this.network.Keys)
+            {
+                if (id == this.id)
+                {
+                    continue;
+                }
+                string server_url = network[id];
+                AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+                GrpcChannel channel = GrpcChannel.ForAddress(server_url);
+                PuppetMaster.PuppetMasterClient client = new PuppetMaster.PuppetMasterClient(channel);
+                var send = new PartitionRequest { Name = request.Name };
+                send.Ids.AddRange(server_ids);
+                client.Partition(send); 
+
+            }
+        }
+
+        public void status()
+        {
+            Console.WriteLine("Current Connections:");
+            foreach (KeyValuePair<string, string> server in this.network)
+            {
+                Console.WriteLine("Id: " + server.Key + " Url: " + server.Value);
+            }
+            Console.WriteLine("Known partitions:");
+            foreach (KeyValuePair<string, List<string>> server in this.partitions)
+            {
+                Console.WriteLine("Partition: " + server.Key + " Servers: " + server.Value.ToString());
+            }
+            Console.WriteLine("Known masters:");
+            foreach (KeyValuePair<string, string> server in this.masters)
+            {
+                Console.WriteLine("Partition: " + server.Key + " Master: " + server.Value);
+            }
+
         }
     }
 }

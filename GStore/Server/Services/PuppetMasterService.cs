@@ -45,14 +45,14 @@ namespace Server
         {
             Console.WriteLine("Partition request received");
 
-            //TO DO: implement
+            service.partition(request);
             return Task.FromResult(new PartitionResponse());
         }
         public override Task<CrashResponse> Crash(CrashRequest request, ServerCallContext context)
         {
             Console.WriteLine("Crash request received");
 
-            //TO DO: implement
+            service.crash();
             return Task.FromResult(new CrashResponse());
         }
         public override Task<UnfreezeResponse> Unfreeze(UnfreezeRequest request, ServerCallContext context)
