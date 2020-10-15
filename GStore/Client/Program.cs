@@ -11,12 +11,12 @@ namespace Client
 
     public class ServerService : PuppetMaster.PuppetMasterBase
     {
-        public override Task<StatusResponse> Status(
+        public override Task<StatusInfo> Status(
             StatusRequest request, ServerCallContext context)
         {
             ServerInfo server = ServerInfo.Instance();
 
-            return Task.FromResult(new StatusResponse { IsClient = true, IsProcessComplete = server.ExecFinish } );
+            return Task.FromResult(new StatusInfo { IsClient = true, IsProcessComplete = server.ExecFinish } );
         }
     }
 

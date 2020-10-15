@@ -12,8 +12,12 @@ service PuppetMaster {
 	rpc Freeze(FreezeRequest) returns (FreezeResponse);
 	rpc Partition(PartitionRequest) returns (PartitionResponse);
 	rpc Replication(ReplicationRequest) returns (ReplicationResponse);
-	rpc Status(StatusRequest) returns (StatusResponse);
+	rpc Status(StatusRequest) returns (StatusInfo);
 	rpc Unfreeze(UnfreezeRequest) returns (UnfreezeResponse);
+}
+
+service Status {
+	rpc Status(StatusInfo) returns (StatusResponse);
 }
 
 message ClientRequest {
@@ -47,11 +51,14 @@ message ServerRequest {
 	string url = 2;
 	int64 min_delay = 3;
 	int64 max_delay = 4;
+	// TODO: Add optional parameters
 }
 message ServerResponse {}
 
 message StatusRequest {}
-message StatusResponse {
+message StatusResponse {}
+message StatusInfo {
+	// TODO: Use union to select either server or client data
 	bool isClient = 1;
 	bool isProcessComplete = 2;
 }
