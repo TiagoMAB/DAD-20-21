@@ -24,35 +24,42 @@ namespace Server
             Console.WriteLine("Status request received");
 
             //TO DO: implement
-
             return Task.FromResult(new StatusResponse());
         }
 
         public override Task<FreezeResponse> Freeze(FreezeRequest request, ServerCallContext context)
         {
-            //TO DO: implement
-
+            Console.WriteLine("Freeze request received");
+            service.freeze();
             return Task.FromResult(new FreezeResponse());
         }
 
         public override Task<ReplicationResponse> Replication(ReplicationRequest request, ServerCallContext context)
         {
+            Console.WriteLine("Replication request received");
+
             //TO DO: implement
             return Task.FromResult(new ReplicationResponse());
         }
         public override Task<PartitionResponse> Partition(PartitionRequest request, ServerCallContext context)
         {
+            Console.WriteLine("Partition request received");
+
             //TO DO: implement
             return Task.FromResult(new PartitionResponse());
         }
         public override Task<CrashResponse> Crash(CrashRequest request, ServerCallContext context)
         {
+            Console.WriteLine("Crash request received");
+
             //TO DO: implement
             return Task.FromResult(new CrashResponse());
         }
         public override Task<UnfreezeResponse> Unfreeze(UnfreezeRequest request, ServerCallContext context)
         {
-            //TO DO: implement
+            Console.WriteLine("Unfreeze request received");
+
+            service.unfreeze();
             return Task.FromResult(new UnfreezeResponse());
         }
 

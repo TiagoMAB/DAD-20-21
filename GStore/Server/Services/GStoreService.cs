@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Grpc.Core;
@@ -13,6 +14,9 @@ namespace Server
         private readonly string id;
         private readonly string URL;
         private Dictionary<string, string> network = new Dictionary<string, string>();  // Dictionary<server_id, URL>
+        private bool frozen = false;
+        private static Mutex m = new Mutex();
+
             
         public GStoreService(string id, string URL, string otherId, string otherURL)
         {
@@ -52,6 +56,11 @@ namespace Server
         public override Task<GStore.HandshakeReply> handshake(HandshakeRequest request, ServerCallContext context)
         {
             Console.WriteLine("Handshake request received");
+            if (frozen)
+            {
+                m.WaitOne();
+                m.ReleaseMutex();
+            }
 
             HandshakeReply reply = new HandshakeReply();
             foreach (KeyValuePair<string, string> server in this.network) 
@@ -67,6 +76,12 @@ namespace Server
         public override Task<GStore.RegisterReply> register(RegisterRequest request, ServerCallContext context)
         {
             Console.WriteLine("Register request received");
+            if (frozen)
+            {
+                m.WaitOne();
+                m.ReleaseMutex();
+            }
+
             try
             {
                 network.Add(request.Id, request.Url);
@@ -95,6 +110,20 @@ namespace Server
         {
             Console.WriteLine("Read");
             return Task.FromResult(new ReadReply());
+        }
+
+        public void freeze()
+        {
+            m.WaitOne();
+            frozen = true;
+            Console.WriteLine("Frozen = true");
+        }
+
+        public void unfreeze()
+        {
+            m.ReleaseMutex();
+            frozen = false;
+            Console.WriteLine("Frozen = false");
         }
     }
 }
