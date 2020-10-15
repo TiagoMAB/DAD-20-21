@@ -51,16 +51,24 @@ message ServerRequest {
 	string url = 2;
 	int64 min_delay = 3;
 	int64 max_delay = 4;
-	// TODO: Add optional parameters
+	string host_conn = 5;
+	string host_port = 6;
 }
 message ServerResponse {}
 
 message StatusRequest {}
 message StatusResponse {}
+
+message ClientStatus {
+	bool isProcessComplete = 1;
+}
+message ServerStatus {}
+
 message StatusInfo {
-	// TODO: Use union to select either server or client data
-	bool isClient = 1;
-	bool isProcessComplete = 2;
+	oneof status {
+		ClientStatus client = 1;
+		ServerStatus server = 2;
+	}
 }
 
 message UnfreezeRequest {}

@@ -16,7 +16,7 @@ namespace Client
         {
             ServerInfo server = ServerInfo.Instance();
 
-            return Task.FromResult(new StatusInfo { IsClient = true, IsProcessComplete = server.ExecFinish } );
+            return Task.FromResult(new StatusInfo { Client = { IsProcessComplete = true } } );
         }
     }
 
