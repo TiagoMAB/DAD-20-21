@@ -12,7 +12,7 @@ namespace PuppetMaster.Commands {
         }
 
         public async virtual Task Execute() {
-            await Task.Run(DoWork);
+            await Task.Run(DoWork).ConfigureAwait(false);
         }
         protected abstract void DoWork();
 

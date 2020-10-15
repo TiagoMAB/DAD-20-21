@@ -24,7 +24,8 @@ namespace Server
             min_delay = Int64.Parse(args[2]);
             max_delay = Int64.Parse(args[3]);
             
-            string[] details = URL.Split(':');
+            string[] details = URL.Split("//");
+            details = details[1].Split(':');
 
             host = details[0];
             port = int.Parse(details[1]);

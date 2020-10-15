@@ -14,18 +14,27 @@ namespace PuppetMaster {
 
             if (path.Equals("")) {
                 MessageBox.Show("Path cannot be empty", "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             } else if (!File.Exists(path)) {
                 MessageBox.Show(String.Format("File \"{0}\" does not exist", path), "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
 
             try {
+                // TODO: Avoid locking the GUI thread
                 await Parser.parseScript(this, path).Execute();
+            } catch (InvalidURLException ex) {
+                MessageBox.Show(String.Format("Invalid address '{0}' on command '{1}'", ex.Url, ex.Command), "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Error);
             } catch (PartitionParameterNumberMismatchException ex) {
                 MessageBox.Show(String.Format("Partition command expected {0} server ids, but {1} were given", ex.Expected, ex.Given), "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Error);
             } catch (UnknownCommandException ex) {
                 MessageBox.Show(String.Format("Unknown command '{0}' in given file", ex.Command), "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            } catch (UnknownServerException ex) {
+                MessageBox.Show(String.Format("Unknown server '{0}' in command '{1}'", ex.Id, ex.Command), "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Error);
             } catch (WrongArgumentNumberException ex) {
                 MessageBox.Show(String.Format("Command '{0}' is executed with {1} parameters, but {2} were given", ex.Command, ex.Expected, ex.Given), "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            } catch (Exception ex) {
+                System.Diagnostics.Debug.WriteLine(ex);
             }
         }
 

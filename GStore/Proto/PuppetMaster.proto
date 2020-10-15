@@ -17,9 +17,10 @@ service PuppetMaster {
 }
 
 message ClientRequest {
-	string script = 1;
-	string clientUrl = 2;
-	string serverUrl = 3;
+	string id = 1;
+	string script = 2;
+	string clientUrl = 3;
+	string serverUrl = 4;
 }
 message ClientResponse {}
 
