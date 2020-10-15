@@ -52,14 +52,22 @@ namespace Server
             server.Start();
 
             Console.WriteLine("GStore server running on " + host + " listening on port " + port);
-            Console.WriteLine("Press any key to freeze the server...");
+            Console.WriteLine("Press any key to status the server...");
             Console.ReadKey();
-            gstoreservice.freeze();
-            Console.WriteLine("Press any key to unfreeze the server...");
+            gstoreservice.status();
+            if (otherURL == null)
+            {
+                Console.WriteLine("Press any key to partition the server...");
+                Console.ReadKey();
+                gstoreservice.partition(new PartitionRequest { Name = "partition1", Ids = { "server1", "server2" } });
+                gstoreservice.partition(new PartitionRequest { Name = "partition2", Ids = { "server2", "server3" } });
+                gstoreservice.partition(new PartitionRequest { Name = "partition3", Ids = { "server3", "server1" } });
+            }
+            Console.WriteLine("Press any key to status the server...");
             Console.ReadKey();
-            gstoreservice.unfreeze();
+            gstoreservice.status();
+            Console.ReadKey();
             Console.WriteLine("Press any key to stop the server...");
-            Console.ReadKey();
             server.ShutdownAsync().Wait();
         }
     }
