@@ -17,6 +17,7 @@ namespace Client.Commands
         {
             System.Diagnostics.Debug.WriteLine(String.Format("List objects stored in server {0}", this.serverId));
 
+            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
             var channel = GrpcChannel.ForAddress("https://localhost:5001"); //server ports?
             var client = new GStore.GStore.GStoreClient(channel);
 

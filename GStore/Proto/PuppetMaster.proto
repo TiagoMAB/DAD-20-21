@@ -12,14 +12,19 @@ service PuppetMaster {
 	rpc Freeze(FreezeRequest) returns (FreezeResponse);
 	rpc Partition(PartitionRequest) returns (PartitionResponse);
 	rpc Replication(ReplicationRequest) returns (ReplicationResponse);
-	rpc Status(StatusRequest) returns (StatusResponse);
+	rpc Status(StatusRequest) returns (StatusInfo);
 	rpc Unfreeze(UnfreezeRequest) returns (UnfreezeResponse);
 }
 
+service Status {
+	rpc Status(StatusInfo) returns (StatusResponse);
+}
+
 message ClientRequest {
-	string script = 1;
-	string clientUrl = 2;
-	string serverUrl = 3;
+	string id = 1;
+	string script = 2;
+	string clientUrl = 3;
+	string serverUrl = 4;
 }
 message ClientResponse {}
 
@@ -46,13 +51,24 @@ message ServerRequest {
 	string url = 2;
 	int64 min_delay = 3;
 	int64 max_delay = 4;
+	string host_conn = 5;
+	string host_port = 6;
 }
 message ServerResponse {}
 
 message StatusRequest {}
-message StatusResponse {
-	bool isClient = 1;
-	bool isProcessComplete = 2;
+message StatusResponse {}
+
+message ClientStatus {
+	bool isProcessComplete = 1;
+}
+message ServerStatus {}
+
+message StatusInfo {
+	oneof status {
+		ClientStatus client = 1;
+		ServerStatus server = 2;
+	}
 }
 
 message UnfreezeRequest {}

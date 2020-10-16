@@ -17,12 +17,14 @@ namespace PCS {
         public override Task<ClientResponse> Client(ClientRequest request, ServerCallContext context) {
             Console.WriteLine(String.Format("[{1}] Request to launch client with script file '{0}'", request.Script, DateTime.Now.ToString()));
 
-            string[] serverAddress = request.ServerUrl.Split(":");
-            string[] clientAddress = request.ClientUrl.Split(":");
+            string[] address = request.ServerUrl.Split(":");
+            string[] serverAddress = { address[0] + ":" + address[1], address[2] };
+
+            address = request.ClientUrl.Split(":");
+            string[] clientAddress = { address[0] + ":" + address[1], address[2] };
 
             try {
-                // TODO: Missing script parameter on client
-                ProcessStartInfo p = new ProcessStartInfo("cmd.exe", String.Format("/c start {0} {1} {2} {3} {4}", this.client, clientAddress[0], clientAddress[1], serverAddress[0], serverAddress[1]));
+                ProcessStartInfo p = new ProcessStartInfo("cmd.exe", String.Format("/c start {0} {1} {2} {3} {4} {5}", this.client, clientAddress[0], clientAddress[1], request.Script, serverAddress[0], serverAddress[1]));
                 if (Process.Start(p) == null) {
                     // TODO: handle error
                 }
@@ -37,7 +39,7 @@ namespace PCS {
             Console.WriteLine(String.Format("[{4}] Request to launch server with id '{0}' at '{1}' with a min delay of {2}ms and max delay of {3}ms", request.Id, request.Url, request.MinDelay, request.MaxDelay, DateTime.Now.ToString()));
 
             try {
-                ProcessStartInfo p = new ProcessStartInfo("cmd.exe", String.Format("/c start {0} {1} {2} {3} {4}", this.server, request.Id, request.Url, request.MinDelay, request.MaxDelay));
+                ProcessStartInfo p = new ProcessStartInfo("cmd.exe", String.Format("/c start {0} {1} {2} {3} {4} {5} {6}", this.server, request.Id, request.Url, request.MinDelay, request.MaxDelay, request.HostConn, request.HostPort));
                 if (Process.Start(p) == null) {
                     // TODO: handle error
                 }

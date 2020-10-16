@@ -23,7 +23,6 @@ namespace Server
             URL = args[1];
             min_delay = Int64.Parse(args[2]);
             max_delay = Int64.Parse(args[3]);
-
             string[] details = URL.Split("//");
             details = details[1].Split(':');
 

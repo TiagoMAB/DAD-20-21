@@ -10,6 +10,7 @@ namespace PuppetMaster.Commands {
         }
 
         protected override void DoWork() {
+            // TODO: Implement????
             Log(String.Format("ReplicationFactor set to {0}", this.factor));
         }
     }

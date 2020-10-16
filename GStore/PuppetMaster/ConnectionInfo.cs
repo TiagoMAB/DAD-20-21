@@ -2,8 +2,6 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using System;
-using System.Runtime.CompilerServices;
-using System.Xml.Serialization;
 
 namespace PuppetMaster {
     static class ConnectionInfo {

@@ -94,6 +94,6 @@ service GStore {
   rpc write (WriteRequest) returns (WriteReply);
   rpc listServer (ListServerRequest) returns (ListServerReply);
   rpc serverInfo (ServerInfoRequest) returns (ServerInfoReply);
-  rpc handshake(HandshakeRequest) returns (HandshakeReply);
-  rpc register(RegisterRequest) returns (RegisterReply);
+  rpc handshake (HandshakeRequest) returns (HandshakeReply);
+  rpc register (RegisterRequest) returns (RegisterReply);
 }

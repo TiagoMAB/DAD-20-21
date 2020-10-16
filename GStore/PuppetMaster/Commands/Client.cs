@@ -1,5 +1,7 @@
 ﻿using Grpc.Core;
+using Grpc.Net.Client;
 using GStore;
+using PuppetMaster.Exceptions;
 using System;
 
 namespace PuppetMaster.Commands {
@@ -12,11 +14,13 @@ namespace PuppetMaster.Commands {
         public Client(PuppetMaster form, string username, string URL, string file) : base(form) {
             string[] address = URL.Split(':');
 
-            // TODO: Assert correct format of address
+            if(!URL.StartsWith("http://") || address.Length != 3) {
+                throw new InvalidURLException("Client", URL);
+            }
 
             this.username = username;
-            this.host = address[0];
-            this.port = address[1];
+            this.host = address[0] + ":" + address[1];
+            this.port = address[2];
             this.file = file;
         }
 
@@ -25,15 +29,32 @@ namespace PuppetMaster.Commands {
 
             ConnectionInfo.AddClient(this.username, URL);
 
-            Channel channel = new Channel(this.host + ":10000", ChannelCredentials.Insecure);
+            GrpcChannel channel = GrpcChannel.ForAddress(this.host + ":10000");
 
             PCS.PCSClient client = new PCS.PCSClient(channel);
 
             try {
                 client.Client(new ClientRequest { ClientUrl = URL, Script = this.file, ServerUrl = ConnectionInfo.GetRandomServer() });
             } catch (RpcException e) {
-                // TODO: Improve error handling
-                System.Diagnostics.Debug.WriteLine(e);
+                String command = String.Format("Create client '{0}' at '{1}'", this.username, URL);
+
+                switch(e.StatusCode) {
+                    case StatusCode.Aborted:
+                        Log(String.Format("ABORTED: {0}", command));
+                        return;
+                    case StatusCode.Cancelled:
+                        Log(String.Format("CANCELLED: {0}", command));
+                        return;
+                    case StatusCode.DeadlineExceeded:
+                        Log(String.Format("TIMEOUT: {0}", command));
+                        return;
+                    case StatusCode.Internal:
+                        Log(String.Format("INTERNAL ERROR: {0}", command));
+                        return;
+                    default:
+                        Log(String.Format("UNKNOWN ERROR: {0}", command));
+                        return;
+                }
             }
 
             channel.ShutdownAsync().Wait();

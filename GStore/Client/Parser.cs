@@ -8,13 +8,9 @@ namespace Client
 {
     class Parser
     {
-        public static Script ParseScript()
+        public static Script ParseScript(string path)
         {
             Script script = new Script();
-
-            Console.WriteLine("Insert the file path: ");
-
-            string path = Console.ReadLine();
             string line;
 
             if (!File.Exists(path))

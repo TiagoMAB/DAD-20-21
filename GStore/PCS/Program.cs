@@ -5,7 +5,7 @@ namespace PCS
 {
     class Program
     {
-        const int port = 10000;
+        const int PORT = 10000;
 
         static void Main(string[] args)
         {
@@ -22,12 +22,12 @@ namespace PCS
             Server server = new Server
             {
                 Services = { GStore.PCS.BindService(new PCSImpl(clientPath, serverPath)) },
-                Ports    = { new ServerPort("localhost", port, ServerCredentials.Insecure) }
+                Ports = { new ServerPort("localhost", PORT, ServerCredentials.Insecure) },
             };
 
             server.Start();
 
-            Console.WriteLine("PCS running on port " + port);
+            Console.WriteLine("PCS running on port " + PORT);
             Console.WriteLine("Press any key to shutdown...");
             Console.ReadKey();
 
