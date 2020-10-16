@@ -45,12 +45,17 @@ message ServerInfoRequest {
 
 message ServerInfoReply {
 	repeated Server servers = 1;
+	repeated Partition partition = 2;
 
 	message Server {
-		string serverId = 1;
+		string id = 1;
 		string url = 2;
-		repeated string masterPartitionId = 3;
-		repeated string partitions = 4;
+	}
+
+	message Partition {
+		string name = 1;
+		string master = 2;
+		repeated string partitions = 3;
 	}
 }
 

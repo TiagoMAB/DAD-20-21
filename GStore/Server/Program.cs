@@ -23,7 +23,6 @@ namespace Server
             URL = args[1];
             min_delay = Int64.Parse(args[2]);
             max_delay = Int64.Parse(args[3]);
-            
             string[] details = URL.Split("//");
             details = details[1].Split(':');
 
@@ -36,18 +35,43 @@ namespace Server
                 otherURL = args[5];
             }
 
+            Console.WriteLine(id);
+            Console.WriteLine(URL);
+            Console.WriteLine(otherId);
+            Console.WriteLine(otherURL);
+            var gstoreservice = new GStoreService(id, URL, otherId, otherURL);
+            var puppetmasterservice = new PuppetMasterService(gstoreservice);
+
             Grpc.Core.Server server = new Grpc.Core.Server
             {
-                Services = { GStore.GStore.BindService(new GStoreService(id, URL, otherId, otherURL))},
+                Services = { GStore.GStore.BindService(gstoreservice), PuppetMaster.BindService(puppetmasterservice) },
                 Ports = { new ServerPort(host, port, ServerCredentials.Insecure) }
             };
 
             server.Start();
 
             Console.WriteLine("GStore server running on " + host + " listening on port " + port);
+            Console.WriteLine("Press any key to status the server...");
+            Console.ReadKey();
+            gstoreservice.status();
+            if (otherURL == null)
+            {
+                Console.WriteLine("Press any key to partition the server...");
+                Console.ReadKey();
+                gstoreservice.partition(new PartitionRequest { Name = "partition1", Ids = { "server1", "server2" } });
+                gstoreservice.partition(new PartitionRequest { Name = "partition2", Ids = { "server2", "server3" } });
+                gstoreservice.partition(new PartitionRequest { Name = "partition3", Ids = { "server3", "server1" } });
+            }
+            Console.WriteLine("Press any key to status the server...");
+            Console.ReadKey();
+            gstoreservice.status();
+            Console.WriteLine("Press any key to print ServerInfo of the server...");
+            Console.ReadKey();
+            ServerInfoReply r = gstoreservice.ServerInfo(new ServerInfoRequest());
+            Console.WriteLine(r.Servers.ToString());
+            Console.WriteLine(r.Partition.ToString());
             Console.WriteLine("Press any key to stop the server...");
             Console.ReadKey();
-
             server.ShutdownAsync().Wait();
         }
     }
