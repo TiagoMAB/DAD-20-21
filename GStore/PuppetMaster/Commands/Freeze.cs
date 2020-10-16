@@ -3,6 +3,7 @@ using Grpc.Net.Client;
 using GStore;
 using PuppetMaster.Exceptions;
 using System;
+using System.Threading.Tasks;
 
 namespace PuppetMaster.Commands {
     public class Freeze : Command {
@@ -11,7 +12,7 @@ namespace PuppetMaster.Commands {
         public Freeze(PuppetMaster form, string id) : base(form) {
             this.id = id;
         }
-        protected override void DoWork() {
+        protected override async Task DoWork() {
             String URL = ConnectionInfo.GetServer(this.id);
 
             if(URL == null) {
@@ -23,30 +24,30 @@ namespace PuppetMaster.Commands {
             GStore.PuppetMaster.PuppetMasterClient client = new GStore.PuppetMaster.PuppetMasterClient(channel);
 
             try {
-                client.Freeze(new FreezeRequest { } );
+                await client.FreezeAsync(new FreezeRequest { } );
+
+                Log(String.Format("Freezed server '{0}'", this.id));
             } catch (RpcException e) {
                 String command = String.Format("Freeze server '{0}'", this.id);
 
                 switch(e.StatusCode) {
                     case StatusCode.Aborted:
                         Log(String.Format("ABORTED: {0}", command));
-                        return;
+                        break;
                     case StatusCode.Cancelled:
                         Log(String.Format("CANCELLED: {0}", command));
-                        return;
+                        break;
                     case StatusCode.DeadlineExceeded:
                         Log(String.Format("TIMEOUT: {0}", command));
-                        return;
+                        break;
                     case StatusCode.Internal:
                         Log(String.Format("INTERNAL ERROR: {0}", command));
-                        return;
+                        break;
                     default:
                         Log(String.Format("UNKNOWN ERROR: {0}", command));
-                        return;
+                        break;
                 }
             }
-
-            Log(String.Format("Freezed server '{0}'", this.id));
         }
     }
 }

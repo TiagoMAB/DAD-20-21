@@ -3,6 +3,7 @@ using Grpc.Net.Client;
 using GStore;
 using PuppetMaster.Exceptions;
 using System;
+using System.Threading.Tasks;
 
 namespace PuppetMaster.Commands {
     public class Client : Command {
@@ -24,7 +25,7 @@ namespace PuppetMaster.Commands {
             this.file = file;
         }
 
-        protected override void DoWork() {
+        protected override async Task DoWork() {
             string URL = this.host + ":" + this.port;
 
             ConnectionInfo.AddClient(this.username, URL);
@@ -34,32 +35,32 @@ namespace PuppetMaster.Commands {
             PCS.PCSClient client = new PCS.PCSClient(channel);
 
             try {
-                client.Client(new ClientRequest { ClientUrl = URL, Script = this.file, ServerUrl = ConnectionInfo.GetRandomServer() });
+                await client.ClientAsync(new ClientRequest { ClientUrl = URL, Script = this.file, ServerUrl = ConnectionInfo.GetRandomServer() });
+
+                channel.ShutdownAsync().Wait();
+
+                Log(String.Format("Client '{0}' started", this.username));
             } catch (RpcException e) {
                 String command = String.Format("Create client '{0}' at '{1}'", this.username, URL);
 
                 switch(e.StatusCode) {
                     case StatusCode.Aborted:
                         Log(String.Format("ABORTED: {0}", command));
-                        return;
+                        break;
                     case StatusCode.Cancelled:
                         Log(String.Format("CANCELLED: {0}", command));
-                        return;
+                        break;
                     case StatusCode.DeadlineExceeded:
                         Log(String.Format("TIMEOUT: {0}", command));
-                        return;
+                        break;
                     case StatusCode.Internal:
                         Log(String.Format("INTERNAL ERROR: {0}", command));
-                        return;
+                        break;
                     default:
                         Log(String.Format("UNKNOWN ERROR: {0}", command));
-                        return;
+                        break;
                 }
             }
-
-            channel.ShutdownAsync().Wait();
-
-            Log(String.Format("Client '{0}' started", this.username));
         }
     }
 }

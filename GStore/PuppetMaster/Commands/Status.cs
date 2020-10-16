@@ -11,7 +11,7 @@ namespace PuppetMaster.Commands
     {
         public Status(PuppetMaster form) : base(form) { }
 
-        protected override void DoWork()
+        protected override async Task DoWork()
         {
             List<Task> tasks = new List<Task>();
 
@@ -20,41 +20,41 @@ namespace PuppetMaster.Commands
             StatusRequest request = new StatusRequest { };
 
             foreach(var pair in ids) {
-                tasks.Add(Task.Run(() => { 
+                tasks.Add(Task.Run(async () => { 
                     GrpcChannel channel = GrpcChannel.ForAddress(pair.Value);
 
                     GStore.PuppetMaster.PuppetMasterClient client = new GStore.PuppetMaster.PuppetMasterClient(channel);
 
                     try {
-                        client.Status(request);
+                        await client.StatusAsync(request);
+
+                        // TODO: Print status of each client
+                        Log(String.Format("Got status of '{0}'", pair.Key));
                     } catch (RpcException e) {
                         String command = String.Format("Get status of '{0}'", pair.Key);
 
                         switch (e.StatusCode) {
                             case StatusCode.Aborted:
                                 Log(String.Format("ABORTED: {0}", command));
-                                return;
+                                break;
                             case StatusCode.Cancelled:
                                 Log(String.Format("CANCELLED: {0}", command));
-                                return;
+                                break;
                             case StatusCode.DeadlineExceeded:
                                 Log(String.Format("TIMEOUT: {0}", command));
-                                return;
+                                break;
                             case StatusCode.Internal:
                                 Log(String.Format("INTERNAL ERROR: {0}", command));
-                                return;
+                                break;
                             default:
                                 Log(String.Format("UNKNOWN ERROR: {0}", command));
-                                return;
+                                break;
                         }
                     }
-
-                    // TODO: Print status of each client
-                    Log(String.Format("Got status of '{0}'", pair.Key));
                 }));
             }
 
-            Task.WhenAll(tasks).Wait();
+            await Task.WhenAll(tasks);
 
             Log("All status received");
         }
