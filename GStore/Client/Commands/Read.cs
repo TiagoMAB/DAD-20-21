@@ -41,6 +41,7 @@ namespace Client.Commands
 
                     Console.WriteLine(response.Value);
                     //TODO: é suposto o server retornar N/A e sendo esse o caso é necessário procurar no secundário?
+                    //TODO: talvez recebe se um null em vez de N/A do server, e sendo esse o caso falta meter um if no writeline
                     return;
                 }
                 catch (RpcException e) when (e.StatusCode == StatusCode.Unavailable) {
