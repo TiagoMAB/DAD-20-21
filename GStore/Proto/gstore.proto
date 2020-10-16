@@ -90,10 +90,10 @@ message RegisterReply {
 }
 
 service GStore {
-  rpc read (ReadRequest) returns (ReadReply);
-  rpc write (WriteRequest) returns (WriteReply);
-  rpc listServer (ListServerRequest) returns (ListServerReply);
-  rpc serverInfo (ServerInfoRequest) returns (ServerInfoReply);
-  rpc handshake (HandshakeRequest) returns (HandshakeReply);
-  rpc register (RegisterRequest) returns (RegisterReply);
+  rpc Read (ReadRequest) returns (ReadReply);
+  rpc Write (WriteRequest) returns (WriteReply);
+  rpc ListServer (ListServerRequest) returns (ListServerReply);
+  rpc ServerInfo (ServerInfoRequest) returns (ServerInfoReply);
+  rpc Handshake (HandshakeRequest) returns (HandshakeReply);
+  rpc Register (RegisterRequest) returns (RegisterReply);
 }
