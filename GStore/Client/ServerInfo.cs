@@ -10,12 +10,12 @@ namespace Client
     {
         static ServerInfo serverInfo = null;
 
-        readonly Dictionary<string, string> serverURL = new Dictionary<string, string>(); // <serverId, URL>
+        readonly Dictionary<string, string> serverURL = new Dictionary<string, string>();                   // <serverId, URL>
 
-        readonly Dictionary<string, string> masterURL = new Dictionary<string, string>(); // <partitionId, URL>
+        readonly Dictionary<string, string> masterURL = new Dictionary<string, string>();                   // <partitionId, URL>
 
         //TODO: maybe not needed
-        readonly Dictionary<string, List<string>> serverReplicas = new Dictionary<string, List<string>>(); // <URL, partitionIds>
+        readonly Dictionary<string, List<string>> serverReplicas = new Dictionary<string, List<string>>();  // <URL, partitionIds>
 
         public string CurrentServerURL { get; set; }
         public bool ExecFinish { get; set; }
@@ -29,6 +29,13 @@ namespace Client
                 return serverInfo;
         }
 
+        public string GetMasterURLByPartitionId(string partitionId)
+        {
+            string value;
+            if (masterURL.TryGetValue(partitionId, out value))
+                return value;
+            else return null;
+        }
         public List<string> GetPartitionsByURL(string url)
         {
             List<string> value;

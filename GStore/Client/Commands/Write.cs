@@ -1,6 +1,8 @@
 ﻿using System;
+using Grpc.Core;
 using Grpc.Net.Client;
 using GStore;
+using Client.Exceptions;
 
 namespace Client.Commands
 {
@@ -19,18 +21,31 @@ namespace Client.Commands
 
         public void Execute()
         {
-            // TODO: Implement
+            ServerInfo serverInfo = ServerInfo.Instance();
+
             System.Diagnostics.Debug.WriteLine(String.Format("Write in partition {0} with object id {1} and value {2}", this.partitionId, this.objectId, this.value));
 
-            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-            var channel = GrpcChannel.ForAddress("https://localhost:5001"); //server ports?
+            string masterURL = serverInfo.GetMasterURLByPartitionId(this.partitionId);
+            if (masterURL == null)
+                throw new NonExistentServerException(String.Format("Master server of partition {0} not found.", this.partitionId));
+
+            if (!String.Equals(serverInfo.CurrentServerURL, masterURL))
+                serverInfo.CurrentServerURL = masterURL;
+
+            var channel = GrpcChannel.ForAddress(serverInfo.CurrentServerURL);
             var client = new GStore.GStore.GStoreClient(channel);
 
-            // TODO: Change to the master replica server
-            // write calls can be made asynchronously 
-            client.write(new WriteRequest { PartitionId = this.partitionId, ObjectId = this.objectId, Value = this.value } );
+            try
+            {
+                //TODO: a chamada deve ser async no codigo base?
+                client.write(new WriteRequest { PartitionId = this.partitionId, ObjectId = this.objectId, Value = this.value });
+            }
+            catch (RpcException e) when (e.StatusCode == StatusCode.Unavailable)
+            {
+                System.Diagnostics.Debug.WriteLine(String.Format("Master server with URL {0} not available. Exiting...", serverInfo.CurrentServerURL));
+                throw;
+            }
 
-            Console.WriteLine();
         }
     }
 }

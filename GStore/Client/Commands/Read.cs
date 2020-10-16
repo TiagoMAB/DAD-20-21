@@ -4,7 +4,6 @@ using Grpc.Core;
 using Grpc.Net.Client;
 using GStore;
 using Client.Exceptions;
-using System.Linq;
 
 namespace Client.Commands
 {
