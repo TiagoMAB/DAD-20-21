@@ -66,8 +66,13 @@ namespace Server
             Console.WriteLine("Press any key to status the server...");
             Console.ReadKey();
             gstoreservice.status();
+            Console.WriteLine("Press any key to print ServerInfo of the server...");
             Console.ReadKey();
+            ServerInfoReply r = gstoreservice.ServerInfo(new ServerInfoRequest());
+            Console.WriteLine(r.Servers.ToString());
+            Console.WriteLine(r.Partition.ToString());
             Console.WriteLine("Press any key to stop the server...");
+            Console.ReadKey();
             server.ShutdownAsync().Wait();
         }
     }
