@@ -37,6 +37,7 @@ namespace PuppetMaster.Commands {
             try {
                 await client.ClientAsync(new ClientRequest { ClientUrl = URL, Script = this.file, ServerUrl = ConnectionInfo.GetRandomServer() });
 
+                // FIXME: await or no shutdown?
                 channel.ShutdownAsync().Wait();
 
                 Log(String.Format("Client '{0}' started", this.username));

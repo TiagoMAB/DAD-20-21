@@ -26,10 +26,9 @@ namespace PuppetMaster.Commands
                     GStore.PuppetMaster.PuppetMasterClient client = new GStore.PuppetMaster.PuppetMasterClient(channel);
 
                     try {
-                        await client.StatusAsync(request);
+                        StatusInfo response = await client.StatusAsync(request);
 
-                        // TODO: Print status of each client
-                        Log(String.Format("Got status of '{0}'", pair.Key));
+                        Log(StatusImpl.PrettyStatus(response));
                     } catch (RpcException e) {
                         String command = String.Format("Get status of '{0}'", pair.Key);
 
