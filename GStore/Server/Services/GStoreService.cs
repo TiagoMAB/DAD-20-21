@@ -14,16 +14,6 @@ namespace Server
             this.server = server;
         }
 
-        public override Task<HandshakeReply> Handshake(HandshakeRequest request, ServerCallContext context)
-        {
-            return Task.FromResult(server.handshake(request));
-        }
-
-        public override Task<RegisterReply> Register(RegisterRequest request, ServerCallContext context)
-        {
-            return Task.FromResult(server.register(request));
-        }
-
         public override Task<WriteReply> Write(WriteRequest request, ServerCallContext context)
         {
             return Task.FromResult(server.write(request));
@@ -38,5 +28,11 @@ namespace Server
         {
             return Task.FromResult(server.serverInfo(request));
         }
+
+        public override Task<ListServerReply> ListServer(ListServerRequest request, ServerCallContext context)
+        {
+            return Task.FromResult(server.listServer(request));
+        }
+
     }
 }

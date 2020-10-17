@@ -55,38 +55,8 @@ message ServerInfoReply {
 	message Partition {
 		string name = 1;
 		string master = 2;
-		repeated string partitions = 3;
+		repeated string serverIds = 3;
 	}
-}
-
-message HandshakeRequest {
-	
-	string id = 1;
-	string url = 2;
-
-}
-
-message HandshakeReply {
-
-	repeated Info network = 1;
-
-	message Info {
-		string id = 1;
-		string url = 2;
-	}
-
-}
-
-message RegisterRequest {
-	
-	string id = 1;
-	string url = 2;
-
-}
-
-message RegisterReply {
-
-	bool ok = 1;
 }
 
 service GStore {
@@ -94,6 +64,4 @@ service GStore {
   rpc Write (WriteRequest) returns (WriteReply);
   rpc ListServer (ListServerRequest) returns (ListServerReply);
   rpc ServerInfo (ServerInfoRequest) returns (ServerInfoReply);
-  rpc Handshake (HandshakeRequest) returns (HandshakeReply);
-  rpc Register (RegisterRequest) returns (RegisterReply);
 }

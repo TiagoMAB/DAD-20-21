@@ -42,10 +42,10 @@ namespace Server
             var ServerService = new ServerService(id, URL, otherId, otherURL);
             var gstoreservice = new GStoreService(ServerService);
             var puppetmasterservice = new PuppetMasterService(ServerService);
-
+            var servercommunicationservice = new ServerCommunicationService(ServerService);
             Grpc.Core.Server server = new Grpc.Core.Server
             {
-                Services = { GStore.GStore.BindService(gstoreservice), PuppetMaster.BindService(puppetmasterservice) },
+                Services = { GStore.GStore.BindService(gstoreservice), PuppetMaster.BindService(puppetmasterservice), ServerCommunication.BindService(servercommunicationservice) },
                 Ports = { new ServerPort(host, port, ServerCredentials.Insecure) }
             };
 
@@ -60,7 +60,17 @@ namespace Server
                 Console.WriteLine("Press any key to partition the server...");
                 Console.ReadKey();
                 ServerService.partition(new PartitionRequest { Name = "partition1", Ids = { "server1", "server2" } });
+            }
+            else if (id == "server2")
+            {
+                Console.WriteLine("Press any key to partition the server...");
+                Console.ReadKey();
                 ServerService.partition(new PartitionRequest { Name = "partition2", Ids = { "server2", "server3" } });
+            }
+            else
+            {
+                Console.WriteLine("Press any key to partition the server...");
+                Console.ReadKey();
                 ServerService.partition(new PartitionRequest { Name = "partition3", Ids = { "server3", "server1" } });
             }
             Console.WriteLine("Press any key to status the server...");
