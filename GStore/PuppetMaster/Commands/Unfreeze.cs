@@ -3,6 +3,7 @@ using Grpc.Net.Client;
 using GStore;
 using PuppetMaster.Exceptions;
 using System;
+using System.Threading.Tasks;
 
 namespace PuppetMaster.Commands {
     public class Unfreeze : Command {
@@ -12,7 +13,7 @@ namespace PuppetMaster.Commands {
             this.id = id;
         }
 
-        protected override void DoWork() {
+        protected override async Task DoWork() {
             String URL = ConnectionInfo.GetServer(this.id);
 
             if(URL == null) {
@@ -24,29 +25,30 @@ namespace PuppetMaster.Commands {
             GStore.PuppetMaster.PuppetMasterClient client = new GStore.PuppetMaster.PuppetMasterClient(channel);
 
             try {
-                client.Freeze(new FreezeRequest { } );
+                await client.UnfreezeAsync(new UnfreezeRequest { } );
+
+                Log(String.Format("Unfreezed server '{0}'", this.id));
             } catch (RpcException e) {
                 String command = String.Format("Unfreeze server '{0}'", this.id);
 
                 switch(e.StatusCode) {
                     case StatusCode.Aborted:
                         Log(String.Format("ABORTED: {0}", command));
-                        return;
+                        break;
                     case StatusCode.Cancelled:
                         Log(String.Format("CANCELLED: {0}", command));
-                        return;
+                        break;
                     case StatusCode.DeadlineExceeded:
                         Log(String.Format("TIMEOUT: {0}", command));
-                        return;
+                        break;
                     case StatusCode.Internal:
                         Log(String.Format("INTERNAL ERROR: {0}", command));
-                        return;
+                        break;
                     default:
                         Log(String.Format("UNKNOWN ERROR: {0}", command));
-                        return;
+                        break;
                 }
             }
-            Log(String.Format("Unfreezed server '{0}'", this.id));
         }
     }
 }

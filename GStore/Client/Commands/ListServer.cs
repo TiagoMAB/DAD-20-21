@@ -1,6 +1,8 @@
 ﻿using System;
+using Grpc.Core;
 using Grpc.Net.Client;
 using GStore;
+using Client.Exceptions;
 
 namespace Client.Commands
 {
@@ -15,18 +17,30 @@ namespace Client.Commands
 
         public void Execute()
         {
+            ServerInfo serverInfo = ServerInfo.Instance();
+
             System.Diagnostics.Debug.WriteLine(String.Format("List objects stored in server {0}", this.serverId));
 
-            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-            var channel = GrpcChannel.ForAddress("https://localhost:5001"); //server ports?
+            string url = serverInfo.GetURLByServerId(this.serverId);
+            if (url == null)
+                throw new NonExistentServerException(String.Format("Server with id {0} not found.", this.serverId));
+
+            var channel = GrpcChannel.ForAddress(url);
             var client = new GStore.GStore.GStoreClient(channel);
 
-            var response = client.listServer(new ListServerRequest {} );
+            try
+            {
+                ListServerReply response = client.listServer(new ListServerRequest { });
 
-            Console.WriteLine("  Is Master?\tValue");
+                Console.WriteLine("  Is Master?\t\tValue");
 
-            foreach (var value in response.Values)
-                Console.WriteLine("  {1}\t{2}", (value.IsMaster)? "true":"false", value.Value);
+                foreach (ListServerReply.Types.ListValue value in response.Values)
+                    Console.WriteLine("  {1}\t\t{2}", (value.IsMaster)? "true":"false", value.Value);
+            }
+            catch (RpcException e) when (e.StatusCode == StatusCode.Unavailable) {
+                Console.WriteLine("Server with id {0} not available. Exiting...");
+                throw;
+            }
         }
     }
 }

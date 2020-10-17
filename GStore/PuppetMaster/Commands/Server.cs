@@ -3,6 +3,7 @@ using Grpc.Net.Client;
 using GStore;
 using PuppetMaster.Exceptions;
 using System;
+using System.Threading.Tasks;
 
 namespace PuppetMaster.Commands {
     public class Server : Command {
@@ -26,7 +27,7 @@ namespace PuppetMaster.Commands {
             this.maxDelay = maxDelay;
         }
 
-        protected override void DoWork() {
+        protected override async Task DoWork() {
             string URL = this.host + ":" + this.port;
 
             ConnectionInfo.AddServer(this.id, URL);
@@ -36,32 +37,32 @@ namespace PuppetMaster.Commands {
             PCS.PCSClient client = new PCS.PCSClient(channel);
 
             try {
-                client.Server(new ServerRequest { Id = this.id, Url = URL, MaxDelay = this.maxDelay, MinDelay = this.minDelay });
+                await client.ServerAsync(new ServerRequest { Id = this.id, Url = URL, MaxDelay = this.maxDelay, MinDelay = this.minDelay });
+
+                channel.ShutdownAsync().Wait();
+
+                Log(String.Format("Server '{0}' listening at '{1}'", this.id, URL));
             } catch (RpcException e) {
                 String command = String.Format("Create server '{0}' at '{1}'", this.id, URL);
 
                 switch(e.StatusCode) {
                     case StatusCode.Aborted:
                         Log(String.Format("ABORTED: {0}", command));
-                        return;
+                        break;
                     case StatusCode.Cancelled:
                         Log(String.Format("CANCELLED: {0}", command));
-                        return;
+                        break;
                     case StatusCode.DeadlineExceeded:
                         Log(String.Format("TIMEOUT: {0}", command));
-                        return;
+                        break;
                     case StatusCode.Internal:
                         Log(String.Format("INTERNAL ERROR: {0}", command));
-                        return;
+                        break;
                     default:
                         Log(String.Format("UNKNOWN ERROR: {0}", command));
-                        return;
+                        break;
                 }
             }
-
-            channel.ShutdownAsync().Wait();
-
-            Log(String.Format("Server '{0}' listening at '{1}'", this.id, URL));
         }
     }
 }

@@ -20,8 +20,7 @@ namespace PuppetMaster.Commands {
             }
         }
 
-        protected override void DoWork() {
-            Dictionary<string, string> urls = new Dictionary<string, string>();
+        protected override async Task DoWork() {
             string print = String.Format("Partition {0} created\nShared by {1} replicas: ", this.name, this.replicas.Count);
 
             foreach (string id in this.replicas) {
@@ -32,48 +31,41 @@ namespace PuppetMaster.Commands {
                 }
 
                 print = String.Concat(print, String.Format("{0} ", id));
-                urls.Add(id, URL);
             }
-
-            List<Task> tasks = new List<Task>();
 
             PartitionRequest request = new PartitionRequest { Replicas = this.replicas.Count, Name = this.name, Ids = { this.replicas } };
 
-            foreach (var pair in urls) {
-                tasks.Add(Task.Run(() => {
-                    GrpcChannel channel = GrpcChannel.ForAddress(pair.Value);
+            String master = ConnectionInfo.GetServer(this.replicas[0]);
 
-                    GStore.PuppetMaster.PuppetMasterClient client = new GStore.PuppetMaster.PuppetMasterClient(channel);
+            GrpcChannel channel = GrpcChannel.ForAddress(master);
 
-                    try {
-                        client.Partition(request);
-                    } catch (RpcException e) {
-                        String command = String.Format("Create partition '{0}' on '{1}'", this.name, pair.Key);
+            GStore.PuppetMaster.PuppetMasterClient client = new GStore.PuppetMaster.PuppetMasterClient(channel);
 
-                        switch (e.StatusCode) {
-                            case StatusCode.Aborted:
-                                Log(String.Format("ABORTED: {0}", command));
-                                break;
-                            case StatusCode.Cancelled:
-                                Log(String.Format("CANCELLED: {0}", command));
-                                break;
-                            case StatusCode.DeadlineExceeded:
-                                Log(String.Format("TIMEOUT: {0}", command));
-                                break;
-                            case StatusCode.Internal:
-                                Log(String.Format("INTERNAL ERROR: {0}", command));
-                                break;
-                            default:
-                                Log(String.Format("UNKNOWN ERROR: {0}", command));
-                                break;
-                        }
-                    }
+            try {
+                await client.PartitionAsync(request);
 
-                    Log(String.Format("Created partition '{0}' on '{1}'", this.name, pair.Key));
-                }));
+                Log(String.Format("Created partition '{0}'", this.name));
+            } catch (RpcException e) {
+                String command = String.Format("Create partition '{0}'", this.name);
+
+                switch (e.StatusCode) {
+                    case StatusCode.Aborted:
+                        Log(String.Format("ABORTED: {0}", command));
+                        break;
+                    case StatusCode.Cancelled:
+                        Log(String.Format("CANCELLED: {0}", command));
+                        break;
+                    case StatusCode.DeadlineExceeded:
+                        Log(String.Format("TIMEOUT: {0}", command));
+                        break;
+                    case StatusCode.Internal:
+                        Log(String.Format("INTERNAL ERROR: {0}", command));
+                        break;
+                    default:
+                        Log(String.Format("UNKNOWN ERROR: {0}", command));
+                        break;
+                }
             }
-
-            Task.WhenAll(tasks).Wait();
         }
     }
 }
