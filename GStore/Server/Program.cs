@@ -1,6 +1,7 @@
 ﻿using System;
 using GStore;
 using Grpc.Core;
+using Grpc.Net.Client;
 
 namespace Server
 {
@@ -51,21 +52,35 @@ namespace Server
 
             server.Start();
 
+            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+            GrpcChannel channel = GrpcChannel.ForAddress(URL);
+            PuppetMaster.PuppetMasterClient client = new PuppetMaster.PuppetMasterClient(channel);
+            
+
             Console.WriteLine("GStore server running on " + host + " listening on port " + port);
             Console.WriteLine("Press any key to status the server...");
             Console.ReadKey();
-            ServerService.status(new StatusRequest());
+            client.Status(new StatusRequest());
             if (otherURL == null)
             {
                 Console.WriteLine("Press any key to partition the server...");
                 Console.ReadKey();
                 ServerService.partition(new PartitionRequest { Name = "partition1", Ids = { "server1", "server2" } });
+                Console.WriteLine("Press any key to write object the server...");
+                Console.ReadKey();
+                ServerService.write(new WriteRequest { PartitionId = "partition1", ObjectId = "Object1", Value = "VALUE1"});
+                Console.WriteLine("Press any key to read object the server...");
+                Console.ReadKey();
+                Console.WriteLine("Value received: " + ServerService.read(new ReadRequest { PartitionId = "partition1", ObjectId = "Object1" }).Value);
             }
             else if (id == "server2")
             {
                 Console.WriteLine("Press any key to partition the server...");
                 Console.ReadKey();
                 ServerService.partition(new PartitionRequest { Name = "partition2", Ids = { "server2", "server3" } });
+                Console.WriteLine("Press any key to read object the server...");
+                Console.ReadKey();
+                Console.WriteLine("Value received: " + ServerService.read(new ReadRequest { PartitionId = "partition1", ObjectId = "Object1" }).Value);
             }
             else
             {
