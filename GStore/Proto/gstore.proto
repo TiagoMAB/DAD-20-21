@@ -35,7 +35,7 @@ message ListServerReply {
 		string partitionId = 1;
 		string objectId = 2;
 		string value = 3;
-		bool isMaster = 2;
+		bool isMaster = 4;
 	}
 }
 

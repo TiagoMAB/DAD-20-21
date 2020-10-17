@@ -89,8 +89,6 @@ namespace Server
                     Console.WriteLine("Pulsing");
                 } 
             });
-          
-
             
             Console.WriteLine("Frozen = true");
             return new FreezeResponse();
@@ -205,7 +203,6 @@ namespace Server
 
             string objectId = request.ObjectId;
             string value = request.Value;
-            bool taken = false;
 
             lock (partition)
             {
@@ -287,7 +284,18 @@ namespace Server
         public ListServerReply listServer(ListServerRequest request)
         {
             Console.WriteLine("listServer");
-            return new ListServerReply();
+            ListServerReply reply = new ListServerReply();
+
+            foreach (Partition p in partitions.Values)
+            {
+                bool isMaster = p.masterID == this.id;
+                foreach (KeyValuePair<string, string> o in p.objects)
+                {
+                    reply.Values.Add(new ListServerReply.Types.ListValue { PartitionId = p.name, ObjectId = o.Key, Value = o.Value, IsMaster = isMaster });
+                } 
+            }
+
+            return reply;
         }
 
         //
@@ -385,6 +393,5 @@ namespace Server
                 return new RegisterReply { Ok = false };
             }
         }
-
     }
 }
