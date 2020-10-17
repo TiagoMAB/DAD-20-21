@@ -32,9 +32,10 @@ message ListServerReply {
 	repeated ListValue values = 1;
 
 	message ListValue {
-		string value = 1;
+		string partitionId = 1;
+		string objectId = 2;
+		string value = 3;
 		bool isMaster = 2;
-		//maybe add the partitionId
 	}
 }
 
