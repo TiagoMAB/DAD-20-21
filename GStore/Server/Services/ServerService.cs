@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using Grpc.Net.Client;
 using System.Linq;
 using Domain;
+using System.Threading.Tasks;
 
 namespace Server 
 {
@@ -19,8 +20,8 @@ namespace Server
         private Dictionary<string, Partition> partitions = new Dictionary<string, Partition>();                         //  Dictionary<partition_id, Partition>
 
         private bool frozen = false;
-        private static Mutex m = new Mutex();
-    
+        private readonly object key = new object();
+
         public ServerService(string id, string URL, string otherId, string otherURL)
         {
             this.id = id;
@@ -75,28 +76,45 @@ namespace Server
         public FreezeResponse freeze(FreezeRequest request)
         {
             Console.WriteLine("Freeze request received");
-            m.WaitOne();
-            frozen = true;
+
+            Task t = Task.Run(() => 
+            { 
+                lock (key) 
+                {
+                    frozen = true;
+                    Console.WriteLine("Freezing");
+                    Monitor.Wait(key);
+                    Console.WriteLine("Finished Freezing");
+                    Monitor.Pulse(key);
+                    Console.WriteLine("Pulsing");
+                } 
+            });
+          
+
+            
             Console.WriteLine("Frozen = true");
             return new FreezeResponse();
-        }
-
-        public ReplicationResponse replication(ReplicationRequest request)
-        {
-            Console.WriteLine("Replication request received");
-
-            //TO DO: implement
-            return new ReplicationResponse();
         }
 
         public UnfreezeResponse unfreeze(UnfreezeRequest request)
         {
             Console.WriteLine("Unfreeze request received");
 
-            m.ReleaseMutex();
+            lock (key)
+            {
+                Monitor.Pulse(key);
+            }
+
             frozen = false;
             Console.WriteLine("Frozen = false");
             return new UnfreezeResponse();
+        }
+        public ReplicationResponse replication(ReplicationRequest request)
+        {
+            Console.WriteLine("Replication request received");
+
+            //TO DO: implement
+            return new ReplicationResponse();
         }
 
         public CrashResponse crash(CrashRequest request)
@@ -178,26 +196,92 @@ namespace Server
         {
             Console.WriteLine("Write");
             string partitionId = request.PartitionId;
+            Partition partition = partitions[partitionId];
+
+            if (partition.masterID != this.id)
+            {
+                //TO DO: only masters can write an object
+            }
+
             string objectId = request.ObjectId;
             string value = request.Value;
-/*
-            if (!ownPartitions.Contains(partitionId))
+            bool taken = false;
+
+            lock (partition)
             {
-                // TO DO: server doesn't belong to this partition
+                while (partition.locked == true)
+                {
+                    Monitor.Wait(partition);        //Write request is queued until lock is obtained
+                }
+                partition.locked = true;
             }
 
-            foreach (string id in partitions[partitionId]) 
+            foreach (string url in partition.replicas.Values)
             {
+                if (url == this.URL) 
+                { 
+                    continue; 
+                }
+
+                AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+                GrpcChannel channel = GrpcChannel.ForAddress(url);
+                var client = new ServerCommunication.ServerCommunicationClient(channel);
+                LockObjectReply reply = client.LockObject(new LockObjectRequest { PartitionId = partitionId, ObjectId = objectId });                   //TO DO: do it async and evaluate return value
 
             }
-*/
+
+            partition.addObject(objectId, value);
+
+            foreach (string url in partition.replicas.Values)
+            {
+                if (url == this.URL)
+                {
+                    continue;
+                }
+
+                AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);   //TO DO: why is this necessary?
+                GrpcChannel channel = GrpcChannel.ForAddress(url);
+                var client = new ServerCommunication.ServerCommunicationClient(channel);
+                WriteObjectReply reply = client.WriteObject(new WriteObjectRequest { PartitionId = partitionId, ObjectId = objectId, Value = value });                   //TO DO: do it async and evaluate return value
+            }
+
+            lock (partition)
+            {
+                Monitor.Pulse(partition);
+                partition.locked = false;
+            }
+
             return new WriteReply();
         }
 
         public ReadReply read(ReadRequest request)
         {
             Console.WriteLine("Read");
-            return new ReadReply();
+
+            string partitionId = request.PartitionId;
+            string objectId = request.ObjectId;
+
+            if (!partitions.ContainsKey(partitionId))
+            {
+                return new ReadReply { Value = "N/A" };                 // TO DO: handle failure (partition doesn't exist)
+            }
+            else
+            {
+                Partition p = partitions[partitionId];
+                string value;
+
+                lock (p)
+                {
+                    while (p.locked == true)
+                    {
+                        Monitor.Wait(p);        //Write request is queued until lock is obtained
+                    }
+                    value = p.getObject(objectId);
+                    Monitor.Pulse(p);
+                }
+
+                return new ReadReply { Value = value };
+            }
         }
 
         public ListServerReply listServer(ListServerRequest request)
@@ -210,28 +294,58 @@ namespace Server
         //Server-Server Communication
         //
 
-        public LockObjectReply lockObject(LockObjectRequest request)
+        public LockObjectReply lockObject(LockObjectRequest request)        //TO DO: handle failures
         {
-            bool taken = false;
+            bool ok;
+            string partitionId = request.PartitionId;
 
-            //Monitor.Enter(, taken);
-            return new LockObjectReply { Ok = taken };
+            lock (partitions[partitionId])
+            {
+                if (partitions[partitionId].locked == true)
+                {
+                    ok = false;                             //partition is locked (theoretically can't happen, TO DO: maybe remove)
+                    Console.WriteLine("Partition " + partitionId + " is already locked by another request");
+                }
+                else
+                {
+                    partitions[partitionId].locked = true;  //partition will be locked
+                    ok = true;
+                    Console.WriteLine("Partition " + partitionId + " was locked successfully");
+                }
+            }
+
+            return new LockObjectReply { Ok = ok };
         }
 
-        public WriteObjectReply writeObject(WriteObjectRequest request)
+        public WriteObjectReply writeObject(WriteObjectRequest request)     //TO DO: handle failures
         {
-            bool taken = false;
+            string partitionId = request.PartitionId;
+            string objectId = request.ObjectId;
+            string value = request.Value;
+            
+            lock (partitions[partitionId])
+            {
+                partitions[partitionId].addObject(objectId, value);
+                partitions[partitionId].locked = false;
+            }
 
-            return new WriteObjectReply { Ok = taken };
+            return new WriteObjectReply { Ok = true };
         }
 
         public HandshakeReply handshake(HandshakeRequest request)
         {
             Console.WriteLine("Handshake request received");
+
             if (frozen)
             {
-                m.WaitOne();
-                m.ReleaseMutex();
+                lock(key)
+                {
+                    Console.WriteLine("Handshake Freezed");
+                    Monitor.Wait(key);
+                    Console.WriteLine("Handshake Unfreezed");
+                    Monitor.Pulse(key);
+                    Console.WriteLine("Handshake Pulsing");
+                }
             }
 
             HandshakeReply reply = new HandshakeReply();
@@ -248,10 +362,17 @@ namespace Server
         public RegisterReply register(RegisterRequest request)
         {
             Console.WriteLine("Register request received");
+
             if (frozen)
             {
-                m.WaitOne();
-                m.ReleaseMutex();
+                lock (key)
+                {
+                    Console.WriteLine("Register Freezed");
+                    Monitor.Wait(key);
+                    Console.WriteLine("Register Unfreezed");
+                    Monitor.Pulse(key);
+                    Console.WriteLine("Register Pulsing");
+                }
             }
 
             try
