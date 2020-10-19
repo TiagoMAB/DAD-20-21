@@ -204,6 +204,7 @@
             this.Controls.Add(this.label1);
             this.Name = "PuppetMaster";
             this.Text = "PuppetMaster";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.PM_Closing);
             this.ResumeLayout(false);
             this.PerformLayout();
 

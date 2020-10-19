@@ -11,12 +11,13 @@ using System.Windows.Forms;
 namespace PuppetMaster {
     public partial class PuppetMaster : Form {
         const int PORT = 10001;
+        private readonly Grpc.Core.Server server;
         private readonly ServerController controller;
 
         public PuppetMaster() {
             InitializeComponent();
 
-            Grpc.Core.Server server = new Grpc.Core.Server {
+            this.server = new Grpc.Core.Server {
                 Services = { GStore.Status.BindService(new StatusImpl(this)) },
                 Ports    = { new ServerPort("localhost", PORT, ServerCredentials.Insecure) },
             };
@@ -91,6 +92,10 @@ namespace PuppetMaster {
         public void UpdateCombo(ComboBox box, List<string> items) {
             box.Items.Clear();
             box.Items.AddRange(items.ToArray());
+        }
+
+        private async void PM_Closing(object sender, FormClosingEventArgs e) {
+            await this.server.ShutdownAsync();
         }
 
         private async Task CommandHandler(Command command) {
