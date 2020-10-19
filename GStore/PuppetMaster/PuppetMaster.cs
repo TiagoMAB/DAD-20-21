@@ -90,6 +90,7 @@ namespace PuppetMaster {
 
         public void UpdateCombo(ComboBox box, List<string> items) {
             box.Items.Clear();
+            box.SelectedIndex = -1;
             box.Items.AddRange(items.ToArray());
         }
 
