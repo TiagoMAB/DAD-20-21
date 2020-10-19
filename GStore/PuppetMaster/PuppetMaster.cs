@@ -1,12 +1,15 @@
 ﻿using Grpc.Core;
 using PuppetMaster.Exceptions;
+using PuppetMaster.MVC;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
 
 namespace PuppetMaster {
     public partial class PuppetMaster : Form {
         const int PORT = 10001;
+        private readonly ServerController controller;
 
         public PuppetMaster() {
             InitializeComponent();
@@ -19,6 +22,14 @@ namespace PuppetMaster {
             server.Start();
 
             this.Log("Status service started successfully");
+
+            List<ComboBox> views = new List<ComboBox> {
+                crashSelector,
+                freezeSelector,
+                unfreezeSelector
+            };
+
+            this.controller = new ServerController(this, views);
         }
 
         private async void LoadPMFileClick(object sender, EventArgs e) {
@@ -58,9 +69,26 @@ namespace PuppetMaster {
             PMFile.Text = SelectPMFile.FileName;
         }
 
+        public void AddServer(string name, string URL) {
+            this.controller.AddServer(name, URL);
+        }
+
+        public void RemoveServer(string name) {
+            this.controller.RemoveServer(name);
+        }
+
         public void Log(string entry) {
             Logs.Items.Add(String.Format("[{0}] {1}", DateTime.Now.ToString(), entry));
             Logs.SelectedIndex = Logs.Items.Count - 1;
+        }
+
+        public void AddToCombo(ComboBox box, string item) {
+            box.Items.Add(item);
+        }
+
+        public void UpdateCombo(ComboBox box, List<string> items) {
+            box.Items.Clear();
+            box.Items.AddRange(items.ToArray());
         }
     }
 }

@@ -16,6 +16,12 @@ namespace PuppetMaster {
             servers.TryAdd(name, url);
         }
 
+        public static List<string> RemoveServer(string name) {
+            servers.TryRemove(name, out _);
+
+            return new List<string>(servers.ToList().Select(i => i.Key));
+        }
+
         public static string GetRandomServer() {
             Random r = new Random();
             int i = r.Next(0, servers.Count);
@@ -39,10 +45,6 @@ namespace PuppetMaster {
             }
 
             return value;
-        }
-
-        public static List<KeyValuePair<string, string>> GetAllServers() {
-            return servers.ToList();
         }
 
         public static List<KeyValuePair<string, string>> GetAll() {

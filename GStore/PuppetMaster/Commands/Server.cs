@@ -30,8 +30,6 @@ namespace PuppetMaster.Commands {
         protected override async Task DoWork() {
             string URL = this.host + ":" + this.port;
 
-            ConnectionInfo.AddServer(this.id, URL);
-
             GrpcChannel channel = GrpcChannel.ForAddress(this.host + ":10000");
 
             PCS.PCSClient client = new PCS.PCSClient(channel);
@@ -39,9 +37,12 @@ namespace PuppetMaster.Commands {
             try {
                 await client.ServerAsync(new ServerRequest { Id = this.id, Url = URL, MaxDelay = this.maxDelay, MinDelay = this.minDelay });
 
-                channel.ShutdownAsync().Wait();
+                this.form.AddServer(this.id, URL);
 
                 Log(String.Format("Server '{0}' listening at '{1}'", this.id, URL));
+
+                // FIXME: await or no shutdown?
+                channel.ShutdownAsync().Wait();
             } catch (RpcException e) {
                 String command = String.Format("Create server '{0}' at '{1}'", this.id, URL);
 
