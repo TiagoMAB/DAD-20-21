@@ -29,7 +29,7 @@ namespace Client.Commands
                 ListGlobalRequest listGlobal = new ListGlobalRequest();
 
                 foreach (string partitionId in serverPartitionIds)
-                    if (partitionsToRequest.Exists(request => String.Equals(request, partitionId)))
+                    if (partitionsToRequest.Contains(partitionId))
                         listGlobal.PartitionIds.Add(partitionId);
 
                 if (listGlobal.PartitionIds.Count == 0)

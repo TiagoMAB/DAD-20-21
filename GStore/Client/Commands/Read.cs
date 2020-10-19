@@ -30,7 +30,7 @@ namespace Client.Commands
 
             List<string> partitions = serverInfo.GetPartitionsByURL(serverInfo.CurrentServerURL);
 
-            if (partitions != null && partitions.Exists(partitionId => String.Equals(partitionId, this.partitionId)))
+            if (partitions != null && partitions.Contains(this.partitionId))
             {
                 try
                 {
