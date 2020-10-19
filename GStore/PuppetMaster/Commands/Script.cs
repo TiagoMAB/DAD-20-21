@@ -11,7 +11,7 @@ namespace PuppetMaster.Commands {
         }
 
         private async Task Await() {
-            await Task.WhenAll(this.tasks);
+            await Task.WhenAll(this.tasks).ConfigureAwait(false);
         }
 
         public void AddCommand(Command command) {

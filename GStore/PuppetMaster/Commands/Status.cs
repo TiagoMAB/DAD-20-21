@@ -53,7 +53,7 @@ namespace PuppetMaster.Commands
                 }));
             }
 
-            await Task.WhenAll(tasks);
+            await Task.WhenAll(tasks).ConfigureAwait(false);
 
             Log("All status received");
         }

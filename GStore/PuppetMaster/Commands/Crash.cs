@@ -17,6 +17,7 @@ namespace PuppetMaster.Commands {
             String URL = ConnectionInfo.GetServer(this.id);
 
             if(URL == null) {
+                Log(String.Format("ERROR: Unknown server '{0}' on command Crash", this.id));
                 throw new UnknownServerException("Crash", this.id);
             }
 

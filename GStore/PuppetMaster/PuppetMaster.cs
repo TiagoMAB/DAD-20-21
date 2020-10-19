@@ -51,7 +51,7 @@ namespace PuppetMaster {
             }
 
             try {
-                await Task.Run(async () => await Parser.parseScript(this, path).Execute());
+                await Task.Run(async () => await Parser.parseScript(this, path).Execute().ConfigureAwait(false));
             } catch (InvalidURLException ex) {
                 MessageBox.Show(String.Format("Invalid address '{0}' on command '{1}'", ex.Url, ex.Command), "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Error);
             } catch (PartitionParameterNumberMismatchException ex) {
@@ -100,7 +100,7 @@ namespace PuppetMaster {
 
         private async Task CommandHandler(Command command) {
             try {
-                await Task.Run(async () => await command.Execute());
+                await Task.Run(async () => await command.Execute().ConfigureAwait(false));
             } catch (InvalidURLException ex) {
                 MessageBox.Show(String.Format("Invalid address '{0}' on command '{1}'", ex.Url, ex.Command), "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Error);
             } catch (PartitionParameterNumberMismatchException ex) {
