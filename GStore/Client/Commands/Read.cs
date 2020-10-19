@@ -36,7 +36,7 @@ namespace Client.Commands
                 {
                     channel = GrpcChannel.ForAddress(serverInfo.CurrentServerURL);
                     client = new GStore.GStore.GStoreClient(channel);
-                    response = client.read(new ReadRequest { PartitionId = this.partitionId, ObjectId = this.objectId });
+                    response = client.Read(new ReadRequest { PartitionId = this.partitionId, ObjectId = this.objectId });
 
                     Console.WriteLine(response.Value);
                     //TODO: é suposto o server retornar N/A e sendo esse o caso é necessário procurar no secundário?
@@ -63,7 +63,7 @@ namespace Client.Commands
 
                 channel = GrpcChannel.ForAddress(nextURL);
                 client = new GStore.GStore.GStoreClient(channel);
-                response = client.read(new ReadRequest { PartitionId = this.partitionId, ObjectId = this.objectId });
+                response = client.Read(new ReadRequest { PartitionId = this.partitionId, ObjectId = this.objectId });
 
                 Console.WriteLine(response.Value);
                 return;

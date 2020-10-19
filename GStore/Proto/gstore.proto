@@ -78,5 +78,6 @@ service GStore {
   rpc Read (ReadRequest) returns (ReadReply);
   rpc Write (WriteRequest) returns (WriteReply);
   rpc ListServer (ListServerRequest) returns (ListServerReply);
+  rpc ListGlobal (ListGlobalRequest) returns (ListGlobalReply);
   rpc ServerInfo (ServerInfoRequest) returns (ServerInfoReply);
 }

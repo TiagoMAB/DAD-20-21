@@ -30,8 +30,9 @@ namespace Client.Commands
 
             try
             {
-                ListServerReply response = client.listServer(new ListServerRequest { });
+                ListServerReply response = client.ListServer(new ListServerRequest { });
 
+                //TODO : ACRESCENTAR O RESTO DOS DETALHES CASO SEJA NECESSÁRIO (objectId partitionId)
                 Console.WriteLine("  Is Master?\t\tValue");
 
                 foreach (ListServerReply.Types.ListValue value in response.Values)

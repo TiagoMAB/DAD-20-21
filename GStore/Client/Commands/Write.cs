@@ -38,7 +38,7 @@ namespace Client.Commands
             try
             {
                 //TODO: a chamada deve ser async no codigo base?
-                client.write(new WriteRequest { PartitionId = this.partitionId, ObjectId = this.objectId, Value = this.value });
+                client.Write(new WriteRequest { PartitionId = this.partitionId, ObjectId = this.objectId, Value = this.value });
             }
             catch (RpcException e) when (e.StatusCode == StatusCode.Unavailable)
             {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Grpc.Net.Client;
 using System.Linq;
 using Grpc.Core;
+using Client.Exceptions;
 
 namespace Client
 {
@@ -36,6 +37,10 @@ namespace Client
                 return value;
             else return null;
         }
+        public List<string> GetURLs()
+        {
+            return serverURL.Values.ToList();
+        }
         public List<string> GetPartitionIds()
         {
             return masterURL.Keys.ToList();
@@ -60,16 +65,23 @@ namespace Client
             serverURL.Add(serverId, url);
         }
 
-        public void RegisterServer(string serverId, string url, List<string> masterPartitionId, List<string> partitions) {
-            serverURL.Add(serverId, url);
+        public void RegisterPartition(string name, string masterId, List<string> serverIds) {
+            string url = GetURLByServerId(masterId);
+            if (url == null)
+                throw new NonExistentServerException(String.Format("Server with id {0} not found.", masterId));
 
-            if (masterPartitionId.Count != 0)
-            {
-                foreach (string part in masterPartitionId)
-                    masterURL.Add(part, url);
+            masterURL.Add(name, url);
+
+            foreach (string serverId in serverIds) {
+                url = GetURLByServerId(serverId);
+                if (url == null)
+                    throw new NonExistentServerException(String.Format("Server with id {0} not found.", serverId));
+
+                List<string> partitionIds = GetPartitionsByURL(url);
+                if (partitionIds == null)
+                    serverReplicas.Add(url, new List<string>() { name } );
+                else partitionIds.Add(name);
             }
-
-            serverReplicas.Add(url, partitions);
         }
 
         public void GetServerInfo()
@@ -92,13 +104,16 @@ namespace Client
                 try
                 {
                     //TODO: maybe add a variable for waiting time
-                    var response = client.serverInfo(
+                    var response = client.ServerInfo(
                         new GStore.ServerInfoRequest { },
                         //TODO: maybe use deadline: context.Deadline in server
                         deadline: DateTime.UtcNow.AddMilliseconds(5000));
 
                     foreach (var value in response.Servers)
-                        RegisterServer(value.ServerId, value.Url, value.MasterPartitionId.ToList(), value.Partitions.ToList());
+                        serverURL.Add(value.Id, value.Url);
+
+                    foreach (var value in response.Partition)
+                        RegisterPartition(value.Name, value.Master, value.ServerIds.ToList());
 
                     CurrentServerURL = url;
                     return;

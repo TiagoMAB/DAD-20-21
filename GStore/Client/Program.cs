@@ -85,10 +85,9 @@ namespace Client
                 return;
             }
 
-            serverInfo.GetServerInfo();
-
             try
             {
+                serverInfo.GetServerInfo();
                 script.Execute();
             }
             catch (NonExistentServerException e)
