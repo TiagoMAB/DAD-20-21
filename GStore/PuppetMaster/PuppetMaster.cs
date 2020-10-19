@@ -1,9 +1,11 @@
 ﻿using Grpc.Core;
+using PuppetMaster.Commands;
 using PuppetMaster.Exceptions;
 using PuppetMaster.MVC;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace PuppetMaster {
@@ -14,7 +16,7 @@ namespace PuppetMaster {
         public PuppetMaster() {
             InitializeComponent();
 
-            Server server = new Server {
+            Grpc.Core.Server server = new Grpc.Core.Server {
                 Services = { GStore.Status.BindService(new StatusImpl(this)) },
                 Ports    = { new ServerPort("localhost", PORT, ServerCredentials.Insecure) },
             };
@@ -30,6 +32,10 @@ namespace PuppetMaster {
             };
 
             this.controller = new ServerController(this, views);
+        }
+
+        private void SelectPMFileClick(object sender, EventArgs e) {
+            SelectPMFile.ShowDialog();
         }
 
         private async void LoadPMFileClick(object sender, EventArgs e) {
@@ -61,10 +67,6 @@ namespace PuppetMaster {
             }
         }
 
-        private void SelectPMFileClick(object sender, EventArgs e) {
-            SelectPMFile.ShowDialog();
-        }
-
         private void SelectedPMFile(object sender, System.ComponentModel.CancelEventArgs e) {
             PMFile.Text = SelectPMFile.FileName;
         }
@@ -89,6 +91,52 @@ namespace PuppetMaster {
         public void UpdateCombo(ComboBox box, List<string> items) {
             box.Items.Clear();
             box.Items.AddRange(items.ToArray());
+        }
+
+        private async Task CommandHandler(Command command) {
+            try {
+                await Task.Run(async () => await command.Execute());
+            } catch (InvalidURLException ex) {
+                MessageBox.Show(String.Format("Invalid address '{0}' on command '{1}'", ex.Url, ex.Command), "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            } catch (PartitionParameterNumberMismatchException ex) {
+                MessageBox.Show(String.Format("Partition command expected {0} server ids, but {1} were given", ex.Expected, ex.Given), "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            } catch (UnknownServerException ex) {
+                MessageBox.Show(String.Format("Unknown server '{0}' in command '{1}'", ex.Id, ex.Command), "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            } catch (WrongArgumentNumberException ex) {
+                MessageBox.Show(String.Format("Command '{0}' is executed with {1} parameters, but {2} were given", ex.Command, ex.Expected, ex.Given), "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            } catch (Exception ex) {
+                System.Diagnostics.Debug.WriteLine(ex);
+            }
+        }
+
+        private async void CrashBtn_Click(object sender, EventArgs e) {
+            if (crashSelector.SelectedIndex == -1) {
+                MessageBox.Show("Select a server to crash", "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            Command command = new Crash(this, crashSelector.Text);
+            await CommandHandler(command);
+        }
+
+        private async void FreezeBtn_Click(object sender, EventArgs e) {
+            if (freezeSelector.SelectedIndex == -1) {
+                MessageBox.Show("Select a server to freeze", "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            Command command = new Freeze(this, freezeSelector.Text);
+            await CommandHandler(command);
+        }
+
+        private async void UnfreezeBtn_Click(object sender, EventArgs e) {
+            if (unfreezeSelector.SelectedIndex == -1) {
+                MessageBox.Show("Select a server to unfreeze", "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            Command command = new Unfreeze(this, unfreezeSelector.Text);
+            await CommandHandler(command);
         }
     }
 }

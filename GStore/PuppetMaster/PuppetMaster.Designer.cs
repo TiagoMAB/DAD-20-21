@@ -24,15 +24,15 @@
             this.btnSelectPMFile = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.Logs = new System.Windows.Forms.ListBox();
-            this.button1 = new System.Windows.Forms.Button();
+            this.crashBtn = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
             this.crashSelector = new System.Windows.Forms.ComboBox();
             this.label4 = new System.Windows.Forms.Label();
             this.freezeSelector = new System.Windows.Forms.ComboBox();
-            this.button2 = new System.Windows.Forms.Button();
+            this.freezeBtn = new System.Windows.Forms.Button();
             this.unfreezeSelector = new System.Windows.Forms.ComboBox();
             this.label5 = new System.Windows.Forms.Label();
-            this.button3 = new System.Windows.Forms.Button();
+            this.unfreezeBtn = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // label1
@@ -95,14 +95,15 @@
             this.Logs.Size = new System.Drawing.Size(571, 229);
             this.Logs.TabIndex = 6;
             // 
-            // button1
+            // crashBtn
             // 
-            this.button1.Location = new System.Drawing.Point(365, 78);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
-            this.button1.TabIndex = 7;
-            this.button1.Text = "Execute";
-            this.button1.UseVisualStyleBackColor = true;
+            this.crashBtn.Location = new System.Drawing.Point(365, 78);
+            this.crashBtn.Name = "crashBtn";
+            this.crashBtn.Size = new System.Drawing.Size(75, 23);
+            this.crashBtn.TabIndex = 7;
+            this.crashBtn.Text = "Execute";
+            this.crashBtn.UseVisualStyleBackColor = true;
+            this.crashBtn.Click += new System.EventHandler(this.CrashBtn_Click);
             // 
             // label3
             // 
@@ -142,14 +143,15 @@
             this.freezeSelector.Sorted = true;
             this.freezeSelector.TabIndex = 11;
             // 
-            // button2
+            // freezeBtn
             // 
-            this.button2.Location = new System.Drawing.Point(365, 107);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(75, 23);
-            this.button2.TabIndex = 12;
-            this.button2.Text = "Execute";
-            this.button2.UseVisualStyleBackColor = true;
+            this.freezeBtn.Location = new System.Drawing.Point(365, 107);
+            this.freezeBtn.Name = "freezeBtn";
+            this.freezeBtn.Size = new System.Drawing.Size(75, 23);
+            this.freezeBtn.TabIndex = 12;
+            this.freezeBtn.Text = "Execute";
+            this.freezeBtn.UseVisualStyleBackColor = true;
+            this.freezeBtn.Click += new System.EventHandler(this.FreezeBtn_Click);
             // 
             // unfreezeSelector
             // 
@@ -170,29 +172,30 @@
             this.label5.TabIndex = 14;
             this.label5.Text = "Unfreeze:";
             // 
-            // button3
+            // unfreezeBtn
             // 
-            this.button3.Location = new System.Drawing.Point(365, 136);
-            this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(75, 23);
-            this.button3.TabIndex = 15;
-            this.button3.Text = "Execute";
-            this.button3.UseVisualStyleBackColor = true;
+            this.unfreezeBtn.Location = new System.Drawing.Point(365, 136);
+            this.unfreezeBtn.Name = "unfreezeBtn";
+            this.unfreezeBtn.Size = new System.Drawing.Size(75, 23);
+            this.unfreezeBtn.TabIndex = 15;
+            this.unfreezeBtn.Text = "Execute";
+            this.unfreezeBtn.UseVisualStyleBackColor = true;
+            this.unfreezeBtn.Click += new System.EventHandler(this.UnfreezeBtn_Click);
             // 
             // PuppetMaster
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(595, 560);
-            this.Controls.Add(this.button3);
+            this.Controls.Add(this.unfreezeBtn);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.unfreezeSelector);
-            this.Controls.Add(this.button2);
+            this.Controls.Add(this.freezeBtn);
             this.Controls.Add(this.freezeSelector);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.crashSelector);
             this.Controls.Add(this.label3);
-            this.Controls.Add(this.button1);
+            this.Controls.Add(this.crashBtn);
             this.Controls.Add(this.Logs);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.btnSelectPMFile);
@@ -215,15 +218,15 @@
         private System.Windows.Forms.Button btnSelectPMFile;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.ListBox Logs;
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button crashBtn;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.ComboBox crashSelector;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.ComboBox freezeSelector;
-        private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.Button freezeBtn;
         private System.Windows.Forms.ComboBox unfreezeSelector;
         private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.Button button3;
+        private System.Windows.Forms.Button unfreezeBtn;
     }
 }
 
