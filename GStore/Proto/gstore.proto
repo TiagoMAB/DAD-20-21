@@ -38,6 +38,20 @@ message ListServerReply {
 	}
 }
 
+// LIST GLOBAL objects
+message ListGlobalRequest {
+	repeated string partitionIds = 1;
+}
+
+message ListGlobalReply {
+	repeated ListPartition partitions = 1;
+
+	message ListPartition {
+		string partitionId = 1;
+		repeated string objectId = 2;
+	}
+}
+
 // LIST information about each server
 //masterPartitionId is only filled for servers that are master replicas
 message ServerInfoRequest {

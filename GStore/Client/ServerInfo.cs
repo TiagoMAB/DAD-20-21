@@ -36,6 +36,10 @@ namespace Client
                 return value;
             else return null;
         }
+        public List<string> GetPartitionIds()
+        {
+            return masterURL.Keys.ToList();
+        }
         public List<string> GetPartitionsByURL(string url)
         {
             List<string> value;
