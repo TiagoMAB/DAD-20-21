@@ -51,8 +51,7 @@ namespace PuppetMaster {
             }
 
             try {
-                // TODO: Avoid locking the GUI thread
-                await Parser.parseScript(this, path).Execute();
+                await Task.Run(async () => await Parser.parseScript(this, path).Execute());
             } catch (InvalidURLException ex) {
                 MessageBox.Show(String.Format("Invalid address '{0}' on command '{1}'", ex.Url, ex.Command), "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Error);
             } catch (PartitionParameterNumberMismatchException ex) {
