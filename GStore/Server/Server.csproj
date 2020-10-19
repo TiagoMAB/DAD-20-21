@@ -8,6 +8,7 @@
   <ItemGroup>
     <Protobuf Include="..\Proto\gstore.proto" GrpcServices="Both" Link="Protos\gstore.proto" />
     <Protobuf Include="..\Proto\PuppetMaster.proto" GrpcServices="Both" Link="Protos\puppetmaster.proto" />
+    <Protobuf Include="..\Proto\ServerCommunication.proto" GrpcServices="Both" Link="Protos\servercommunication.proto" />
     
     <PackageReference Include="Google.Protobuf" Version="3.13.0" />
     <PackageReference Include="Grpc.Core" Version="2.32.0" />

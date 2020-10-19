@@ -9,9 +9,9 @@ namespace PuppetMaster.Commands {
             this.factor = factor;
         }
 
-        protected override void DoWork() {
+        protected override async Task DoWork() {
             // TODO: Implement????
-            Log(String.Format("ReplicationFactor set to {0}", this.factor));
+            await Task.Run(() => Log(String.Format("ReplicationFactor set to {0}", this.factor)));
         }
     }
 }

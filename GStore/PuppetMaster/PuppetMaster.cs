@@ -1,12 +1,24 @@
-﻿using PuppetMaster.Exceptions;
+﻿using Grpc.Core;
+using PuppetMaster.Exceptions;
 using System;
 using System.IO;
 using System.Windows.Forms;
 
 namespace PuppetMaster {
     public partial class PuppetMaster : Form {
+        const int PORT = 10001;
+
         public PuppetMaster() {
             InitializeComponent();
+
+            Server server = new Server {
+                Services = { GStore.Status.BindService(new StatusImpl(this)) },
+                Ports    = { new ServerPort("localhost", PORT, ServerCredentials.Insecure) },
+            };
+
+            server.Start();
+
+            this.Log("Status service started successfully");
         }
 
         private async void LoadPMFileClick(object sender, EventArgs e) {

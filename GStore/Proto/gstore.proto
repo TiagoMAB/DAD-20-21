@@ -32,9 +32,10 @@ message ListServerReply {
 	repeated ListValue values = 1;
 
 	message ListValue {
-		string value = 1;
-		bool isMaster = 2;
-		//maybe add the partitionId
+		string partitionId = 1;
+		string objectId = 2;
+		string value = 3;
+		bool isMaster = 4;
 	}
 }
 
@@ -69,45 +70,13 @@ message ServerInfoReply {
 	message Partition {
 		string name = 1;
 		string master = 2;
-		repeated string partitions = 3;
+		repeated string serverIds = 3;
 	}
-}
-
-message HandshakeRequest {
-	
-	string id = 1;
-	string url = 2;
-
-}
-
-message HandshakeReply {
-
-	repeated Info network = 1;
-
-	message Info {
-		string id = 1;
-		string url = 2;
-	}
-
-}
-
-message RegisterRequest {
-	
-	string id = 1;
-	string url = 2;
-
-}
-
-message RegisterReply {
-
-	bool ok = 1;
 }
 
 service GStore {
-  rpc read (ReadRequest) returns (ReadReply);
-  rpc write (WriteRequest) returns (WriteReply);
-  rpc listServer (ListServerRequest) returns (ListServerReply);
-  rpc serverInfo (ServerInfoRequest) returns (ServerInfoReply);
-  rpc handshake (HandshakeRequest) returns (HandshakeReply);
-  rpc register (RegisterRequest) returns (RegisterReply);
+  rpc Read (ReadRequest) returns (ReadReply);
+  rpc Write (WriteRequest) returns (WriteReply);
+  rpc ListServer (ListServerRequest) returns (ListServerReply);
+  rpc ServerInfo (ServerInfoRequest) returns (ServerInfoReply);
 }

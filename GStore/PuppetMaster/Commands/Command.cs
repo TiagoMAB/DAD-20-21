@@ -11,10 +11,10 @@ namespace PuppetMaster.Commands {
             this.form = form;
         }
 
-        public async virtual Task Execute() {
-            await Task.Run(DoWork).ConfigureAwait(false);
+        public virtual async Task Execute() {
+            await DoWork().ConfigureAwait(false);
         }
-        protected abstract void DoWork();
+        protected abstract Task DoWork();
 
         protected void Log(string s) {
             this.form.Invoke(this.logger, s);

@@ -17,7 +17,8 @@ namespace PuppetMaster.Commands {
             return null;
         }
 
-        protected override void DoWork() {
+        protected override Task DoWork() {
+            return null;
         }
     }
 }
