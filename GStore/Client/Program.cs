@@ -95,8 +95,9 @@ namespace Client
                 Console.WriteLine(e.Message);
                 return;
             } 
-            catch (RpcException e) when (e.StatusCode == StatusCode.Unavailable)
+            catch (RpcException e)
             {
+                Console.WriteLine(e.Message);
                 return;
             }
 

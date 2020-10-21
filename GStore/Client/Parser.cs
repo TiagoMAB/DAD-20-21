@@ -3,6 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using Client.Commands;
 using Client.Exceptions;
+using System.Linq;
 
 namespace Client
 {
@@ -31,6 +32,7 @@ namespace Client
                     case "begin-repeat":
                         int repeatTimes;
                         BeginRepeat beginRepeat;
+                        List<string> lines = new List<string>();
 
                         if (command.Length != 2)
                         {
@@ -41,17 +43,17 @@ namespace Client
                             throw new InvalidExpressionException("Invalid number for repeats:\n" + line);
                         }
 
-                        beginRepeat = new BeginRepeat(repeatTimes);
+                        beginRepeat = new BeginRepeat();
 
                         while ((line = file.ReadLine()) != null && string.Compare(line, "end-repeat") != 0)
-                        {
-                            beginRepeat.AddCommand(ParseLine(line));
-                        }
+                            lines.Add(line);
 
                         if (line == null)
-                        {
                             throw new NoEndOfCycleException();
-                        }
+
+                        foreach (int i in Enumerable.Range(1, repeatTimes))
+                            foreach (string cycleLine in lines)
+                                beginRepeat.AddCommand(ParseLine(new string(cycleLine).Replace("$i", i.ToString())));
 
                         script.AddCommand(beginRepeat);
                         break;

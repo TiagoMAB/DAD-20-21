@@ -5,14 +5,9 @@ namespace Client.Commands
 {
     class BeginRepeat : Command
     {
-        private readonly int repeatTimes;
         private readonly List<Command> commands = new List<Command>();
 
-        public BeginRepeat(int repeatTimes)
-        {
-            this.repeatTimes = repeatTimes;
-        }
-
+        public BeginRepeat() { } 
         public void AddCommand(Command command)
         {
             this.commands.Add(command);
@@ -20,13 +15,9 @@ namespace Client.Commands
 
         public void Execute()
         {
-            int i = 0;
-            while (i++ != repeatTimes)
+            foreach (Command command in this.commands)
             {
-                foreach (Command command in this.commands)
-                {
-                    command.Execute();
-                }
+                command.Execute();
             }
         }
     }
