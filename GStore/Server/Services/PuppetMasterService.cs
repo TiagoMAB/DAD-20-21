@@ -28,18 +28,20 @@ namespace Server
         {
             return Task.FromResult(server.replication(request));
         }
+        
         public override Task<PartitionResponse> Partition(PartitionRequest request, ServerCallContext context)
         {
             return Task.FromResult(server.partition(request));
         }
+
         public override Task<CrashResponse> Crash(CrashRequest request, ServerCallContext context)
         {
             return Task.FromResult(server.crash(request));
         }
+
         public override Task<UnfreezeResponse> Unfreeze(UnfreezeRequest request, ServerCallContext context)
         {
             return Task.FromResult(server.unfreeze(request));
         }
-
     }
 }

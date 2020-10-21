@@ -34,5 +34,9 @@ namespace Server
             return Task.FromResult(server.listServer(request));
         }
 
+        public override Task<ListGlobalReply> ListGlobal(ListGlobalRequest request, ServerCallContext context)
+        {
+            return Task.FromResult(server.listGlobal(request));
+        }
     }
 }

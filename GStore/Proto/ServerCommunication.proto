@@ -29,7 +29,6 @@ message RegisterRequest {
 }
 
 message RegisterReply {
-	bool ok = 1;
 }
 
 message LockObjectRequest {
