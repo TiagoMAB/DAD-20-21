@@ -11,7 +11,7 @@ namespace PuppetMaster.Commands {
 
         protected override async Task DoWork() {
             // TODO: Implement????
-            await Task.Run(() => Log(String.Format("ReplicationFactor set to {0}", this.factor)));
+            await Task.Run(() => Log(String.Format("ReplicationFactor set to {0}", this.factor))).ConfigureAwait(false);
         }
     }
 }

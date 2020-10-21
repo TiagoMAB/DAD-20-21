@@ -27,6 +27,7 @@ namespace PuppetMaster.Commands {
                 String URL = ConnectionInfo.GetServer(id);
 
                 if (URL == null) {
+                    Log(String.Format("ERROR: Unknown server '{0}' on command Partition", id));
                     throw new UnknownServerException("Partition", id);
                 }
 

@@ -4,7 +4,7 @@ namespace PuppetMaster.Commands {
     public abstract class Command {
         private delegate void Logger(string s);
         private readonly Logger logger;
-        private readonly PuppetMaster form;
+        protected readonly PuppetMaster form;
 
         protected Command(PuppetMaster form) {
             this.logger = new Logger(form.Log);
