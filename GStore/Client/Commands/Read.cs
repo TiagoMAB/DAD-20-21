@@ -30,6 +30,7 @@ namespace Client.Commands
 
             List<string> partitions = serverInfo.GetPartitionsByURL(serverInfo.CurrentServerURL);
 
+            //Trying current connected server
             if (partitions != null && partitions.Contains(this.partitionId))
             {
                 try
@@ -39,39 +40,49 @@ namespace Client.Commands
                     response = client.Read(new ReadRequest { PartitionId = this.partitionId, ObjectId = this.objectId });
 
                     Console.WriteLine(response.Value);
-                    //TODO: é suposto o server retornar N/A e sendo esse o caso é necessário procurar no secundário?
-                    //TODO: talvez recebe se um null em vez de N/A do server, e sendo esse o caso falta meter um if no writeline
                     return;
                 }
                 catch (RpcException e) when (e.StatusCode == StatusCode.Unavailable) {
                     if (String.Equals(this.serverId, "-1")) {
-                        Console.WriteLine("Secondary server isn't given. Exiting...");
-                        throw; //ignore secondary server
+                        System.Diagnostics.Debug.WriteLine(String.Format("Server with URL {0} not available, trying random server.", serverInfo.CurrentServerURL));
                     }
-                    System.Diagnostics.Debug.WriteLine(String.Format("Server with URL {0} not available, trying server with id {1}.", serverInfo.CurrentServerURL, this.serverId));
+                    else System.Diagnostics.Debug.WriteLine(String.Format("Server with URL {0} not available, trying server with id {1}.", serverInfo.CurrentServerURL, this.serverId));
                 }
             }
 
-            string nextURL = serverInfo.GetURLByServerId(this.serverId);
-            if (nextURL == null)
-                throw new NonExistentServerException(String.Format("Server with id {0} not found.", this.serverId));
-            //TODO: necessary to check if nextURL has partition?
-
-            try
+            //Trying server with id "serverId"
+            if (!String.Equals(this.serverId, "-1"))
             {
-                serverInfo.CurrentServerURL = nextURL;
+                string nextURL = serverInfo.GetURLByServerId(this.serverId);
+                partitions = serverInfo.GetPartitionsByURL(serverInfo.CurrentServerURL);
 
-                channel = GrpcChannel.ForAddress(nextURL);
-                client = new GStore.GStore.GStoreClient(channel);
-                response = client.Read(new ReadRequest { PartitionId = this.partitionId, ObjectId = this.objectId });
+                if (nextURL == null)
+                    Console.WriteLine("Server with id {0} not found, trying random server.", this.serverId);
 
-                Console.WriteLine(response.Value);
-                return;
+                else if (partitions != null && partitions.Contains(this.partitionId))
+                {
+                    try
+                    {
+                        serverInfo.CurrentServerURL = nextURL;
+
+                        channel = GrpcChannel.ForAddress(nextURL);
+                        client = new GStore.GStore.GStoreClient(channel);
+                        response = client.Read(new ReadRequest { PartitionId = this.partitionId, ObjectId = this.objectId });
+
+                        Console.WriteLine(response.Value);
+                        return;
+                    }
+                    catch (RpcException e) when (e.StatusCode == StatusCode.Unavailable)
+                    {
+                        Console.WriteLine("Secondary server not available. Exiting...");
+                        throw;
+                    }
+                }
             }
-            catch (RpcException e) when (e.StatusCode == StatusCode.Unavailable) {
-                Console.WriteLine("Secondary server not available. Exiting...");
-                throw;
-            }
+
+            //Trying random server with partitionId
+            List<string> serversWithPartition = serverInfo.GetURLsWithPartitionId(this.partitionId);
+            //TODO
         }
     }
 }

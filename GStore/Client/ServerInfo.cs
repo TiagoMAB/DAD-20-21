@@ -65,6 +65,17 @@ namespace Client
             serverURL.Add(serverId, url);
         }
 
+        public List<string> GetURLsWithPartitionId(string partitionId)
+        {
+            List<string> urls = new List<string>();
+
+            foreach (KeyValuePair<string, List<string>> entry in serverReplicas)
+                if (entry.Value.Contains(partitionId))
+                    urls.Add(entry.Key);
+
+            return urls;
+        }
+
         public void RegisterPartition(string name, string masterId, List<string> serverIds) {
             string url = GetURLByServerId(masterId);
             if (url == null)

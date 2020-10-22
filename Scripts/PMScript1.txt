@@ -1,0 +1,17 @@
+Server server1 http://localhost:8001 0 1000
+Server server2 http://localhost:8002 0 1000
+Server server3 http://localhost:8003 0 1000
+Server server4 http://localhost:8004 0 1000
+Server server5 http://localhost:8005 0 1000
+
+Wait 2000
+
+Partition 3 part1 server1 server2 server3
+Partition 3 part2 server2 server3 server4
+Partition 3 part3 server3 server4 server5
+Partition 3 part4 server4 server5 server1
+Partition 3 part5 server5 server1 server2
+
+Wait 2000
+
+Client client1 http://localhost:9001 clientScript1.txt

@@ -32,11 +32,13 @@ namespace Client.Commands
             {
                 ListServerReply response = client.ListServer(new ListServerRequest { });
 
-                //TODO : ACRESCENTAR O RESTO DOS DETALHES CASO SEJA NECESSÁRIO (objectId partitionId)
-                Console.WriteLine("  Is Master?\t\tValue");
-
                 foreach (ListServerReply.Types.ListValue value in response.Values)
-                    Console.WriteLine("  {1}\t\t{2}", (value.IsMaster)? "true":"false", value.Value);
+                    Console.WriteLine("---------------------//---------------------\n" +
+                        "Partition Id: {1}\n" +
+                        "Object Id: {2}\n" +
+                        "Value: {3}\n" +
+                        "Is this server the master of the object? {4}",
+                        value.PartitionId, value.ObjectId, value.Value, (value.IsMaster)? "true":"false");
             }
             catch (RpcException e) when (e.StatusCode == StatusCode.Unavailable) {
                 Console.WriteLine("Server with id {0} not available. Exiting...");
