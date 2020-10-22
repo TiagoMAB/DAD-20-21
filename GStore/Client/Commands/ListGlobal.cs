@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Grpc.Core;
-using Grpc.Net.Client;
 using GStore;
 using Client.Exceptions;
 using System.Linq;
@@ -38,12 +37,10 @@ namespace Client.Commands
                     continue;
                 }
 
-                serverInfo.CurrentServerURL = url;
-
-                var channel = GrpcChannel.ForAddress(serverInfo.CurrentServerURL);
-                var client = new GStore.GStore.GStoreClient(channel);
                 try
                 {
+                    GStore.GStore.GStoreClient client = serverInfo.GetChannel(url);
+
                     //TODO: Timeout can be added, but should we do it?
                     replies.Add(client.ListGlobal(listGlobal));
 

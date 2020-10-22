@@ -1,6 +1,5 @@
 ﻿using System;
 using Grpc.Core;
-using Grpc.Net.Client;
 using GStore;
 using Client.Exceptions;
 
@@ -25,8 +24,7 @@ namespace Client.Commands
             if (url == null)
                 throw new NonExistentServerException(String.Format("Server with id {0} not found.", this.serverId));
 
-            var channel = GrpcChannel.ForAddress(url);
-            var client = new GStore.GStore.GStoreClient(channel);
+            GStore.GStore.GStoreClient client = serverInfo.GetChannel(url);
 
             try
             {

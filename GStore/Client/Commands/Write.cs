@@ -1,6 +1,5 @@
 ﻿using System;
 using Grpc.Core;
-using Grpc.Net.Client;
 using GStore;
 using Client.Exceptions;
 
@@ -29,15 +28,9 @@ namespace Client.Commands
             if (masterURL == null)
                 throw new NonExistentServerException(String.Format("Master server of partition {0} not found.", this.partitionId));
 
-            if (!String.Equals(serverInfo.CurrentServerURL, masterURL))
-                serverInfo.CurrentServerURL = masterURL;
-
-            var channel = GrpcChannel.ForAddress(serverInfo.CurrentServerURL);
-            var client = new GStore.GStore.GStoreClient(channel);
-
             try
             {
-                //TODO: a chamada deve ser async no codigo base?
+                GStore.GStore.GStoreClient client = serverInfo.GetChannel(masterURL);
                 client.Write(new WriteRequest { PartitionId = this.partitionId, ObjectId = this.objectId, Value = this.value });
             }
             catch (RpcException e) when (e.StatusCode == StatusCode.Unavailable)

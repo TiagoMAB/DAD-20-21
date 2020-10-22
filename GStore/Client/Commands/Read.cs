@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Grpc.Core;
-using Grpc.Net.Client;
 using GStore;
 using Client.Exceptions;
 using System.Linq;
@@ -25,7 +24,6 @@ namespace Client.Commands
         {
             System.Diagnostics.Debug.WriteLine(String.Format("Read in partition {0} for object {1} with optional fetch server {2}", this.partitionId, this.objectId, this.serverId));
             ServerInfo serverInfo = ServerInfo.Instance();
-            GrpcChannel channel;
             GStore.GStore.GStoreClient client;
             ReadReply response;
 
@@ -36,8 +34,7 @@ namespace Client.Commands
             {
                 try
                 {
-                    channel = GrpcChannel.ForAddress(serverInfo.CurrentServerURL);
-                    client = new GStore.GStore.GStoreClient(channel);
+                    client = serverInfo.GetChannel(serverInfo.CurrentServerURL);
                     response = client.Read(new ReadRequest { PartitionId = this.partitionId, ObjectId = this.objectId });
 
                     Console.WriteLine(response.Value);
@@ -55,7 +52,7 @@ namespace Client.Commands
             if (!String.Equals(this.serverId, "-1"))
             {
                 string nextURL = serverInfo.GetURLByServerId(this.serverId);
-                partitions = serverInfo.GetPartitionsByURL(serverInfo.CurrentServerURL);
+                partitions = serverInfo.GetPartitionsByURL(nextURL);
 
                 if (nextURL == null)
                     System.Diagnostics.Debug.WriteLine(String.Format("Server with URL {0} doesn't exist, trying random server.", nextURL));
@@ -64,10 +61,7 @@ namespace Client.Commands
                 {
                     try
                     {
-                        serverInfo.CurrentServerURL = nextURL;
-
-                        channel = GrpcChannel.ForAddress(nextURL);
-                        client = new GStore.GStore.GStoreClient(channel);
+                        client = serverInfo.GetChannel(nextURL);
                         response = client.Read(new ReadRequest { PartitionId = this.partitionId, ObjectId = this.objectId });
 
                         Console.WriteLine(response.Value);
@@ -89,12 +83,9 @@ namespace Client.Commands
             {
                 int i = random.Next(serversWithPartition.Count);
                 url = serversWithPartition[i];
-
-                serverInfo.CurrentServerURL = url;
                 try
                 {
-                    channel = GrpcChannel.ForAddress(url);
-                    client = new GStore.GStore.GStoreClient(channel);
+                    client = serverInfo.GetChannel(url);
                     response = client.Read(new ReadRequest { PartitionId = this.partitionId, ObjectId = this.objectId });
 
                     Console.WriteLine(response.Value);

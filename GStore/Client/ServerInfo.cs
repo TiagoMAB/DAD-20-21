@@ -4,6 +4,7 @@ using Grpc.Net.Client;
 using System.Linq;
 using Grpc.Core;
 using Client.Exceptions;
+using GStore;
 
 namespace Client
 {
@@ -11,12 +12,13 @@ namespace Client
     {
         static ServerInfo serverInfo = null;
 
-        readonly Dictionary<string, string> serverURL = new Dictionary<string, string>();                   // <serverId, URL>
+        readonly Dictionary<string, string> serverURL = new Dictionary<string, string>();                                       // <serverId, URL>
 
-        readonly Dictionary<string, string> masterURL = new Dictionary<string, string>();                   // <partitionId, URL>
+        readonly Dictionary<string, string> masterURL = new Dictionary<string, string>();                                       // <partitionId, URL>
 
-        //TODO: maybe not needed
-        readonly Dictionary<string, List<string>> serverReplicas = new Dictionary<string, List<string>>();  // <URL, partitionIds>
+        readonly Dictionary<string, List<string>> serverReplicas = new Dictionary<string, List<string>>();                      // <URL, partitionIds>
+
+        Dictionary<string, GStore.GStore.GStoreClient> channels = new Dictionary<string, GStore.GStore.GStoreClient>();         // <URL, channel>
 
         public string CurrentServerURL { get; set; }
         public bool ExecFinish { get; set; }
@@ -59,12 +61,26 @@ namespace Client
                 return value;
             else return null;
         }
+        public GStore.GStore.GStoreClient GetChannel(string url)
+        {
+            GStore.GStore.GStoreClient client;
+
+            CurrentServerURL = url;
+
+            if (channels.TryGetValue(url, out client))
+                return client;
+
+            GrpcChannel channel = GrpcChannel.ForAddress(CurrentServerURL);
+            client = new GStore.GStore.GStoreClient(channel);
+            channels.Add(CurrentServerURL, client);
+
+            return client;
+        }
 
         public void AddServerURL(string serverId, string url)
         {
             serverURL.Add(serverId, url);
         }
-
         public List<string> GetURLsWithPartitionId(string partitionId)
         {
             List<string> urls = new List<string>();
@@ -109,14 +125,12 @@ namespace Client
             {
                 //Get random server from the list of known servers
                 string url = urls[random.Next(urls.Count)];
-                var channel = GrpcChannel.ForAddress(url);
-                var client = new GStore.GStore.GStoreClient(channel);
-
                 try
                 {
+                    GStore.GStore.GStoreClient client = GetChannel(url);
+
                     //TODO: maybe add a variable for waiting time
-                    var response = client.ServerInfo(
-                        new GStore.ServerInfoRequest { },
+                    var response = client.ServerInfo(new ServerInfoRequest { },
                         //TODO: maybe use deadline: context.Deadline in server
                         deadline: DateTime.UtcNow.AddMilliseconds(5000));
 
@@ -126,7 +140,6 @@ namespace Client
                     foreach (var value in response.Partition)
                         RegisterPartition(value.Name, value.Master, value.ServerIds.ToList());
 
-                    CurrentServerURL = url;
                     return;
                 }
                 catch (RpcException e) when (e.StatusCode == StatusCode.DeadlineExceeded)
