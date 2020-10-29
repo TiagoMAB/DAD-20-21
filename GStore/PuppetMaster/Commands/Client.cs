@@ -3,6 +3,7 @@ using Grpc.Net.Client;
 using GStore;
 using PuppetMaster.Exceptions;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace PuppetMaster.Commands {
@@ -34,8 +35,10 @@ namespace PuppetMaster.Commands {
 
             PCS.PCSClient client = new PCS.PCSClient(channel);
 
+            KeyValuePair<string, string> serverURL = ConnectionInfo.GetRandomServer();
+
             try {
-                await client.ClientAsync(new ClientRequest { ClientUrl = URL, Script = this.file, ServerUrl = ConnectionInfo.GetRandomServer() });
+                await client.ClientAsync(new ClientRequest { ClientUrl = URL, Id = this.username, Script = this.file, ServerId = serverURL.Key, ServerUrl = serverURL.Value });
 
                 // FIXME: await or no shutdown?
                 channel.ShutdownAsync().Wait();

@@ -24,7 +24,8 @@ message ClientRequest {
 	string id = 1;
 	string script = 2;
 	string clientUrl = 3;
-	string serverUrl = 4;
+	string serverId = 4;
+	string serverUrl = 5;
 }
 message ClientResponse {}
 

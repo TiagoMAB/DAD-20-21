@@ -17,14 +17,11 @@ namespace PCS {
         public override Task<ClientResponse> Client(ClientRequest request, ServerCallContext context) {
             Console.WriteLine(String.Format("[{1}] Request to launch client with script file '{0}'", request.Script, DateTime.Now.ToString()));
 
-            string[] address = request.ServerUrl.Split(":");
-            string[] serverAddress = { address[0] + ":" + address[1], address[2] };
-
-            address = request.ClientUrl.Split(":");
+            string[] address = request.ClientUrl.Split(":");
             string[] clientAddress = { address[0] + ":" + address[1], address[2] };
 
             try {
-                ProcessStartInfo p = new ProcessStartInfo("cmd.exe", String.Format("/c start {0} {1} {2} {3} {4} {5}", this.client, clientAddress[0], clientAddress[1], request.Script, serverAddress[0], serverAddress[1]));
+                ProcessStartInfo p = new ProcessStartInfo("cmd.exe", String.Format("/c start {0} {1} {2} {3} {4} {5} {6}", this.client, request.Id, clientAddress[0], clientAddress[1], request.Script, request.ServerId, request.ServerUrl));
                 if (Process.Start(p) == null) {
                     // TODO: handle error
                 }

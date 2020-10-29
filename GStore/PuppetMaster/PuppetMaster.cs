@@ -143,5 +143,9 @@ namespace PuppetMaster {
             Command command = new Unfreeze(this, unfreezeSelector.Text);
             await CommandHandler(command);
         }
+
+        private void StatusBtn_Click(object sender, EventArgs e) {
+           
+        }
     }
 }
