@@ -36,7 +36,7 @@ namespace PCS {
             Console.WriteLine(String.Format("[{4}] Request to launch server with id '{0}' at '{1}' with a min delay of {2}ms and max delay of {3}ms", request.Id, request.Url, request.MinDelay, request.MaxDelay, DateTime.Now.ToString()));
 
             try {
-                ProcessStartInfo p = new ProcessStartInfo("cmd.exe", String.Format("/c start {0} {1} {2} {3} {4} {5} {6}", this.server, request.Id, request.Url, request.MinDelay, request.MaxDelay, request.HostConn, request.HostPort));
+                ProcessStartInfo p = new ProcessStartInfo("cmd.exe", String.Format("/c start {0} {1} {2} {3} {4} {5} {6}", this.server, request.Id, request.Url, request.MinDelay, request.MaxDelay, request.OtherId, request.OtherUrl));
                 if (Process.Start(p) == null) {
                     // TODO: handle error
                 }

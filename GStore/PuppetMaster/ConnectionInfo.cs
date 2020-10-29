@@ -33,7 +33,7 @@ namespace PuppetMaster {
 
                 i--;
             }
-            return new KeyValuePair<string, string>();
+            return new KeyValuePair<string, string>("", "");
         }
 
         public static string GetServer(string name) {

@@ -52,8 +52,8 @@ message ServerRequest {
 	string url = 2;
 	int64 min_delay = 3;
 	int64 max_delay = 4;
-	string host_conn = 5;
-	string host_port = 6;
+	string otherId = 5;
+	string otherUrl = 6;
 }
 message ServerResponse {}
 
