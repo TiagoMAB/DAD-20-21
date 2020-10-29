@@ -189,8 +189,8 @@ namespace Server
 
             string partition_name = request.Name;
             List<string> server_ids = request.Ids.ToList();
-            bool own = server_ids.Contains(this.id);
-            Partition p = new Partition(partition_name, own);
+            int index = server_ids.FindIndex(server => server == this.id);
+            Partition p = new Partition(partition_name, index, server_ids.Count);
 
             foreach (string id in server_ids)
             {
@@ -451,8 +451,8 @@ namespace Server
             string master_url = network[master_id];
 
             List<string> server_ids = request.Ids.ToList();
-            bool own = server_ids.Contains(this.id);
-            Partition p = new Partition(partition_name, own);
+            int index = server_ids.FindIndex(server => server == this.id);
+            Partition p = new Partition(partition_name, index, server_ids.Count);
 
             foreach (string id in server_ids)
             {
