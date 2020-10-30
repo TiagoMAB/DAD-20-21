@@ -32,10 +32,10 @@ namespace Client.Commands
 
                 foreach (ListServerReply.Types.ListValue value in response.Values)
                     Console.WriteLine("---------------------//---------------------\n" +
-                        "Partition Id: {1}\n" +
-                        "Object Id: {2}\n" +
-                        "Value: {3}\n" +
-                        "Is this server the master of the object? {4}",
+                        "Partition Id: {0}\n" +
+                        "Object Id: {1}\n" +
+                        "Value: {2}\n" +
+                        "Is this server the master of the object? {3}",
                         value.PartitionId, value.ObjectId, value.Value, (value.IsMaster)? "true":"false");
             }
             catch (RpcException e) when (e.StatusCode == StatusCode.Unavailable) {

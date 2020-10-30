@@ -28,26 +28,31 @@ namespace Client
             Server server;
             ServerInfo serverInfo;
 
-            /*
-             clientHost: host name required for status commands (client is actually the server in this operation)
-             clientPort: port number required for status command (client is actually the server in this operation)
-             serverHost: first server URL being contacted by the client
-             */
-            if (args.Length != 6)
+            if (args.Length != 5)
             {
                 Console.WriteLine("Incorrect arguments\n" +
-                    "Correct arguments' format: username clientHost clientPort scriptPath serverId serverURL");
+                    "Correct arguments' format: username clientURL scriptPath serverId serverURL");
+                return;
+            }
+
+            string[] details = args[1].Split("//");
+            if (details.Length == 2)
+                details = details[1].Split(':');
+            else if (details.Length == 1)
+                details = details[0].Split(':');
+            else {
+                Console.WriteLine("Unknown URL format \"{0}\"", args[1]);
                 return;
             }
 
             //USERNAME
-            Console.WriteLine("Client with username \"{0}\" started.", args[0]);
+            Console.WriteLine("Client with username \"{0}\" started in host \"{1}\" and port \"{2}\".", args[0], details[0], details[1]);
 
             serverInfo = ServerInfo.Instance();
 
-            serverInfo.AddServerURL(args[4], args[5]);
+            serverInfo.AddServerURL(args[3], args[4]);
             serverInfo.UserName = args[0];
-            serverInfo.CurrentServerURL = args[5];
+            serverInfo.CurrentServerURL = args[4];
             serverInfo.ExecFinish = false;
 
             AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
@@ -55,14 +60,14 @@ namespace Client
             server = new Server
             {
                 Services = { PuppetMaster.BindService(new ServerService()) },
-                Ports = { new ServerPort(args[1], int.Parse(args[2]), ServerCredentials.Insecure) }
+                Ports = { new ServerPort(details[0], int.Parse(details[1]), ServerCredentials.Insecure) }
             };
 
             server.Start();
 
             try
             {
-                script = Parser.ParseScript(args[3]);
+                script = Parser.ParseScript(args[2]);
             }
             catch (FileNotFoundException e)
             {
