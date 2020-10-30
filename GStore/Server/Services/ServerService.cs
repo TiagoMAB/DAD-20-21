@@ -8,6 +8,9 @@ using Domain;
 using System.Threading.Tasks;
 using System.Collections;
 using System.Collections.Concurrent;
+using Server.Domain;
+using Timestamp = Server.Domain.Timestamp;
+using Record = Server.Domain.Record;
 
 namespace Server 
 {
@@ -190,7 +193,7 @@ namespace Server
             string partition_name = request.Name;
             List<string> server_ids = request.Ids.ToList();
             int index = server_ids.FindIndex(server => server == this.id);
-            Partition p = new Partition(partition_name, index, server_ids.Count);
+            Partition p = new Partition(partition_name, index, server_ids);
 
             foreach (string id in server_ids)
             {
@@ -240,7 +243,7 @@ namespace Server
 
             foreach (Partition p in this.partitions.Values)
             {
-                ServerInfoReply.Types.Partition partition = new ServerInfoReply.Types.Partition { Name = p.name, Master = "N/A" }; //TO DO: check master
+                ServerInfoReply.Types.Partition partition = new ServerInfoReply.Types.Partition { Name = p.name, NumOfServers = p.replicas.Count };
                 foreach (string server in p.replicas.Keys)
                 {
                     partition.ServerIds.Add(server);
@@ -332,7 +335,7 @@ namespace Server
             }
 
             Console.WriteLine("Write() finished...");
-            return new WriteReply { Ok = true };
+            return new WriteReply { Timestamp = { partition.getTimestamp().getValue() } };
         }
 
         /*
@@ -347,15 +350,17 @@ namespace Server
             string partitionId = request.PartitionId;
             string objectId = request.ObjectId;
 
-            ReadReply reply = new ReadReply();
+            string value;
             if (!partitions.ContainsKey(partitionId))
             {
-                reply.Value = "N/A";              
+                value = "N/A";              
             }
             else
             {
-                reply.Value = partitions[partitionId].getObject(objectId);
+                value = partitions[partitionId].getObject(objectId);
             }
+
+            ReadReply reply = new ReadReply{ Timestamp = { partitions[partitionId].getTimestamp().getValue() }, Value = value };
 
             Console.WriteLine("Read() finished...");
             return reply;
@@ -375,8 +380,10 @@ namespace Server
             {
                 foreach (KeyValuePair<string, string> o in p.objects)
                 {
-                    reply.Values.Add(new ListServerReply.Types.ListValue { PartitionId = p.name, ObjectId = o.Key, Value = o.Value, IsMaster = true });
-                } 
+                    reply.Values.Add(new ListServerReply.Types.ListValue { PartitionId = p.name, ObjectId = o.Key, Value = o.Value });
+                }
+
+                reply.PartTimestamps.Add(new ListServerReply.Types.Timestamps { PartitionId = p.name, Timestamp = { p.getTimestamp().getValue() } });
             }
 
             Console.WriteLine("ListServer() finished...");
@@ -452,7 +459,7 @@ namespace Server
 
             List<string> server_ids = request.Ids.ToList();
             int index = server_ids.FindIndex(server => server == this.id);
-            Partition p = new Partition(partition_name, index, server_ids.Count);
+            Partition p = new Partition(partition_name, index, server_ids);
 
             foreach (string id in server_ids)
             {
@@ -463,6 +470,81 @@ namespace Server
 
             Console.WriteLine("SharePartition() finished...");
             return new SharePartitionReply();
+        }
+
+        /*
+         * Gossip request from other server
+         */
+        public GossipReply gossip(GossipRequest request)
+        {
+            delays();
+
+            Timestamp ts = new Timestamp(request.Ts.Value.ToArray());
+
+            Partition p = this.partitions[request.PartitionId];
+            List<GStore.Record> records = p.getUpdateLog()
+                .Where(r => r.getTimestamp() > ts)
+                .Select(r => new GStore.Record { Ts = new GStore.Timestamp { Value = { r.getTimestamp().getValue() } }, ObjectId = r.getObject(), Value = r.getValue() })
+                .OrderByDescending(r => r.Ts)
+                .ToList();
+
+            // Current timestamp
+            Timestamp cur = p.getTimestamp();
+
+            return new GossipReply { Updates = { records } , Ts = new GStore.Timestamp { Value = { cur.getValue() } }, ReplicaNumber = p.getReplicaNumber() };
+        }
+
+        /*
+         * Request other servers for gossip
+         */
+        public void gossip()
+        {
+            Console.WriteLine("Gossip()");
+            List<Task> requests = new List<Task>();
+            foreach(Partition p in this.partitions.Values)
+            {
+                foreach(string url in p.replicas.Values)
+                {
+                    if (url == this.URL || !p.own) 
+                    { 
+                        continue; 
+                    }
+                    requests.Add(Task.Run(() =>
+                    {
+
+                        AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+                        GrpcChannel channel = GrpcChannel.ForAddress(url);
+                        var server = new ServerCommunication.ServerCommunicationClient(channel);
+
+                        try
+                        {
+                            GossipReply reply = server.Gossip(new GossipRequest { PartitionId = p.name, Ts = new GStore.Timestamp { Value = { p.getTimestamp().getValue() } } });
+
+                            // Update current server
+                            lock(p.getTimestamp())
+                            {
+                                p.setTimestamp(reply.ReplicaNumber, new Timestamp(reply.Ts.Value.ToArray()));
+                                p.update(reply.Updates.ToList().Select(r => new Record(
+                                    new Timestamp(r.Ts.Value.ToArray()), r.ObjectId, r.Value)).ToList(), reply.ReplicaNumber);
+                            }
+
+                            lock(p.getUpdateLog())
+                            {
+                                p.cleanLog();
+                            }
+                        } 
+                        catch
+                        {
+                            handleServerFailure(url);
+                        }
+
+                        channel.ShutdownAsync().Wait();
+                    }));
+                }
+            }
+
+            Task.WaitAll(requests.ToArray());
+            Console.WriteLine("Gossip() finished");
         }
 
         public void delays(bool unfreeze = false)
@@ -489,8 +571,17 @@ namespace Server
 
         void handleServerFailure(string url)
         {
-            Console.WriteLine("handleServerFailure() server crashed at " + url);
-            string failed_server = this.network.First(id => id.Value == url).Key;
+            string failed_server;
+            try
+            {
+                failed_server = this.network.First(id => id.Value == url).Key;
+                Console.WriteLine("handleServerFailure() server crashed at " + url);
+            } catch (InvalidOperationException)
+            {
+                // In case server already removed
+                return;
+            }
+
             string fail;
 
             Console.WriteLine("handleServerFailure() server identified with id: " + failed_server);
@@ -500,7 +591,14 @@ namespace Server
             Console.WriteLine("handleServerFailure() server removed from the network...");
             foreach (Partition p in partitions.Values)
             {
-                p.replicas.Remove(failed_server);
+                int index;
+                if ((index = p.order.FindIndex(s => s == failed_server)) != -1) {
+                    p.replicas.Remove(failed_server);
+                    if (p.own)
+                    {
+                        p.setCurTimestamp(index, int.MaxValue);
+                    }
+                }
             }
             Console.WriteLine("handleServerFailure() server removed from all partitions...");
         }

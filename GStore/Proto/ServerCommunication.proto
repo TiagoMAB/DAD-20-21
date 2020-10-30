@@ -8,6 +8,7 @@ service ServerCommunication {
 	rpc LockObject (LockObjectRequest) returns (LockObjectReply);
 	rpc WriteObject (WriteObjectRequest) returns (WriteObjectReply);
 	rpc SharePartition (SharePartitionRequest) returns (SharePartitionReply);
+	rpc Gossip (GossipRequest) returns (GossipReply);
 }
 
 message HandshakeRequest {
@@ -58,3 +59,24 @@ message SharePartitionRequest {
 }
 
 message SharePartitionReply {}
+
+message Timestamp {
+	repeated int32 value = 1;
+}
+
+message Record {
+	Timestamp ts = 1;
+	string objectId = 2;
+	string value = 3;
+}
+
+message GossipRequest {
+	Timestamp ts = 1;
+	string partitionId = 2;
+}
+
+message GossipReply {
+	Timestamp ts = 1;
+	repeated Record updates = 2;
+	int32 replicaNumber = 3;
+}

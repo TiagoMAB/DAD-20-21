@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Server.Domain
 {
-    class Record
+    public class Record
     {
         private readonly Timestamp ts;
         private readonly string obj;
@@ -17,35 +17,19 @@ namespace Server.Domain
             this.val = val;
         }
 
-        /*
-        public static bool operator >(Record a, Record b)
+        public Timestamp getTimestamp()
         {
-            return a.ts > b.ts;
-        }   
-        public static bool operator <(Record a, Record b)
-        {
-            return a.ts < b.ts;
-        }   
+            return this.ts;
+        }
 
-        public static bool operator >=(Record a, Record b)
+        public string getObject()
         {
-            return a.ts >= b.ts;
-        }   
+            return this.obj;
+        }
 
-        public static bool operator <=(Record a, Record b)
+        public string getValue()
         {
-            return a.ts <= b.ts;
-        }   
-
-        public static bool operator ==(Record a, Record b)
-        {
-            return a.ts == b.ts;
-        }   
-
-        public static bool operator !=(Record a, Record b)
-        {
-            return a.ts != b.ts;
-        }   
-        */
+            return this.val;
+        }
     }
 }

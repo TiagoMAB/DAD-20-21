@@ -33,5 +33,10 @@ namespace Server
         {
             return Task.FromResult(server.sharePartition(request));
         }
+
+        public override Task<GossipReply> Gossip(GossipRequest request, ServerCallContext context)
+        {
+            return Task.FromResult(server.gossip(request));
+        }
     }
 }

@@ -8,6 +8,8 @@ namespace Server
 {
     class Program
     {
+        private const int GOSSIP_DELAY = 20;
+
         static void Main(string[] args)
         {
             if (args.Length != 4 && args.Length != 6) 
@@ -42,6 +44,8 @@ namespace Server
                 string otherURL = args[5];
                 ServerService = new ServerService(id, URL, delay, otherId, otherURL);
             }
+
+            new System.Threading.Timer((e) => ServerService.gossip(), null, 0, GOSSIP_DELAY * 1000);
 
             GStoreService gstoreservice = new GStoreService(ServerService);
             PuppetMasterService puppetmasterservice = new PuppetMasterService(ServerService);
