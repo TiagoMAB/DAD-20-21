@@ -22,7 +22,7 @@ namespace PCS
             Server server = new Server
             {
                 Services = { GStore.PCS.BindService(new PCSImpl(clientPath, serverPath)) },
-                Ports = { new ServerPort("localhost", PORT, ServerCredentials.Insecure) },
+                Ports = { new ServerPort("0.0.0.0", PORT, ServerCredentials.Insecure) },
             };
 
             server.Start();
