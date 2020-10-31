@@ -34,33 +34,33 @@
             this.label5 = new System.Windows.Forms.Label();
             this.unfreezeBtn = new System.Windows.Forms.Button();
             this.label6 = new System.Windows.Forms.Label();
-            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.clientName = new System.Windows.Forms.TextBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.clientBtn = new System.Windows.Forms.Button();
-            this.textBox3 = new System.Windows.Forms.TextBox();
+            this.clientScript = new System.Windows.Forms.TextBox();
             this.label8 = new System.Windows.Forms.Label();
-            this.textBox2 = new System.Windows.Forms.TextBox();
+            this.clientURL = new System.Windows.Forms.TextBox();
             this.label7 = new System.Windows.Forms.Label();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.label9 = new System.Windows.Forms.Label();
-            this.textBox4 = new System.Windows.Forms.TextBox();
-            this.label10 = new System.Windows.Forms.Label();
-            this.label11 = new System.Windows.Forms.Label();
+            this.serverBtn = new System.Windows.Forms.Button();
+            this.serverURL = new System.Windows.Forms.TextBox();
+            this.minDelay = new System.Windows.Forms.NumericUpDown();
+            this.maxDelay = new System.Windows.Forms.NumericUpDown();
             this.label12 = new System.Windows.Forms.Label();
-            this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
-            this.numericUpDown2 = new System.Windows.Forms.NumericUpDown();
-            this.textBox5 = new System.Windows.Forms.TextBox();
-            this.button1 = new System.Windows.Forms.Button();
+            this.label11 = new System.Windows.Forms.Label();
+            this.label10 = new System.Windows.Forms.Label();
+            this.serverName = new System.Windows.Forms.TextBox();
+            this.label9 = new System.Windows.Forms.Label();
             this.statusBtn = new System.Windows.Forms.Button();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.label13 = new System.Windows.Forms.Label();
-            this.textBox6 = new System.Windows.Forms.TextBox();
-            this.button2 = new System.Windows.Forms.Button();
             this.checkedListBox1 = new System.Windows.Forms.CheckedListBox();
+            this.partitionBtn = new System.Windows.Forms.Button();
+            this.partitionName = new System.Windows.Forms.TextBox();
+            this.label13 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown2)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.minDelay)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.maxDelay)).BeginInit();
             this.groupBox3.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -220,21 +220,21 @@
             this.label6.TabIndex = 16;
             this.label6.Text = "Name:";
             // 
-            // textBox1
+            // clientName
             // 
-            this.textBox1.Location = new System.Drawing.Point(54, 22);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(268, 23);
-            this.textBox1.TabIndex = 17;
+            this.clientName.Location = new System.Drawing.Point(54, 22);
+            this.clientName.Name = "clientName";
+            this.clientName.Size = new System.Drawing.Size(268, 23);
+            this.clientName.TabIndex = 17;
             // 
             // groupBox1
             // 
             this.groupBox1.Controls.Add(this.clientBtn);
-            this.groupBox1.Controls.Add(this.textBox3);
+            this.groupBox1.Controls.Add(this.clientScript);
             this.groupBox1.Controls.Add(this.label8);
-            this.groupBox1.Controls.Add(this.textBox2);
+            this.groupBox1.Controls.Add(this.clientURL);
             this.groupBox1.Controls.Add(this.label7);
-            this.groupBox1.Controls.Add(this.textBox1);
+            this.groupBox1.Controls.Add(this.clientName);
             this.groupBox1.Controls.Add(this.label6);
             this.groupBox1.Location = new System.Drawing.Point(23, 177);
             this.groupBox1.Name = "groupBox1";
@@ -251,13 +251,14 @@
             this.clientBtn.TabIndex = 22;
             this.clientBtn.Text = "Create";
             this.clientBtn.UseVisualStyleBackColor = true;
+            this.clientBtn.Click += new System.EventHandler(this.ClientBtn_Click);
             // 
-            // textBox3
+            // clientScript
             // 
-            this.textBox3.Location = new System.Drawing.Point(54, 80);
-            this.textBox3.Name = "textBox3";
-            this.textBox3.Size = new System.Drawing.Size(268, 23);
-            this.textBox3.TabIndex = 21;
+            this.clientScript.Location = new System.Drawing.Point(54, 80);
+            this.clientScript.Name = "clientScript";
+            this.clientScript.Size = new System.Drawing.Size(268, 23);
+            this.clientScript.TabIndex = 21;
             // 
             // label8
             // 
@@ -268,12 +269,12 @@
             this.label8.TabIndex = 20;
             this.label8.Text = "Script:";
             // 
-            // textBox2
+            // clientURL
             // 
-            this.textBox2.Location = new System.Drawing.Point(54, 51);
-            this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(268, 23);
-            this.textBox2.TabIndex = 19;
+            this.clientURL.Location = new System.Drawing.Point(54, 51);
+            this.clientURL.Name = "clientURL";
+            this.clientURL.Size = new System.Drawing.Size(268, 23);
+            this.clientURL.TabIndex = 19;
             // 
             // label7
             // 
@@ -286,14 +287,14 @@
             // 
             // groupBox2
             // 
-            this.groupBox2.Controls.Add(this.button1);
-            this.groupBox2.Controls.Add(this.textBox5);
-            this.groupBox2.Controls.Add(this.numericUpDown2);
-            this.groupBox2.Controls.Add(this.numericUpDown1);
+            this.groupBox2.Controls.Add(this.serverBtn);
+            this.groupBox2.Controls.Add(this.serverURL);
+            this.groupBox2.Controls.Add(this.minDelay);
+            this.groupBox2.Controls.Add(this.maxDelay);
             this.groupBox2.Controls.Add(this.label12);
             this.groupBox2.Controls.Add(this.label11);
             this.groupBox2.Controls.Add(this.label10);
-            this.groupBox2.Controls.Add(this.textBox4);
+            this.groupBox2.Controls.Add(this.serverName);
             this.groupBox2.Controls.Add(this.label9);
             this.groupBox2.Location = new System.Drawing.Point(365, 177);
             this.groupBox2.Name = "groupBox2";
@@ -302,39 +303,35 @@
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Server";
             // 
-            // label9
+            // serverBtn
             // 
-            this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(6, 25);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(42, 15);
-            this.label9.TabIndex = 0;
-            this.label9.Text = "Name:";
+            this.serverBtn.Location = new System.Drawing.Point(130, 109);
+            this.serverBtn.Name = "serverBtn";
+            this.serverBtn.Size = new System.Drawing.Size(75, 23);
+            this.serverBtn.TabIndex = 7;
+            this.serverBtn.Text = "Create";
+            this.serverBtn.UseVisualStyleBackColor = true;
             // 
-            // textBox4
+            // serverURL
             // 
-            this.textBox4.Location = new System.Drawing.Point(54, 22);
-            this.textBox4.Name = "textBox4";
-            this.textBox4.Size = new System.Drawing.Size(268, 23);
-            this.textBox4.TabIndex = 1;
+            this.serverURL.Location = new System.Drawing.Point(54, 51);
+            this.serverURL.Name = "serverURL";
+            this.serverURL.Size = new System.Drawing.Size(268, 23);
+            this.serverURL.TabIndex = 6;
             // 
-            // label10
+            // minDelay
             // 
-            this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(6, 54);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(31, 15);
-            this.label10.TabIndex = 2;
-            this.label10.Text = "URL:";
+            this.minDelay.Location = new System.Drawing.Point(75, 80);
+            this.minDelay.Name = "minDelay";
+            this.minDelay.Size = new System.Drawing.Size(82, 23);
+            this.minDelay.TabIndex = 5;
             // 
-            // label11
+            // maxDelay
             // 
-            this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(6, 83);
-            this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(63, 15);
-            this.label11.TabIndex = 3;
-            this.label11.Text = "Min Delay:";
+            this.maxDelay.Location = new System.Drawing.Point(240, 80);
+            this.maxDelay.Name = "maxDelay";
+            this.maxDelay.Size = new System.Drawing.Size(82, 23);
+            this.maxDelay.TabIndex = 4;
             // 
             // label12
             // 
@@ -345,35 +342,39 @@
             this.label12.TabIndex = 3;
             this.label12.Text = "Max Delay:";
             // 
-            // numericUpDown1
+            // label11
             // 
-            this.numericUpDown1.Location = new System.Drawing.Point(240, 80);
-            this.numericUpDown1.Name = "numericUpDown1";
-            this.numericUpDown1.Size = new System.Drawing.Size(82, 23);
-            this.numericUpDown1.TabIndex = 4;
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(6, 83);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(63, 15);
+            this.label11.TabIndex = 3;
+            this.label11.Text = "Min Delay:";
             // 
-            // numericUpDown2
+            // label10
             // 
-            this.numericUpDown2.Location = new System.Drawing.Point(75, 80);
-            this.numericUpDown2.Name = "numericUpDown2";
-            this.numericUpDown2.Size = new System.Drawing.Size(82, 23);
-            this.numericUpDown2.TabIndex = 5;
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(6, 54);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(31, 15);
+            this.label10.TabIndex = 2;
+            this.label10.Text = "URL:";
             // 
-            // textBox5
+            // serverName
             // 
-            this.textBox5.Location = new System.Drawing.Point(54, 51);
-            this.textBox5.Name = "textBox5";
-            this.textBox5.Size = new System.Drawing.Size(268, 23);
-            this.textBox5.TabIndex = 6;
+            this.serverName.Location = new System.Drawing.Point(54, 22);
+            this.serverName.Name = "serverName";
+            this.serverName.Size = new System.Drawing.Size(268, 23);
+            this.serverName.TabIndex = 1;
             // 
-            // button1
+            // label9
             // 
-            this.button1.Location = new System.Drawing.Point(130, 109);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
-            this.button1.TabIndex = 7;
-            this.button1.Text = "Create";
-            this.button1.UseVisualStyleBackColor = true;
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(6, 25);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(42, 15);
+            this.label9.TabIndex = 0;
+            this.label9.Text = "Name:";
             // 
             // statusBtn
             // 
@@ -388,8 +389,8 @@
             // groupBox3
             // 
             this.groupBox3.Controls.Add(this.checkedListBox1);
-            this.groupBox3.Controls.Add(this.button2);
-            this.groupBox3.Controls.Add(this.textBox6);
+            this.groupBox3.Controls.Add(this.partitionBtn);
+            this.groupBox3.Controls.Add(this.partitionName);
             this.groupBox3.Controls.Add(this.label13);
             this.groupBox3.Location = new System.Drawing.Point(23, 324);
             this.groupBox3.Name = "groupBox3";
@@ -397,6 +398,30 @@
             this.groupBox3.TabIndex = 21;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Partition";
+            // 
+            // checkedListBox1
+            // 
+            this.checkedListBox1.FormattingEnabled = true;
+            this.checkedListBox1.Location = new System.Drawing.Point(396, 22);
+            this.checkedListBox1.Name = "checkedListBox1";
+            this.checkedListBox1.Size = new System.Drawing.Size(268, 94);
+            this.checkedListBox1.TabIndex = 3;
+            // 
+            // partitionBtn
+            // 
+            this.partitionBtn.Location = new System.Drawing.Point(149, 79);
+            this.partitionBtn.Name = "partitionBtn";
+            this.partitionBtn.Size = new System.Drawing.Size(75, 23);
+            this.partitionBtn.TabIndex = 2;
+            this.partitionBtn.Text = "Create";
+            this.partitionBtn.UseVisualStyleBackColor = true;
+            // 
+            // partitionName
+            // 
+            this.partitionName.Location = new System.Drawing.Point(54, 30);
+            this.partitionName.Name = "partitionName";
+            this.partitionName.Size = new System.Drawing.Size(268, 23);
+            this.partitionName.TabIndex = 1;
             // 
             // label13
             // 
@@ -406,30 +431,6 @@
             this.label13.Size = new System.Drawing.Size(42, 15);
             this.label13.TabIndex = 0;
             this.label13.Text = "Name:";
-            // 
-            // textBox6
-            // 
-            this.textBox6.Location = new System.Drawing.Point(54, 30);
-            this.textBox6.Name = "textBox6";
-            this.textBox6.Size = new System.Drawing.Size(268, 23);
-            this.textBox6.TabIndex = 1;
-            // 
-            // button2
-            // 
-            this.button2.Location = new System.Drawing.Point(149, 79);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(75, 23);
-            this.button2.TabIndex = 2;
-            this.button2.Text = "Create";
-            this.button2.UseVisualStyleBackColor = true;
-            // 
-            // checkedListBox1
-            // 
-            this.checkedListBox1.FormattingEnabled = true;
-            this.checkedListBox1.Location = new System.Drawing.Point(396, 22);
-            this.checkedListBox1.Name = "checkedListBox1";
-            this.checkedListBox1.Size = new System.Drawing.Size(268, 94);
-            this.checkedListBox1.TabIndex = 3;
             // 
             // PuppetMaster
             // 
@@ -462,8 +463,8 @@
             this.groupBox1.PerformLayout();
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown2)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.minDelay)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.maxDelay)).EndInit();
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
             this.ResumeLayout(false);
@@ -490,28 +491,28 @@
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Button unfreezeBtn;
         private System.Windows.Forms.Label label6;
-        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.TextBox clientName;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.Button clientBtn;
-        private System.Windows.Forms.TextBox textBox3;
+        private System.Windows.Forms.TextBox clientScript;
         private System.Windows.Forms.Label label8;
-        private System.Windows.Forms.TextBox textBox2;
+        private System.Windows.Forms.TextBox clientURL;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.Label label9;
-        private System.Windows.Forms.TextBox textBox4;
-        private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.TextBox textBox5;
-        private System.Windows.Forms.NumericUpDown numericUpDown2;
-        private System.Windows.Forms.NumericUpDown numericUpDown1;
+        private System.Windows.Forms.TextBox serverName;
+        private System.Windows.Forms.Button serverBtn;
+        private System.Windows.Forms.TextBox serverURL;
+        private System.Windows.Forms.NumericUpDown minDelay;
+        private System.Windows.Forms.NumericUpDown maxDelay;
         private System.Windows.Forms.Label label12;
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.Button statusBtn;
         private System.Windows.Forms.GroupBox groupBox3;
-        private System.Windows.Forms.TextBox textBox6;
+        private System.Windows.Forms.TextBox partitionName;
         private System.Windows.Forms.Label label13;
-        private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.Button partitionBtn;
         private System.Windows.Forms.CheckedListBox checkedListBox1;
     }
 }

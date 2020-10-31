@@ -5,8 +5,10 @@ using PuppetMaster.MVC;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Status = PuppetMaster.Commands.Status;
 
 namespace PuppetMaster {
     public partial class PuppetMaster : Form {
@@ -19,7 +21,7 @@ namespace PuppetMaster {
 
             this.server = new Grpc.Core.Server {
                 Services = { GStore.Status.BindService(new StatusImpl(this)) },
-                Ports    = { new ServerPort("localhost", PORT, ServerCredentials.Insecure) },
+                Ports    = { new ServerPort("0.0.0.0", PORT, ServerCredentials.Insecure) },
             };
 
             server.Start();
@@ -144,8 +146,25 @@ namespace PuppetMaster {
             await CommandHandler(command);
         }
 
-        private void StatusBtn_Click(object sender, EventArgs e) {
-           
+        private async void StatusBtn_Click(object sender, EventArgs e) {
+            Command command = new Status(this);
+            await CommandHandler(command);
+        }
+
+        private async void ClientBtn_Click(object sender, EventArgs e) {
+            if (clientName.Text == "") {
+                MessageBox.Show("Insert a name for the client", "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }else if (clientURL.Text == "") {
+                MessageBox.Show("Insert a URL for the client", "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }else if (clientScript.Text == "") {
+                MessageBox.Show("Insert a script for the client to run", "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            Command command = new Client(this, clientName.Text, clientURL.Text, clientScript.Text);
+            await CommandHandler(command);
         }
     }
 }
