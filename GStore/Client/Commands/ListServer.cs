@@ -18,29 +18,33 @@ namespace Client.Commands
         {
             ServerInfo serverInfo = ServerInfo.Instance();
 
-            System.Diagnostics.Debug.WriteLine(String.Format("List objects stored in server {0}", this.serverId));
+            System.Diagnostics.Debug.WriteLine(String.Format("List objects stored in server \"{0}\"", this.serverId));
 
             string url = serverInfo.GetURLByServerId(this.serverId);
-            if (url == null)
-                throw new NonExistentServerException(String.Format("Server with id {0} not found.", this.serverId));
+            if (url == null) {
+                Console.WriteLine("Server with id \"{0}\" not found.", this.serverId);
+                return;
+            }
 
             GStore.GStore.GStoreClient client = serverInfo.GetChannel(url);
-
             try
             {
+                Console.WriteLine("List server: Printing values of \"{0}\":", this.serverId);
+
                 ListServerReply response = client.ListServer(new ListServerRequest { });
 
                 foreach (ListServerReply.Types.ListValue value in response.Values)
-                    Console.WriteLine("---------------------//---------------------\n" +
-                        "Partition Id: {0}\n" +
-                        "Object Id: {1}\n" +
-                        "Value: {2}\n" +
-                        "Is this server the master of the object? {3}",
+                    Console.WriteLine("\tPartition Id: {0}\n" +
+                        "\tObject Id: {1}\n" +
+                        "\tValue: {2}\n" +
+                        "\tIs this server the master of the object? {3}\n",
                         value.PartitionId, value.ObjectId, value.Value, (value.IsMaster)? "true":"false");
+
+                Console.WriteLine("All values printed.\n\n");
             }
-            catch (RpcException e) when (e.StatusCode == StatusCode.Unavailable) {
-                Console.WriteLine("Server with id {0} not available. Exiting...");
-                throw;
+            catch (RpcException e)
+            {
+                Console.WriteLine("Server with id \"{0}\" failed with status \"{1}\". Proceeding to next operation...", this.serverId, e.StatusCode.ToString());
             }
         }
     }

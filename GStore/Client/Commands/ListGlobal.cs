@@ -19,6 +19,8 @@ namespace Client.Commands
             Random random = new Random();
             List<ListGlobalReply> replies = new List<ListGlobalReply>();
 
+            Console.WriteLine("List Global: Printing all partition and object Ids:");
+
             //Picks random server to ask for partition's information
             while (partitionsToRequest.Count != 0 && urls.Count != 0)
             {
@@ -41,16 +43,15 @@ namespace Client.Commands
                 {
                     GStore.GStore.GStoreClient client = serverInfo.GetChannel(url);
 
-                    //TODO: Timeout can be added, but should we do it?
                     replies.Add(client.ListGlobal(listGlobal));
 
                     urls.Remove(url);
                     foreach (string partition in serverPartitionIds)
                         partitionsToRequest.Remove(partition);
                 }
-                catch (RpcException e) when (e.StatusCode == StatusCode.Unavailable)
+                catch (RpcException e)
                 {
-                    System.Diagnostics.Debug.WriteLine(String.Format("Server with URL {0} not available. Asking next server.", serverInfo.CurrentServerURL));
+                    System.Diagnostics.Debug.WriteLine(String.Format("Server with URL \"{0}\" failed with status \"{1}\". Asking next server.", serverInfo.CurrentServerURL, e.StatusCode.ToString()));
                     urls.Remove(url);
                 }
             }
@@ -61,7 +62,8 @@ namespace Client.Commands
             foreach (ListGlobalReply listPartition in replies)
                 foreach (ListGlobalReply.Types.ListPartition partition in listPartition.Partitions.ToList())
                     foreach (string id in partition.ObjectId.ToList())
-                        Console.WriteLine("{0}\t\t\t{1}", partition.PartitionId, id);
+                        Console.WriteLine("{0}\t\t\t\t{1}", partition.PartitionId, id);
+            Console.WriteLine("All values printed.\n\n");
         }
     }
 }

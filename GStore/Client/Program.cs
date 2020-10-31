@@ -32,7 +32,7 @@ namespace Client
             {
                 Console.WriteLine("Incorrect arguments\n" +
                     "Correct arguments' format: username clientURL scriptPath serverId serverURL");
-                return;
+                Console.ReadKey(); return;
             }
 
             string[] details = args[1].Split("//");
@@ -42,11 +42,11 @@ namespace Client
                 details = details[0].Split(':');
             else {
                 Console.WriteLine("Unknown URL format \"{0}\"", args[1]);
-                return;
+                Console.ReadKey(); return;
             }
 
             //USERNAME
-            Console.WriteLine("Client with username \"{0}\" started in host \"{1}\" and port \"{2}\".", args[0], details[0], details[1]);
+            Console.WriteLine("Client with username \"{0}\" started in host \"{1}\" and port \"{2}\".\n", args[0], details[0], details[1]);
 
             serverInfo = ServerInfo.Instance();
 
@@ -72,22 +72,22 @@ namespace Client
             catch (FileNotFoundException e)
             {
                 Console.WriteLine(e.Message);
-                return;
+                Console.ReadKey(); return;
             }
             catch (InvalidExpressionException e)
             {
                 Console.WriteLine(e.Message);
-                return;
+                Console.ReadKey(); return;
             }
             catch (CycleInceptionException)
             {
                 Console.WriteLine("It is not possible to have a cycle inside another cycle.");
-                return;
+                Console.ReadKey(); return;
             }
             catch (NoEndOfCycleException)
             {
                 Console.WriteLine("Script ended with no cycle closure.");
-                return;
+                Console.ReadKey(); return;
             }
 
             try
@@ -98,12 +98,11 @@ namespace Client
             catch (NonExistentServerException e)
             {
                 Console.WriteLine(e.Message);
-                return;
+                Console.ReadKey(); return;
             } 
-            catch (RpcException e)
+            catch (RpcException)
             {
-                Console.WriteLine(e.Message);
-                return;
+                Console.ReadKey(); return;
             }
 
             serverInfo.ExecFinish = true;

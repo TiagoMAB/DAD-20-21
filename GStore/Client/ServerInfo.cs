@@ -12,6 +12,8 @@ namespace Client
     {
         static ServerInfo serverInfo = null;
 
+        static readonly int backoffTime = 5000;
+
         readonly Dictionary<string, string> serverURL = new Dictionary<string, string>();                                       // <serverId, URL>
 
         readonly Dictionary<string, string> masterURL = new Dictionary<string, string>();                                       // <partitionId, URL>
@@ -95,14 +97,14 @@ namespace Client
         public void RegisterPartition(string name, string masterId, List<string> serverIds) {
             string url = GetURLByServerId(masterId);
             if (url == null)
-                throw new NonExistentServerException(String.Format("Server with id {0} not found.", masterId));
+                throw new NonExistentServerException(String.Format("Server with id \"{0}\" not found.", masterId));
 
             masterURL.Add(name, url);
 
             foreach (string serverId in serverIds) {
                 url = GetURLByServerId(serverId);
                 if (url == null)
-                    throw new NonExistentServerException(String.Format("Server with id {0} not found.", serverId));
+                    throw new NonExistentServerException(String.Format("Server with id \"{0}\" not found.", serverId));
 
                 List<string> partitionIds = GetPartitionsByURL(url);
                 if (partitionIds == null)
@@ -125,14 +127,14 @@ namespace Client
             {
                 //Get random server from the list of known servers
                 string url = urls[random.Next(urls.Count)];
+
+                Console.WriteLine("Contacting server with URL \"{0}\" for info about the network...", url);
+
                 try
                 {
                     GStore.GStore.GStoreClient client = GetChannel(url);
 
-                    //TODO: maybe add a variable for waiting time
-                    var response = client.ServerInfo(new ServerInfoRequest { },
-                        //TODO: maybe use deadline: context.Deadline in server
-                        deadline: DateTime.UtcNow.AddMilliseconds(5000));
+                    var response = client.ServerInfo(new ServerInfoRequest { });
 
                     foreach (var value in response.Servers)
                         serverURL.Add(value.Id, value.Url);
@@ -140,15 +142,14 @@ namespace Client
                     foreach (var value in response.Partition)
                         RegisterPartition(value.Name, value.Master, value.ServerIds.ToList());
 
+                    Console.WriteLine("Information about the network obtained.");
                     return;
                 }
-                catch (RpcException e) when (e.StatusCode == StatusCode.DeadlineExceeded)
+                catch (RpcException e)
                 {
-                    System.Diagnostics.Debug.WriteLine(String.Format("Server {0} exceeded response time.", url));
-                }
-                catch (RpcException e) when (e.StatusCode == StatusCode.Unavailable)
-                {
-                    System.Diagnostics.Debug.WriteLine(String.Format("Server {0} not available.", url));
+                    System.Diagnostics.Debug.WriteLine(String.Format("Server with URL \"{0}\" failed with status \"{1}\".\nRetrying in {2}ms...", url, e.StatusCode.ToString(), backoffTime));
+                    Console.WriteLine("Server with URL \"{0}\" failed with status \"{1}\". Retrying in {2}ms...\n", url, e.StatusCode.ToString(), backoffTime);
+                    System.Threading.Thread.Sleep(backoffTime);
                 }
             }
         }

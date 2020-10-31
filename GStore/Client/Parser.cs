@@ -36,7 +36,7 @@ namespace Client
 
                         if (command.Length != 2)
                         {
-                            throw new InvalidExpressionException("Invalid input:\n" + line);
+                            throw new InvalidExpressionException("Invalid begin-repeat input:\n" + line);
                         }
                         else if (!int.TryParse(command[1], out repeatTimes))
                         {
@@ -63,6 +63,7 @@ namespace Client
                         break;
                 }
             }
+            file.Close();
             return script;
         }
 
@@ -75,33 +76,38 @@ namespace Client
                     case "read":
                         if (command.Length != 4)
                         {
-                            throw new InvalidExpressionException("Invalid input:\n" + line);
+                            throw new InvalidExpressionException("Invalid read input:\n" + line);
                         }
                         return new Read(command[1], command[2], command[3]);
 
                     case "write":
-                        if (command.Length != 4)
+                        string[] arguments = line.Split('"');
+
+                        if (arguments.Length != 3)
+                            throw new InvalidExpressionException("Invalid write input:\n" + line);
+
+                        else if (command.Length < 4)
                         {
-                            throw new InvalidExpressionException("Invalid input:\n" + line);
+                            throw new InvalidExpressionException("Invalid write input:\n" + line);
                         }
-                       return new Write(command[1], command[2], command[3]);
+                       return new Write(command[1], command[2], arguments[1]);
                     case "listServer":
                         if (command.Length != 2)
                         {
-                            throw new InvalidExpressionException("Invalid input:\n" + line);
+                            throw new InvalidExpressionException("Invalid listServer input:\n" + line);
                         }
                         return new ListServer(command[1]);
                     case "listGlobal":
                         if (command.Length != 1)
                         {
-                            throw new InvalidExpressionException("Invalid input:\n" + line);
+                            throw new InvalidExpressionException("Invalid listGlobal input:\n" + line);
                         }
                         return new ListGlobal();
                     case "wait":
                         int time;
                         if (command.Length != 2)
                         {
-                            throw new InvalidExpressionException("Invalid input:\n" + line);
+                            throw new InvalidExpressionException("Invalid wait input:\n" + line);
                         }
                         else if (!int.TryParse(command[1], out time))
                         {
