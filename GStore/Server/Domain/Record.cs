@@ -31,5 +31,10 @@ namespace Server.Domain
         {
             return this.val;
         }
+
+        public override string ToString()
+        {
+            return String.Format("<TS: {0}, OBJ: {1}, VAL: {2}>", ts, obj, val);
+        }
     }
 }

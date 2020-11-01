@@ -74,12 +74,17 @@ namespace Domain
                 this.updateLog.Add(r);
 
                 // Apply update if its the next one
+                applyUpdate(r);
+            }
+        }
+
+        private void applyUpdate(Record r)
+        {
                 if (r.getTimestamp() == getTimestamp() + 1)
                 {
                     objects[r.getObject()] = r.getValue();
                     setCurTimestamp(r.getTimestamp());
                 }
-            }
         }
 
         public string getObject(string id)
@@ -118,9 +123,10 @@ namespace Domain
         {
             this.updateLog.RemoveAll(r =>
             {
+                applyUpdate(r);
                 foreach(int ts in this.ts)
                 {
-                    if (ts > getTimestamp())
+                    if (r.getTimestamp() > ts)
                     {
                         return false;
                     }
@@ -134,7 +140,7 @@ namespace Domain
 
         public override string ToString()
         {
-            string ret = "Name: " + name + " | Master: " + masterID + " | Own: " + own + "\nIds: ";
+            string ret = "\nName: " + name + " | Master: " + masterID + " | Own: " + own + "\nIds: ";
 
             foreach (string id in replicas.Keys)
             {
@@ -143,6 +149,29 @@ namespace Domain
 
             if (own)
             {
+                ret += String.Format("\nMy Timestamp: {0}", getTimestamp());
+
+                ret += "\nEstimated Timestamps: [";
+
+                int len = this.ts.Length - 1;
+
+                for (int i = 0; i <= len; i++)
+                {
+                    ret += i + (i != len ? ", " : "");
+                }
+
+                ret += "]\nUpdates:\n[";
+
+                int j = 0;
+
+                foreach(Record r in this.updateLog)
+                {
+                    ret += "\n" + r.ToString() + "; ";
+                    j++;
+                }
+
+                ret += "\n]";
+
                 ret = ret + "\nObjects:";
 
                 foreach (KeyValuePair<string, string> info in this.objects)
@@ -151,7 +180,7 @@ namespace Domain
                 }
             }
 
-            return ret;
+            return ret + "\n";
         }
     }
 }
