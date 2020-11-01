@@ -6,6 +6,7 @@ using Grpc.Net.Client;
 using System.Linq;
 using Domain;
 using System.Threading.Tasks;
+using System.Collections;
 
 namespace Server 
 {
@@ -67,8 +68,11 @@ namespace Server
         {
             delays();
 
+            List<string> partitions = new List<string>();
+
             Console.WriteLine("Status()...");
             Console.WriteLine("Known Servers:");
+            
             foreach (KeyValuePair<string, string> server in this.network)
             {
                 Console.WriteLine("Id: " + server.Key + " Url: " + server.Value);
@@ -76,11 +80,12 @@ namespace Server
             Console.WriteLine("Known partitions:");
             foreach (Partition p in this.partitions.Values)
             {
-                Console.WriteLine(p.ToString());
-               
+                string print = p.ToString();
+                Console.WriteLine(print);
+                partitions.Add(print);
             }
 
-            return new StatusInfo();
+            return new StatusInfo { Id = this.id, Server = new ServerStatus { Servers = { this.network }, Partitions = { partitions } } };
         }
 
         /*
@@ -109,14 +114,7 @@ namespace Server
          */
         public UnfreezeResponse unfreeze(UnfreezeRequest request)
         {
-            delays();
-
-            Console.WriteLine("Unfreeze()...");
-            lock (key)
-            {
-                Monitor.Pulse(key);
-                frozen = false;
-            }
+            delays(true);
 
             return new UnfreezeResponse();
         }
@@ -425,7 +423,7 @@ namespace Server
             return new RegisterReply();
         }
 
-        public void delays()
+        public void delays(bool unfreeze = false)
         {
             //Any incoming message is delayed by a predefined amount
             Thread.Sleep(delay);
@@ -435,6 +433,12 @@ namespace Server
             {
                 lock (key)
                 {
+                    if (unfreeze) {
+                        Console.WriteLine("Unfreeze()...");
+                        Monitor.Pulse(key);
+                        frozen = false;
+                    }
+
                     Monitor.Wait(key);
                     Monitor.Pulse(key);
                 }

@@ -63,12 +63,16 @@ message StatusResponse {}
 message ClientStatus {
 	bool isProcessComplete = 1;
 }
-message ServerStatus {}
+message ServerStatus {
+    map<string, string> servers = 1;
+	repeated string partitions = 2;
+}
 
 message StatusInfo {
+	string id = 1;
 	oneof status {
-		ClientStatus client = 1;
-		ServerStatus server = 2;
+		ClientStatus client = 2;
+		ServerStatus server = 3;
 	}
 }
 

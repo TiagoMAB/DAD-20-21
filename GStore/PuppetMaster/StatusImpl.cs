@@ -1,4 +1,6 @@
 ﻿using GStore;
+using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace PuppetMaster {
@@ -8,9 +10,33 @@ namespace PuppetMaster {
         private readonly Logger logger;
 
         public static string PrettyStatus(StatusInfo status) {
-            // TODO: Pretty print
+            if (status.StatusCase == StatusInfo.StatusOneofCase.Client) {
+                string response = String.Format("Status of client '{0}':", status.Id);
 
-            return status.ToString();
+                response += status.Client.IsProcessComplete ? "\nFinished script execution" : "\nScript execution not finished yet";
+
+                return response;
+            } else if (status.StatusCase == StatusInfo.StatusOneofCase.Server) {
+                string response = String.Format("Status of client '{0}':", status.Id);
+
+                response += "\nKnown servers:";
+
+                foreach(KeyValuePair<string, string> server in status.Server.Servers) {
+                    response += String.Format("\nId: {0} URL: {1}", server.Key, server.Value);
+                }
+
+                response += "\nPartitions:";
+
+                foreach(string partition in status.Server.Partitions) {
+                    response += partition;
+                }
+
+                return response;
+            } else {
+                // SHOULD NEVER HAPPEN
+                // BUT WHO KNOWS?
+                throw new NotImplementedException();
+            }
         }
 
         public StatusImpl(PuppetMaster form) {

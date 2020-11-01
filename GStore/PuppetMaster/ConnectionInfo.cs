@@ -38,7 +38,6 @@ namespace PuppetMaster {
 
         public static string GetServer(string name) {
             string value = servers.GetOrAdd(name, "");
-            System.Diagnostics.Debug.WriteLine(servers);
 
             if (value.Trim().Equals("")) {
                 value = null;

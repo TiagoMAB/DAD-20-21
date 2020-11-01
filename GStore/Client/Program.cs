@@ -18,7 +18,7 @@ namespace Client
 
             Console.WriteLine("Sending status to PuppetMaster...\n");
 
-            return Task.FromResult(new StatusInfo { Client = new ClientStatus { IsProcessComplete = server.ExecFinish } } );
+            return Task.FromResult(new StatusInfo { Id = server.UserName, Client = new ClientStatus { IsProcessComplete = server.ExecFinish } } );
         }
     }
 

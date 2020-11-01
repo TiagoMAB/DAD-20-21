@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Status = PuppetMaster.Commands.Status;
@@ -15,6 +16,7 @@ namespace PuppetMaster {
         const int PORT = 10001;
         private readonly Grpc.Core.Server server;
         private readonly ServerController controller;
+        private readonly object lockLog = new Object();
 
         public PuppetMaster() {
             InitializeComponent();
@@ -82,7 +84,12 @@ namespace PuppetMaster {
         }
 
         public void Log(string entry) {
-            Logs.Items.Add(String.Format("[{0}] {1}", DateTime.Now.ToString(), entry));
+            string multiple = String.Format("[{0}] {1}", DateTime.Now.ToString(), entry);
+            lock (this.lockLog) {
+                foreach(string s in Regex.Split(multiple, "\n")) {
+                    Logs.Items.Add(s);
+                }
+            }
             Logs.SelectedIndex = Logs.Items.Count - 1;
         }
 
@@ -124,6 +131,8 @@ namespace PuppetMaster {
 
             Command command = new Crash(this, crashSelector.Text);
             await CommandHandler(command);
+
+            crashSelector.SelectedIndex = -1;
         }
 
         private async void FreezeBtn_Click(object sender, EventArgs e) {
@@ -134,6 +143,8 @@ namespace PuppetMaster {
 
             Command command = new Freeze(this, freezeSelector.Text);
             await CommandHandler(command);
+
+            freezeSelector.SelectedIndex = -1;
         }
 
         private async void UnfreezeBtn_Click(object sender, EventArgs e) {
@@ -144,6 +155,8 @@ namespace PuppetMaster {
 
             Command command = new Unfreeze(this, unfreezeSelector.Text);
             await CommandHandler(command);
+
+            unfreezeSelector.SelectedIndex = -1;
         }
 
         private async void StatusBtn_Click(object sender, EventArgs e) {
@@ -165,6 +178,8 @@ namespace PuppetMaster {
 
             Command command = new Client(this, clientName.Text, clientURL.Text, clientScript.Text);
             await CommandHandler(command);
+
+            clientName.Text = clientURL.Text = clientScript.Text = "";
         }
     }
 }
