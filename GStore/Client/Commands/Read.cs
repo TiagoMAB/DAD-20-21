@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Grpc.Core;
-using Grpc.Net.Client;
 using GStore;
 using Client.Exceptions;
 
@@ -22,56 +21,87 @@ namespace Client.Commands
 
         public void Execute()
         {
-            System.Diagnostics.Debug.WriteLine(String.Format("Read in partition {0} for object {1} with optional fetch server {2}", this.partitionId, this.objectId, this.serverId));
+            System.Diagnostics.Debug.WriteLine(String.Format("Read in partition \"{0}\" for object \"{1}\" with optional fetch server \"{2}\"", this.partitionId, this.objectId, this.serverId));
             ServerInfo serverInfo = ServerInfo.Instance();
-            GrpcChannel channel;
             GStore.GStore.GStoreClient client;
             ReadReply response;
 
             List<string> partitions = serverInfo.GetPartitionsByURL(serverInfo.CurrentServerURL);
 
+            Console.WriteLine("Reading value in partition \"{0}\" for object \"{1}\" and alternative server \"{2}\":", this.partitionId, this.objectId, this.serverId);
+
+
+            //Trying current connected server
             if (partitions != null && partitions.Contains(this.partitionId))
             {
                 try
                 {
-                    channel = GrpcChannel.ForAddress(serverInfo.CurrentServerURL);
-                    client = new GStore.GStore.GStoreClient(channel);
+                    client = serverInfo.GetChannel(serverInfo.CurrentServerURL);
                     response = client.Read(new ReadRequest { PartitionId = this.partitionId, ObjectId = this.objectId });
 
-                    Console.WriteLine(response.Value);
-                    //TODO: é suposto o server retornar N/A e sendo esse o caso é necessário procurar no secundário?
-                    //TODO: talvez recebe se um null em vez de N/A do server, e sendo esse o caso falta meter um if no writeline
+                    Console.WriteLine("Contacted server with URL \"{0}\"\nThe requested value: {1}\n\n", serverInfo.CurrentServerURL, response.Value);
                     return;
                 }
-                catch (RpcException e) when (e.StatusCode == StatusCode.Unavailable) {
+                catch (RpcException e) {
                     if (String.Equals(this.serverId, "-1")) {
-                        Console.WriteLine("Secondary server isn't given. Exiting...");
-                        throw; //ignore secondary server
+                        System.Diagnostics.Debug.WriteLine(String.Format("Server with URL \"{0}\" failed with status \"{1}\", trying random server.", serverInfo.CurrentServerURL, e.StatusCode.ToString()));
                     }
-                    System.Diagnostics.Debug.WriteLine(String.Format("Server with URL {0} not available, trying server with id {1}.", serverInfo.CurrentServerURL, this.serverId));
+                    else System.Diagnostics.Debug.WriteLine(String.Format("Server with URL \"{0}\" failed with status \"{1}\", trying server with id {2}.", serverInfo.CurrentServerURL, e.StatusCode.ToString(), this.serverId));
                 }
             }
 
-            string nextURL = serverInfo.GetURLByServerId(this.serverId);
-            if (nextURL == null)
-                throw new NonExistentServerException(String.Format("Server with id {0} not found.", this.serverId));
-            //TODO: necessary to check if nextURL has partition?
-
-            try
+            //Trying server with id "serverId"
+            if (!String.Equals(this.serverId, "-1"))
             {
-                serverInfo.CurrentServerURL = nextURL;
+                string nextURL = serverInfo.GetURLByServerId(this.serverId);
+                partitions = serverInfo.GetPartitionsByURL(nextURL);
 
-                channel = GrpcChannel.ForAddress(nextURL);
-                client = new GStore.GStore.GStoreClient(channel);
-                response = client.Read(new ReadRequest { PartitionId = this.partitionId, ObjectId = this.objectId });
+                if (nextURL == null)
+                    System.Diagnostics.Debug.WriteLine(String.Format("Server with URL \"{0}\" doesn't exist, trying random server.", nextURL));
 
-                Console.WriteLine(response.Value);
-                return;
+                else if (partitions != null && partitions.Contains(this.partitionId))
+                {
+                    try
+                    {
+                        client = serverInfo.GetChannel(nextURL);
+                        response = client.Read(new ReadRequest { PartitionId = this.partitionId, ObjectId = this.objectId });
+
+                        Console.WriteLine("Contacted server with URL \"{0}\"\nThe requested value: {1}\n\n", serverInfo.CurrentServerURL, response.Value);
+                        return;
+                    }
+                    catch (RpcException e)
+                    {
+                        System.Diagnostics.Debug.WriteLine(String.Format("Server with URL \"{0}\" failed with status \"{1}\", trying random server.", nextURL, e.StatusCode.ToString()));
+                    }
+                }
             }
-            catch (RpcException e) when (e.StatusCode == StatusCode.Unavailable) {
-                Console.WriteLine("Secondary server not available. Exiting...");
-                throw;
+
+            //Trying random server with partitionId
+            List<string> serversWithPartition = serverInfo.GetURLsWithPartitionId(this.partitionId);
+            Random random = new Random();
+            string url;
+
+            while (serversWithPartition.Count != 0)
+            {
+                int i = random.Next(serversWithPartition.Count);
+                url = serversWithPartition[i];
+                try
+                {
+                    client = serverInfo.GetChannel(url);
+                    response = client.Read(new ReadRequest { PartitionId = this.partitionId, ObjectId = this.objectId });
+
+                    Console.WriteLine("Contacted server with URL \"{0}\"\nThe requested value: {1}\n\n", serverInfo.CurrentServerURL, response.Value);
+                    return;
+                }
+                catch (RpcException e)
+                {
+                    System.Diagnostics.Debug.WriteLine(String.Format("Server with URL \"{0}\" failed with status \"{1}\", trying random server.", url, e.StatusCode.ToString()));
+                }
+
+                serversWithPartition.RemoveAt(i);
             }
+
+            throw new NonExistentServerException(String.Format("No server with partition id \"{0}\" was found.", this.partitionId));
         }
     }
 }

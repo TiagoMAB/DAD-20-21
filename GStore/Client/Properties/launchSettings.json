@@ -2,7 +2,7 @@
   "profiles": {
     "Client": {
       "commandName": "Project",
-      "commandLineArgs": "USERNAME localhost 1234 test.txt serverId1 http://localhost:1000"
+      "commandLineArgs": "client2 http://localhost:9002 ClientScript3.txt serverId1 http://localhost:8001"
     }
   }
 }

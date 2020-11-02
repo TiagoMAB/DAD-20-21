@@ -3,6 +3,7 @@ using Grpc.Net.Client;
 using GStore;
 using PuppetMaster.Exceptions;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace PuppetMaster.Commands {
@@ -30,20 +31,25 @@ namespace PuppetMaster.Commands {
         protected override async Task DoWork() {
             string URL = this.host + ":" + this.port;
 
-            ConnectionInfo.AddServer(this.id, URL);
-
             GrpcChannel channel = GrpcChannel.ForAddress(this.host + ":10000");
 
             PCS.PCSClient client = new PCS.PCSClient(channel);
 
-            try {
-                await client.ServerAsync(new ServerRequest { Id = this.id, Url = URL, MaxDelay = this.maxDelay, MinDelay = this.minDelay });
+            KeyValuePair<string, string> connectURL = ConnectionInfo.GetRandomServer();
 
-                channel.ShutdownAsync().Wait();
+            try {
+                this.form.AddServer(this.id, URL);
+
+                await client.ServerAsync(new ServerRequest { Id = this.id, Url = URL, MaxDelay = this.maxDelay, MinDelay = this.minDelay, OtherId = connectURL.Key, OtherUrl = connectURL.Value  });
 
                 Log(String.Format("Server '{0}' listening at '{1}'", this.id, URL));
+
+                // FIXME: await or no shutdown?
+                channel.ShutdownAsync().Wait();
             } catch (RpcException e) {
                 String command = String.Format("Create server '{0}' at '{1}'", this.id, URL);
+
+                ConnectionInfo.RemoveServer(this.id);
 
                 switch(e.StatusCode) {
                     case StatusCode.Aborted:

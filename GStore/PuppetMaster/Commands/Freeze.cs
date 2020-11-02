@@ -16,6 +16,7 @@ namespace PuppetMaster.Commands {
             String URL = ConnectionInfo.GetServer(this.id);
 
             if(URL == null) {
+                Log(String.Format("ERROR: Unknown server '{0}' on command Freeze", this.id));
                 throw new UnknownServerException("Freeze", this.id);
             }
 

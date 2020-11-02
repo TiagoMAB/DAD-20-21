@@ -17,6 +17,7 @@ namespace PuppetMaster.Commands {
             String URL = ConnectionInfo.GetServer(this.id);
 
             if(URL == null) {
+                Log(String.Format("ERROR: Unknown server '{0}' on command Crash", this.id));
                 throw new UnknownServerException("Crash", this.id);
             }
 
@@ -27,7 +28,7 @@ namespace PuppetMaster.Commands {
             try {
                 await client.CrashAsync(new CrashRequest { } );
 
-                Log(String.Format("Crashed server '{0}'", this.id));
+                Log(String.Format("ERROR: Server not crashed '{0}'", this.id));
             } catch (RpcException e) {
                 String command = String.Format("Crash server '{0}'", this.id);
 
@@ -42,7 +43,9 @@ namespace PuppetMaster.Commands {
                         Log(String.Format("TIMEOUT: {0}", command));
                         break;
                     case StatusCode.Internal:
-                        Log(String.Format("INTERNAL ERROR: {0}", command));
+                        Log(String.Format("Crashed server {0}", this.id));
+
+                        this.form.RemoveServer(this.id);
                         break;
                     default:
                         Log(String.Format("UNKNOWN ERROR: {0}", command));

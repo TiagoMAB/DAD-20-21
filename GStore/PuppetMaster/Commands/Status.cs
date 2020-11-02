@@ -5,22 +5,19 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace PuppetMaster.Commands
-{
-    public class Status : Command
-    {
+namespace PuppetMaster.Commands {
+    public class Status : Command {
         public Status(PuppetMaster form) : base(form) { }
 
-        protected override async Task DoWork()
-        {
+        protected override async Task DoWork() {
             List<Task> tasks = new List<Task>();
 
             List<KeyValuePair<string, string>> ids = ConnectionInfo.GetAll();
 
             StatusRequest request = new StatusRequest { };
 
-            foreach(var pair in ids) {
-                tasks.Add(Task.Run(async () => { 
+            foreach (var pair in ids) {
+                tasks.Add(Task.Run(async () => {
                     GrpcChannel channel = GrpcChannel.ForAddress(pair.Value);
 
                     GStore.PuppetMaster.PuppetMasterClient client = new GStore.PuppetMaster.PuppetMasterClient(channel);
@@ -53,7 +50,7 @@ namespace PuppetMaster.Commands
                 }));
             }
 
-            await Task.WhenAll(tasks);
+            await Task.WhenAll(tasks).ConfigureAwait(false);
 
             Log("All status received");
         }

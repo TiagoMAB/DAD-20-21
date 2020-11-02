@@ -1,0 +1,1 @@
+.\PCS.exe ../../../../Client/bin/Debug/netcoreapp3.1/Client.exe ../../../../Server/bin/Debug/netcoreapp3.1/Server.exe

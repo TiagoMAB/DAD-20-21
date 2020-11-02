@@ -1,0 +1,20 @@
+wait 4000
+
+write part1 obj4 arch
+write part1 obj5 vim
+write part2 obj3 emacs
+
+listGlobal
+listServer server3
+
+read part2 obj1 server2
+read part2 obj2 server4
+
+listServer server4
+
+read part4 obj1 server5
+
+listServer server5
+
+read part5 obj1 server1
+read part1 obj5 server3
