@@ -53,7 +53,7 @@
             this.label9 = new System.Windows.Forms.Label();
             this.statusBtn = new System.Windows.Forms.Button();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.checkedListBox1 = new System.Windows.Forms.CheckedListBox();
+            this.serverList = new System.Windows.Forms.CheckedListBox();
             this.partitionBtn = new System.Windows.Forms.Button();
             this.partitionName = new System.Windows.Forms.TextBox();
             this.label13 = new System.Windows.Forms.Label();
@@ -409,7 +409,7 @@
             // 
             // groupBox3
             // 
-            this.groupBox3.Controls.Add(this.checkedListBox1);
+            this.groupBox3.Controls.Add(this.serverList);
             this.groupBox3.Controls.Add(this.partitionBtn);
             this.groupBox3.Controls.Add(this.partitionName);
             this.groupBox3.Controls.Add(this.label13);
@@ -420,13 +420,14 @@
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Partition";
             // 
-            // checkedListBox1
+            // serverList
             // 
-            this.checkedListBox1.FormattingEnabled = true;
-            this.checkedListBox1.Location = new System.Drawing.Point(396, 22);
-            this.checkedListBox1.Name = "checkedListBox1";
-            this.checkedListBox1.Size = new System.Drawing.Size(268, 94);
-            this.checkedListBox1.TabIndex = 3;
+            this.serverList.FormattingEnabled = true;
+            this.serverList.Location = new System.Drawing.Point(396, 22);
+            this.serverList.Name = "serverList";
+            this.serverList.Size = new System.Drawing.Size(268, 94);
+            this.serverList.TabIndex = 3;
+            this.serverList.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.ServerList_ItemCheck);
             // 
             // partitionBtn
             // 
@@ -436,6 +437,7 @@
             this.partitionBtn.TabIndex = 2;
             this.partitionBtn.Text = "Create";
             this.partitionBtn.UseVisualStyleBackColor = true;
+            this.partitionBtn.Click += new System.EventHandler(this.PartitionBtn_Click);
             // 
             // partitionName
             // 
@@ -534,7 +536,7 @@
         private System.Windows.Forms.TextBox partitionName;
         private System.Windows.Forms.Label label13;
         private System.Windows.Forms.Button partitionBtn;
-        private System.Windows.Forms.CheckedListBox checkedListBox1;
+        private System.Windows.Forms.CheckedListBox serverList;
     }
 }
 

@@ -15,13 +15,14 @@ namespace PuppetMaster {
         private readonly Grpc.Core.Server server;
         private readonly ServerController controller;
         private readonly object lockLog = new Object();
+        private readonly List<string> partitionServers = new List<string>();
 
         public PuppetMaster() {
             InitializeComponent();
 
             this.server = new Grpc.Core.Server {
                 Services = { GStore.Status.BindService(new StatusImpl(this)) },
-                Ports    = { new ServerPort("0.0.0.0", PORT, ServerCredentials.Insecure) },
+                Ports = { new ServerPort("0.0.0.0", PORT, ServerCredentials.Insecure) },
             };
 
             server.Start();
@@ -34,7 +35,7 @@ namespace PuppetMaster {
                 unfreezeSelector
             };
 
-            this.controller = new ServerController(this, views);
+            this.controller = new ServerController(this, views, serverList);
         }
 
         private void SelectPMFileClick(object sender, EventArgs e) {
@@ -84,7 +85,7 @@ namespace PuppetMaster {
         public void Log(string entry) {
             string multiple = String.Format("[{0}] {1}", DateTime.Now.ToString(), entry);
             lock (this.lockLog) {
-                foreach(string s in Regex.Split(multiple, "\n")) {
+                foreach (string s in Regex.Split(multiple, "\n")) {
                     Logs.Items.Add(s);
                 }
             }
@@ -99,6 +100,20 @@ namespace PuppetMaster {
             box.Items.Clear();
             box.SelectedIndex = -1;
             box.Items.AddRange(items.ToArray());
+        }
+
+        public void AddToList(CheckedListBox box, string item) {
+            box.Items.Add(item);
+        }
+
+        public void UpdateList(CheckedListBox box, List<string> items) {
+            box.Items.Clear();
+            box.SelectedIndex = -1;
+            box.Items.AddRange(items.ToArray());
+
+            lock (this.partitionServers) {
+                this.partitionServers.Clear();
+            }
         }
 
         private async void PM_Closing(object sender, FormClosingEventArgs e) {
@@ -166,10 +181,10 @@ namespace PuppetMaster {
             if (clientName.Text == "") {
                 MessageBox.Show("Insert a name for the client", "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
-            }else if (clientURL.Text == "") {
+            } else if (clientURL.Text == "") {
                 MessageBox.Show("Insert a URL for the client", "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
-            }else if (clientScript.Text == "") {
+            } else if (clientScript.Text == "") {
                 MessageBox.Show("Insert a script for the client to run", "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
@@ -177,7 +192,7 @@ namespace PuppetMaster {
             Command command;
             try {
                 command = new Client(this, clientName.Text, clientURL.Text, clientScript.Text);
-            } catch(InvalidURLException) {
+            } catch (InvalidURLException) {
                 MessageBox.Show("Invalid URL. Must start with 'http:'", "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
@@ -190,7 +205,7 @@ namespace PuppetMaster {
             if (serverName.Text == "") {
                 MessageBox.Show("Insert a name for the server", "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
-            }else if (serverURL.Text == "") {
+            } else if (serverURL.Text == "") {
                 MessageBox.Show("Insert a URL for the server", "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
@@ -198,7 +213,7 @@ namespace PuppetMaster {
             Command command;
             try {
                 command = new Commands.Server(this, serverName.Text, serverURL.Text, Decimal.ToInt32(minDelay.Value), Decimal.ToInt32(maxDelay.Value));
-            } catch(InvalidURLException) {
+            } catch (InvalidURLException) {
                 MessageBox.Show("Invalid URL. Must start with 'http:'", "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
@@ -207,6 +222,43 @@ namespace PuppetMaster {
 
             serverName.Text = serverURL.Text = "";
             minDelay.Value = maxDelay.Value = 0;
+        }
+
+        private void ServerList_ItemCheck(object sender, ItemCheckEventArgs e) {
+            lock (this.partitionServers) {
+                if (e.NewValue == CheckState.Checked) {
+                    this.partitionServers.Add((string)serverList.Items[e.Index]);
+                } else {
+                    this.partitionServers.Remove((string)serverList.Items[e.Index]);
+                }
+            }
+        }
+
+        private async void PartitionBtn_Click(object sender, EventArgs e) {
+            if (partitionName.Text == "") {
+                MessageBox.Show("Insert a name for the partition", "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            } else if (this.partitionServers.Count == 0) {
+                MessageBox.Show("Select at least 1 server to create a partition", "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            Command command;
+            lock (this.partitionServers) {
+                command = new Partition(this, this.partitionServers.Count, partitionName.Text, this.partitionServers);
+            }
+
+            await CommandHandler(command);
+
+            lock (this.partitionServers) {
+                this.partitionServers.Clear();
+            }
+            
+            for(int i = 0; i < serverList.Items.Count; i++) {
+                serverList.SetItemCheckState(i, CheckState.Unchecked);
+            }
+
+            partitionName.Text = "";
         }
     }
 }
