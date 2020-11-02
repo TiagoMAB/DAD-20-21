@@ -42,16 +42,16 @@ namespace Server
 
             foreach (HandshakeReply.Types.Info info in reply.Network)
             {
-                this.network.Add(info.Id, info.Url);                                                                    //TO DO: add lock if necessary, probably not
+                this.network.Add(info.Id, info.Url);
 
                 channel = GrpcChannel.ForAddress(info.Url);
                 client = new ServerCommunication.ServerCommunicationClient(channel);
-                client.Register(new RegisterRequest { Id = this.id, Url = this.URL });                                  //TODO: check return value, if necessary
+                client.Register(new RegisterRequest { Id = this.id, Url = this.URL });
 
             }
 
-            this.network.Add(otherId, otherURL);    //TO DO: add lock if necessary, probably not
-        }
+            this.network.Add(otherId, otherURL);
+        } 
 
         /*
          * 
@@ -77,7 +77,6 @@ namespace Server
             foreach (Partition p in this.partitions.Values)
             {
                 Console.WriteLine(p.ToString());
-               
             }
 
             return new StatusInfo();
@@ -128,7 +127,8 @@ namespace Server
         {
             delays();
 
-            //TO DO: Inform others of the crash 
+            //TO DO: Inform others of the crash
+            //TO DO: Return before exit ???
             Console.WriteLine("Crash()...");
             Environment.Exit(-1);
             return new CrashResponse();
@@ -154,8 +154,13 @@ namespace Server
             Console.WriteLine("Partition()...");
             string partition_name = request.Name;
             string master_id = request.Ids.First();
-            string master_url = master_id == this.id ? this.URL : network[master_id];
 
+            if (this.id != master_id)
+            {
+                //TO DO: Only masters can receive partition requests, they will then share the information with the rest of the network
+            }
+
+            string master_url = this.URL;
             List<string> server_ids = request.Ids.ToList();
             bool own = server_ids.Contains(this.id);
             Partition p = new Partition(partition_name, master_id, master_url, own);
@@ -167,19 +172,17 @@ namespace Server
 
             this.partitions.Add(partition_name, p);
 
-            //if current server is the master, partition is sent to all other members of the network
-            if (this.id == master_id)
+            //partition is sent to all other members of the network
+            foreach (string id in this.network.Keys)
             {
-                foreach (string id in this.network.Keys)
-                {
-                    string server_url = network[id];
-                    AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-                    GrpcChannel channel = GrpcChannel.ForAddress(server_url);
-                    PuppetMaster.PuppetMasterClient client = new PuppetMaster.PuppetMasterClient(channel);
-                    var send = new PartitionRequest { Name = request.Name };
-                    send.Ids.AddRange(server_ids);
-                    client.Partition(send);
-                }
+                string server_url = network[id];
+
+                AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+                GrpcChannel channel = GrpcChannel.ForAddress(server_url);
+                ServerCommunication.ServerCommunicationClient client = new ServerCommunication.ServerCommunicationClient(channel);
+                SharePartitionRequest p_request = new SharePartitionRequest { Name = request.Name };
+                p_request.Ids.AddRange(server_ids);
+                client.SharePartition(p_request);
             }
 
             return new PartitionResponse();
@@ -190,6 +193,9 @@ namespace Server
         //Client-Server Communication
         //
 
+        /*
+         * Sends client the known network of servers
+         */
         public ServerInfoReply serverInfo(ServerInfoRequest request)
         {
             delays();
@@ -217,6 +223,10 @@ namespace Server
             return reply;
         }
 
+
+        /*
+         * Writes an object in all servers of a partition
+         */
         public WriteReply write(WriteRequest request)
         {
             delays();
@@ -280,6 +290,9 @@ namespace Server
             return new WriteReply();
         }
 
+        /*
+         * Sends client the value of a specific object, if it is present in the server
+         */
         public ReadReply read(ReadRequest request)
         {
             delays();
@@ -312,6 +325,9 @@ namespace Server
             }
         }
 
+        /*
+         * Sets up a new partition and sends the partition's information to the other servers
+         */
         public ListServerReply listServer(ListServerRequest request)
         {
             delays();
@@ -331,6 +347,9 @@ namespace Server
             return reply;
         }
 
+        /*
+         * Sends client objects of asked partitions present in the server
+         */
         public ListGlobalReply listGlobal(ListGlobalRequest request)
         {
             delays();
@@ -408,7 +427,7 @@ namespace Server
             Console.WriteLine("Handshake()...");
 
             HandshakeReply reply = new HandshakeReply();
-            foreach (KeyValuePair<string, string> server in this.network)
+            foreach (KeyValuePair<string, string> server in network)
             {
                 reply.Network.Add(new HandshakeReply.Types.Info { Id = server.Key, Url = server.Value });
             }
@@ -423,6 +442,29 @@ namespace Server
 
             network.Add(request.Id, request.Url);
             return new RegisterReply();
+        }
+
+        public SharePartitionReply sharePartition(SharePartitionRequest request)
+        {
+            delays();
+
+            Console.WriteLine("SharePartition()...");
+            string partition_name = request.Name;
+            string master_id = request.Ids.First();
+            string master_url = network[master_id];
+
+            List<string> server_ids = request.Ids.ToList();
+            bool own = server_ids.Contains(this.id);
+            Partition p = new Partition(partition_name, master_id, master_url, own);
+
+            foreach (string id in server_ids)
+            {
+                p.addId(id, this.id == id ? this.URL : network[id]);
+            }
+
+            this.partitions.Add(partition_name, p);
+
+            return new SharePartitionReply();
         }
 
         public void delays()

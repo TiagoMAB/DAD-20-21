@@ -33,5 +33,10 @@ namespace Server
         {
             return Task.FromResult(server.writeObject(request));
         }
+
+        public override Task<SharePartitionReply> SharePartition(SharePartitionRequest request, ServerCallContext context)
+        {
+            return Task.FromResult(server.sharePartition(request));
+        }
     }
 }

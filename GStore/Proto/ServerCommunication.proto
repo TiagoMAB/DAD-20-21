@@ -7,6 +7,7 @@ service ServerCommunication {
 	rpc Register (RegisterRequest) returns (RegisterReply);
 	rpc LockObject (LockObjectRequest) returns (LockObjectReply);
 	rpc WriteObject (WriteObjectRequest) returns (WriteObjectReply);
+	rpc SharePartition (SharePartitionRequest) returns (SharePartitionReply);
 }
 
 message HandshakeRequest {
@@ -49,3 +50,11 @@ message WriteObjectRequest {
 message WriteObjectReply {
 	bool ok = 1;
 }
+
+message SharePartitionRequest {
+	int32 replicas = 1;
+	string name = 2;
+	repeated string ids = 3;
+}
+
+message SharePartitionReply {}
