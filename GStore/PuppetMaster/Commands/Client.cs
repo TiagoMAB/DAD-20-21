@@ -40,10 +40,9 @@ namespace PuppetMaster.Commands {
             try {
                 await client.ClientAsync(new ClientRequest { ClientUrl = URL, Id = this.username, Script = this.file, ServerId = serverURL.Key, ServerUrl = serverURL.Value });
 
-                // FIXME: await or no shutdown?
-                channel.ShutdownAsync().Wait();
-
                 Log(String.Format("Client '{0}' started", this.username));
+
+                await channel.ShutdownAsync();
             } catch (RpcException e) {
                 String command = String.Format("Create client '{0}' at '{1}'", this.username, URL);
 

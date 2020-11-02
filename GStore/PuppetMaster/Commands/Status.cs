@@ -26,6 +26,8 @@ namespace PuppetMaster.Commands {
                         StatusInfo response = await client.StatusAsync(request);
 
                         Log(StatusImpl.PrettyStatus(response));
+
+                        await channel.ShutdownAsync();
                     } catch (RpcException e) {
                         String command = String.Format("Get status of '{0}'", pair.Key);
 

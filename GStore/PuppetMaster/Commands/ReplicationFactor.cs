@@ -30,6 +30,8 @@ namespace PuppetMaster.Commands {
                         await client.ReplicationAsync(request);
 
                         Log(String.Format("ReplicationFactor set to {0} on '{1}'", this.factor, pair.Key));
+
+                        await channel.ShutdownAsync();
                     } catch (RpcException e) {
                         String command = String.Format("Set replication factor on '{0}'", pair.Key);
 

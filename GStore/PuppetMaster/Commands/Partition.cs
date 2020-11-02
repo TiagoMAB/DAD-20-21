@@ -46,6 +46,8 @@ namespace PuppetMaster.Commands {
                 await client.PartitionAsync(request);
 
                 Log(String.Format("Created partition '{0}'", this.name));
+
+                await channel.ShutdownAsync();
             } catch (RpcException e) {
                 String command = String.Format("Create partition '{0}'", this.name);
 

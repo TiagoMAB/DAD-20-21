@@ -44,8 +44,7 @@ namespace PuppetMaster.Commands {
 
                 Log(String.Format("Server '{0}' listening at '{1}'", this.id, URL));
 
-                // FIXME: await or no shutdown?
-                channel.ShutdownAsync().Wait();
+                await channel.ShutdownAsync();
             } catch (RpcException e) {
                 String command = String.Format("Create server '{0}' at '{1}'", this.id, URL);
 

@@ -28,6 +28,8 @@ namespace PuppetMaster.Commands {
                 await client.FreezeAsync(new FreezeRequest { } );
 
                 Log(String.Format("Freezed server '{0}'", this.id));
+
+                await channel.ShutdownAsync();
             } catch (RpcException e) {
                 String command = String.Format("Freeze server '{0}'", this.id);
 

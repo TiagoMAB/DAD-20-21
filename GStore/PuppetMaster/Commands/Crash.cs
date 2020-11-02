@@ -28,8 +28,9 @@ namespace PuppetMaster.Commands {
             try {
                 await client.CrashAsync(new CrashRequest { } );
 
-                Log(String.Format("Crashed server {0}", this.id));
-                this.form.RemoveServer(this.id);
+                Log(String.Format("ERROR: Server not crashed '{0}'", this.id));
+
+                await channel.ShutdownAsync();
             } catch (RpcException e) {
                 String command = String.Format("Crash server '{0}'", this.id);
 

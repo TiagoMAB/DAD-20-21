@@ -29,6 +29,8 @@ namespace PuppetMaster.Commands {
                 await client.UnfreezeAsync(new UnfreezeRequest { } );
 
                 Log(String.Format("Unfreezed server '{0}'", this.id));
+
+                await channel.ShutdownAsync();
             } catch (RpcException e) {
                 String command = String.Format("Unfreeze server '{0}'", this.id);
 
