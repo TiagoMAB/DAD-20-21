@@ -311,6 +311,7 @@
             this.serverBtn.TabIndex = 7;
             this.serverBtn.Text = "Create";
             this.serverBtn.UseVisualStyleBackColor = true;
+            this.serverBtn.Click += new System.EventHandler(this.ServerBtn_Click);
             // 
             // serverURL
             // 
@@ -321,14 +322,34 @@
             // 
             // minDelay
             // 
+            this.minDelay.Increment = new decimal(new int[] {
+            100,
+            0,
+            0,
+            0});
             this.minDelay.Location = new System.Drawing.Point(75, 80);
+            this.minDelay.Maximum = new decimal(new int[] {
+            1215752191,
+            23,
+            0,
+            0});
             this.minDelay.Name = "minDelay";
             this.minDelay.Size = new System.Drawing.Size(82, 23);
             this.minDelay.TabIndex = 5;
             // 
             // maxDelay
             // 
+            this.maxDelay.Increment = new decimal(new int[] {
+            100,
+            0,
+            0,
+            0});
             this.maxDelay.Location = new System.Drawing.Point(240, 80);
+            this.maxDelay.Maximum = new decimal(new int[] {
+            1215752191,
+            23,
+            0,
+            0});
             this.maxDelay.Name = "maxDelay";
             this.maxDelay.Size = new System.Drawing.Size(82, 23);
             this.maxDelay.TabIndex = 4;

@@ -5,11 +5,9 @@ using PuppetMaster.MVC;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Status = PuppetMaster.Commands.Status;
 
 namespace PuppetMaster {
     public partial class PuppetMaster : Form {
@@ -160,7 +158,7 @@ namespace PuppetMaster {
         }
 
         private async void StatusBtn_Click(object sender, EventArgs e) {
-            Command command = new Status(this);
+            Command command = new Commands.Status(this);
             await CommandHandler(command);
         }
 
@@ -176,10 +174,39 @@ namespace PuppetMaster {
                 return;
             }
 
-            Command command = new Client(this, clientName.Text, clientURL.Text, clientScript.Text);
+            Command command;
+            try {
+                command = new Client(this, clientName.Text, clientURL.Text, clientScript.Text);
+            } catch(InvalidURLException) {
+                MessageBox.Show("Invalid URL. Must start with 'http:'", "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
             await CommandHandler(command);
 
             clientName.Text = clientURL.Text = clientScript.Text = "";
+        }
+
+        private async void ServerBtn_Click(object sender, EventArgs e) {
+            if (serverName.Text == "") {
+                MessageBox.Show("Insert a name for the server", "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }else if (serverURL.Text == "") {
+                MessageBox.Show("Insert a URL for the server", "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            Command command;
+            try {
+                command = new Commands.Server(this, serverName.Text, serverURL.Text, Decimal.ToInt32(minDelay.Value), Decimal.ToInt32(maxDelay.Value));
+            } catch(InvalidURLException) {
+                MessageBox.Show("Invalid URL. Must start with 'http:'", "PuppetMaster", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            await CommandHandler(command);
+
+            serverName.Text = serverURL.Text = "";
+            minDelay.Value = maxDelay.Value = 0;
         }
     }
 }
