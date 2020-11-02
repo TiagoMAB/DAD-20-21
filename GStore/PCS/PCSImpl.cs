@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using System.ComponentModel;
 
 namespace PCS {
     public class PCSImpl : GStore.PCS.PCSBase {
@@ -22,10 +23,12 @@ namespace PCS {
                 ProcessStartInfo p = new ProcessStartInfo("cmd.exe", String.Format("/c start {0} {1} {2} {3} {4} {5}", this.client, request.Id, request.ClientUrl, request.Script, request.ServerId, request.ServerUrl));
                 p.WorkingDirectory = Path.GetDirectoryName(this.client);
                 if (Process.Start(p) == null) {
-                    // TODO: handle error
+                    throw new RpcException(new Grpc.Core.Status(StatusCode.Aborted, "Process not started"));
                 }
-            } catch(Exception e) {
-                Console.WriteLine(e);
+            } catch(ObjectDisposedException) {
+                throw new RpcException(new Grpc.Core.Status(StatusCode.Cancelled, "Object disposed"));
+            } catch(Win32Exception) {
+                throw new RpcException(new Grpc.Core.Status(StatusCode.Cancelled, "Error opening file or arguments too long"));
             }
 
             return Task.FromResult(new ClientResponse());
@@ -37,10 +40,12 @@ namespace PCS {
             try {
                 ProcessStartInfo p = new ProcessStartInfo("cmd.exe", String.Format("/c start {0} {1} {2} {3} {4} {5} {6}", this.server, request.Id, request.Url, request.MinDelay, request.MaxDelay, request.OtherId, request.OtherUrl));
                 if (Process.Start(p) == null) {
-                    // TODO: handle error
+                    throw new RpcException(new Grpc.Core.Status(StatusCode.Aborted, "Process not started"));
                 }
-            } catch(Exception e) {
-                Console.WriteLine(e);
+            } catch(ObjectDisposedException) {
+                throw new RpcException(new Grpc.Core.Status(StatusCode.Cancelled, "Object disposed"));
+            } catch(Win32Exception) {
+                throw new RpcException(new Grpc.Core.Status(StatusCode.Cancelled, "Error opening file or arguments too long"));
             }
 
             return Task.FromResult(new ServerResponse());

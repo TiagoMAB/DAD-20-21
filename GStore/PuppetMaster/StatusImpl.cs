@@ -47,8 +47,6 @@ namespace PuppetMaster {
         public override Task<StatusResponse> Status(StatusInfo request, Grpc.Core.ServerCallContext context) {
             LogStatus(request);
 
-            // TODO: Handle error
-
             return Task.FromResult(new StatusResponse());
         }
 
