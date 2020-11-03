@@ -50,5 +50,21 @@ namespace PuppetMaster.MVC {
                 this.form.Invoke(this.updaterList, this.listView, servers);
             }
         }
+
+        public void RemoveConnection(string name) {
+            lock (mvcLock) {
+                List<string> servers = ConnectionInfo.RemoveIfServer(name);
+
+                if(servers != null) {
+                    foreach (var view in views) {
+                        this.form.Invoke(this.updaterCombo, view, servers);
+                    }
+
+                    this.form.Invoke(this.updaterList, this.listView, servers);
+                } else {
+                    ConnectionInfo.RemoveClient(name);
+                }
+            }
+        }
     }
 }

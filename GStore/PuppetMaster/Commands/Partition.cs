@@ -42,32 +42,49 @@ namespace PuppetMaster.Commands {
 
             GStore.PuppetMaster.PuppetMasterClient client = new GStore.PuppetMaster.PuppetMasterClient(channel);
 
-            try {
-                await client.PartitionAsync(request);
+            Random random = new Random();
+            String command = String.Format("Create partition '{0}'", this.name);
 
-                Log(String.Format("Created partition '{0}'", this.name));
+            int remaining = TRIES;
+            do {
+                try {
+                    await client.PartitionAsync(request);
 
-                await channel.ShutdownAsync();
-            } catch (RpcException e) {
-                String command = String.Format("Create partition '{0}'", this.name);
+                    Log(String.Format("Created partition '{0}'", this.name));
 
-                switch (e.StatusCode) {
-                    case StatusCode.Aborted:
-                        Log(String.Format("ABORTED: {0}", command));
-                        break;
-                    case StatusCode.Cancelled:
-                        Log(String.Format("CANCELLED: {0}", command));
-                        break;
-                    case StatusCode.DeadlineExceeded:
-                        Log(String.Format("TIMEOUT: {0}", command));
-                        break;
-                    case StatusCode.Internal:
-                        Log(String.Format("INTERNAL ERROR: {0}", command));
-                        break;
-                    default:
-                        Log(String.Format("UNKNOWN ERROR: {0}", command));
-                        break;
+                    await channel.ShutdownAsync();
+                    return;
+                } catch (RpcException e) {
+                    switch (e.StatusCode) {
+                        case StatusCode.Aborted:
+                            Log(String.Format("ABORTED: {0}", command));
+                            break;
+                        case StatusCode.Cancelled:
+                            Log(String.Format("CANCELLED: {0}", command));
+                            break;
+                        case StatusCode.DeadlineExceeded:
+                            Log(String.Format("TIMEOUT: {0}", command));
+                            break;
+                        case StatusCode.Internal:
+                            Log(String.Format("INTERNAL ERROR: {0}", command));
+                            break;
+                        default:
+                            Log(String.Format("UNKNOWN ERROR: {0}", command));
+                            break;
+                    }
                 }
+
+                remaining -= 1;
+                if (remaining != 0) {
+                    Log(String.Format("RETRYING: {0}...", command));
+                }
+
+                await Task.Delay(random.Next(MIN_BACKOFF, MAX_BACKOFF));
+            } while (remaining != 0);
+
+            if(remaining == 0) {
+                Log(String.Format("MAX TRIES EXCEEDED: {0}\nAssuming server '{1}' is dead", command, this.replicas[0]));
+                this.form.RemoveServer(this.replicas[0]);
             }
         }
     }

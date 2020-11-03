@@ -25,32 +25,51 @@ namespace PuppetMaster.Commands {
 
             GStore.PuppetMaster.PuppetMasterClient client = new GStore.PuppetMaster.PuppetMasterClient(channel);
 
-            try {
-                await client.CrashAsync(new CrashRequest { } );
+            Random random = new Random();
+            String command = String.Format("Crash server '{0}'", this.id);
 
-                Log(String.Format("ERROR: Server not crashed '{0}'", this.id));
+            int remaining = TRIES;
+            do {
+                try {
+                    await client.CrashAsync(new CrashRequest { });
 
-                await channel.ShutdownAsync();
-            } catch (RpcException e) {
-                String command = String.Format("Crash server '{0}'", this.id);
+                    Log(String.Format("ERROR: Server not crashed '{0}'", this.id));
 
-                switch(e.StatusCode) {
-                    case StatusCode.Aborted:
-                        Log(String.Format("ABORTED: {0}", command));
-                        break;
-                    case StatusCode.Cancelled:
-                        Log(String.Format("CANCELLED: {0}", command));
-                        break;
-                    case StatusCode.DeadlineExceeded:
-                        Log(String.Format("TIMEOUT: {0}", command));
-                        break;
-                    case StatusCode.Internal:
-                        Log(String.Format("INTERNAL: {0}", command));
-                        break;
-                    default:
-                        Log(String.Format("UNKNOWN ERROR: {0}", command));
-                        break;
+                    await channel.ShutdownAsync();
+                } catch (RpcException e) {
+
+                    switch (e.StatusCode) {
+                        case StatusCode.Aborted:
+                            Log(String.Format("ABORTED: {0}", command));
+                            break;
+                        case StatusCode.Cancelled:
+                            Log(String.Format("CANCELLED: {0}", command));
+                            break;
+                        case StatusCode.DeadlineExceeded:
+                            Log(String.Format("TIMEOUT: {0}", command));
+                            break;
+                        case StatusCode.Internal:
+                            Log(String.Format("Crashed server {0}", this.id));
+
+                            this.form.RemoveServer(this.id);
+                            return;
+                        default:
+                            Log(String.Format("UNKNOWN ERROR: {0}", command));
+                            break;
+                    }
                 }
+
+                remaining -= 1;
+                if (remaining != 0) {
+                    Log(String.Format("RETRYING: {0}...", command));
+                }
+
+                await Task.Delay(random.Next(MIN_BACKOFF, MAX_BACKOFF));
+            } while (remaining != 0);
+
+            if(remaining == 0) {
+                Log(String.Format("MAX TRIES EXCEEDED: {0}\nAssuming server '{1}' is already dead", command, this.id));
+                this.form.RemoveServer(this.id);
             }
         }
     }

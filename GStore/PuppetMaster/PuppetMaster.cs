@@ -82,6 +82,10 @@ namespace PuppetMaster {
             this.controller.RemoveServer(name);
         }
 
+        public void RemoveConnection(string name) {
+            this.controller.RemoveConnection(name);
+        }
+
         public void Log(string entry) {
             string multiple = String.Format("[{0}] {1}", DateTime.Now.ToString(), entry);
             lock (this.lockLog) {
@@ -89,6 +93,7 @@ namespace PuppetMaster {
                     Logs.Items.Add(s);
                 }
             }
+
             Logs.SelectedIndex = Logs.Items.Count - 1;
         }
 

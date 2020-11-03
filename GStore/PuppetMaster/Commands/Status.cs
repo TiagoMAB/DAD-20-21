@@ -22,32 +22,49 @@ namespace PuppetMaster.Commands {
 
                     GStore.PuppetMaster.PuppetMasterClient client = new GStore.PuppetMaster.PuppetMasterClient(channel);
 
-                    try {
-                        StatusInfo response = await client.StatusAsync(request);
+                    Random random = new Random();
+                    String command = String.Format("Get status of '{0}'", pair.Key);
 
-                        Log(StatusImpl.PrettyStatus(response));
+                    int remaining = TRIES;
+                    do {
+                        try {
+                            StatusInfo response = await client.StatusAsync(request);
 
-                        await channel.ShutdownAsync();
-                    } catch (RpcException e) {
-                        String command = String.Format("Get status of '{0}'", pair.Key);
+                            Log(StatusImpl.PrettyStatus(response));
 
-                        switch (e.StatusCode) {
-                            case StatusCode.Aborted:
-                                Log(String.Format("ABORTED: {0}", command));
-                                break;
-                            case StatusCode.Cancelled:
-                                Log(String.Format("CANCELLED: {0}", command));
-                                break;
-                            case StatusCode.DeadlineExceeded:
-                                Log(String.Format("TIMEOUT: {0}", command));
-                                break;
-                            case StatusCode.Internal:
-                                Log(String.Format("INTERNAL ERROR: {0}", command));
-                                break;
-                            default:
-                                Log(String.Format("UNKNOWN ERROR: {0}", command));
-                                break;
+                            await channel.ShutdownAsync();
+                            return;
+                        } catch (RpcException e) {
+                            switch (e.StatusCode) {
+                                case StatusCode.Aborted:
+                                    Log(String.Format("ABORTED: {0}", command));
+                                    break;
+                                case StatusCode.Cancelled:
+                                    Log(String.Format("CANCELLED: {0}", command));
+                                    break;
+                                case StatusCode.DeadlineExceeded:
+                                    Log(String.Format("TIMEOUT: {0}", command));
+                                    break;
+                                case StatusCode.Internal:
+                                    Log(String.Format("INTERNAL ERROR: {0}", command));
+                                    break;
+                                default:
+                                    Log(String.Format("UNKNOWN ERROR: {0}", command));
+                                    break;
+                            }
                         }
+
+                        remaining -= 1;
+                        if (remaining != 0) {
+                            Log(String.Format("RETRYING: {0}...", command));
+                        }
+
+                        await Task.Delay(random.Next(MIN_BACKOFF, MAX_BACKOFF));
+                    } while (remaining != 0);
+
+                    if (remaining == 0) {
+                        Log(String.Format("MAX TRIES EXCEEDED: {0}\nAssuming '{1}' is dead", command, pair.Key));
+                        this.form.RemoveConnection(pair.Key);
                     }
                 }));
             }

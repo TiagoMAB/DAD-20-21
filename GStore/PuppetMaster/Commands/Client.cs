@@ -37,32 +37,49 @@ namespace PuppetMaster.Commands {
 
             KeyValuePair<string, string> serverURL = ConnectionInfo.GetRandomServer();
 
-            try {
-                await client.ClientAsync(new ClientRequest { ClientUrl = URL, Id = this.username, Script = this.file, ServerId = serverURL.Key, ServerUrl = serverURL.Value });
+            Random random = new Random();
+            String command = String.Format("Create client '{0}' at '{1}'", this.username, URL);
 
-                Log(String.Format("Client '{0}' started", this.username));
+            int remaining = TRIES;
+            do {
+                try {
+                    await client.ClientAsync(new ClientRequest { ClientUrl = URL, Id = this.username, Script = this.file, ServerId = serverURL.Key, ServerUrl = serverURL.Value });
 
-                await channel.ShutdownAsync();
-            } catch (RpcException e) {
-                String command = String.Format("Create client '{0}' at '{1}'", this.username, URL);
+                    Log(String.Format("Client '{0}' started", this.username));
 
-                switch(e.StatusCode) {
-                    case StatusCode.Aborted:
-                        Log(String.Format("ABORTED: {0}", command));
-                        break;
-                    case StatusCode.Cancelled:
-                        Log(String.Format("CANCELLED: {0}", command));
-                        break;
-                    case StatusCode.DeadlineExceeded:
-                        Log(String.Format("TIMEOUT: {0}", command));
-                        break;
-                    case StatusCode.Internal:
-                        Log(String.Format("INTERNAL ERROR: {0}", command));
-                        break;
-                    default:
-                        Log(String.Format("UNKNOWN ERROR: {0}", command));
-                        break;
+                    await channel.ShutdownAsync();
+                    return;
+                } catch (RpcException e) {
+                    switch (e.StatusCode) {
+                        case StatusCode.Aborted:
+                            Log(String.Format("ABORTED: {0}", command));
+                            break;
+                        case StatusCode.Cancelled:
+                            Log(String.Format("CANCELLED: {0}", command));
+                            break;
+                        case StatusCode.DeadlineExceeded:
+                            Log(String.Format("TIMEOUT: {0}", command));
+                            break;
+                        case StatusCode.Internal:
+                            Log(String.Format("INTERNAL ERROR: {0}", command));
+                            break;
+                        default:
+                            Log(String.Format("UNKNOWN ERROR: {0}", command));
+                            break;
+                    }
                 }
+
+                remaining -= 1;
+                if (remaining != 0) {
+                    Log(String.Format("RETRYING: {0}...", command));
+                }
+
+                await Task.Delay(random.Next(MIN_BACKOFF, MAX_BACKOFF));
+            } while (remaining != 0);
+
+            if(remaining == 0) {
+                Log(String.Format("MAX TRIES EXCEEDED: {0}", command));
+                ConnectionInfo.RemoveClient(this.username);
             }
         }
     }

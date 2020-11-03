@@ -37,36 +37,53 @@ namespace PuppetMaster.Commands {
 
             KeyValuePair<string, string> connectURL = ConnectionInfo.GetRandomServer();
 
-            try {
-                this.form.AddServer(this.id, URL);
+            Random random = new Random();
+            String command = String.Format("Create server '{0}' at '{1}'", this.id, URL);
 
-                await client.ServerAsync(new ServerRequest { Id = this.id, Url = URL, MaxDelay = this.maxDelay, MinDelay = this.minDelay, OtherId = connectURL.Key, OtherUrl = connectURL.Value  });
+            int remaining = TRIES;
+            do {
+                try {
+                    this.form.AddServer(this.id, URL);
 
-                Log(String.Format("Server '{0}' listening at '{1}'", this.id, URL));
+                    await client.ServerAsync(new ServerRequest { Id = this.id, Url = URL, MaxDelay = this.maxDelay, MinDelay = this.minDelay, OtherId = connectURL.Key, OtherUrl = connectURL.Value });
 
-                await channel.ShutdownAsync();
-            } catch (RpcException e) {
-                String command = String.Format("Create server '{0}' at '{1}'", this.id, URL);
+                    Log(String.Format("Server '{0}' listening at '{1}'", this.id, URL));
 
-                ConnectionInfo.RemoveServer(this.id);
+                    await channel.ShutdownAsync();
+                    return;
+                } catch (RpcException e) {
+                    ConnectionInfo.RemoveServer(this.id);
 
-                switch(e.StatusCode) {
-                    case StatusCode.Aborted:
-                        Log(String.Format("ABORTED: {0}", command));
-                        break;
-                    case StatusCode.Cancelled:
-                        Log(String.Format("CANCELLED: {0}", command));
-                        break;
-                    case StatusCode.DeadlineExceeded:
-                        Log(String.Format("TIMEOUT: {0}", command));
-                        break;
-                    case StatusCode.Internal:
-                        Log(String.Format("INTERNAL ERROR: {0}", command));
-                        break;
-                    default:
-                        Log(String.Format("UNKNOWN ERROR: {0}", command));
-                        break;
+                    switch (e.StatusCode) {
+                        case StatusCode.Aborted:
+                            Log(String.Format("ABORTED: {0}", command));
+                            break;
+                        case StatusCode.Cancelled:
+                            Log(String.Format("CANCELLED: {0}", command));
+                            break;
+                        case StatusCode.DeadlineExceeded:
+                            Log(String.Format("TIMEOUT: {0}", command));
+                            break;
+                        case StatusCode.Internal:
+                            Log(String.Format("INTERNAL ERROR: {0}", command));
+                            break;
+                        default:
+                            Log(String.Format("UNKNOWN ERROR: {0}", command));
+                            break;
+                    }
                 }
+
+                remaining -= 1;
+                if (remaining != 0) {
+                    Log(String.Format("RETRYING: {0}...", command));
+                }
+
+                await Task.Delay(random.Next(MIN_BACKOFF, MAX_BACKOFF));
+            } while (remaining != 0);
+
+            if(remaining == 0) {
+                Log(String.Format("MAX TRIES EXCEEDED: {0}", command));
+                this.form.RemoveServer(this.id);
             }
         }
     }

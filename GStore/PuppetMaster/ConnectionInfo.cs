@@ -22,6 +22,18 @@ namespace PuppetMaster {
             return new List<string>(servers.ToList().Select(i => i.Key));
         }
 
+        public static List<string> RemoveIfServer(string name) {
+            if(servers.GetOrAdd(name, "") != "") {
+                return RemoveServer(name);
+            }
+
+            return null;
+        }
+
+        public static void RemoveClient(string name) {
+            clients.TryRemove(name, out _);
+        }
+
         public static KeyValuePair<string, string> GetRandomServer() {
             Random r = new Random();
             int i = r.Next(0, servers.Count);
