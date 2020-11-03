@@ -63,12 +63,48 @@ namespace Server
 
             server.Start();
 
-            Console.WriteLine("GStore server running on " + host + " listening on port " + port + "\nPress any key to stop the server...");
-            Console.ReadKey();
+            Console.WriteLine("GStore server running on " + host + " listening on port " + port + "");
 
             //TO DO: Remove in final version
-            debug(id, URL, host, port, otherURL);
-            
+            //debug(id, URL, host, port, otherURL);
+
+            ConsoleKeyInfo k;
+            do
+            {
+                Console.WriteLine("Press 'p' if you want to create a new partition (current server will be the master).\nPress 's' to print the server status.\nPress 'e' to stop the server.");
+                k = Console.ReadKey();
+
+                switch (k.KeyChar)
+                {
+                    case 'p':
+                        Console.WriteLine("\nWrite the name of the partition.");
+                        string name = Console.ReadLine();
+
+                        Console.WriteLine("Write the ids of replicas belonging to the partition, separated by a comma. The first one must be the current server id.\nExample: server1,server2,server3");
+                        string line = Console.ReadLine();
+
+                    
+                        string[] ids = line.Split(',');
+                        PartitionRequest request = new PartitionRequest { Name = name};
+                        request.Ids.AddRange(ids);
+                        ServerService.partition(request);
+                        break;
+
+                    case 's':
+                        Console.WriteLine();
+                        ServerService.status(new StatusRequest());
+                        break;
+
+                    case 'e':
+                        break;
+
+                    default:
+                        Console.WriteLine("Command not recognized.");
+                        break;
+                }
+
+            } while (k.KeyChar != 'e');
+
             server.ShutdownAsync().Wait();
         }
 
@@ -101,6 +137,9 @@ namespace Server
                 Console.WriteLine("Press any key to read object the server...");
                 Console.ReadKey();
                 Console.WriteLine("Value received: " + client1.Read(new ReadRequest { PartitionId = "partition1", ObjectId = "Object1" }).Value);
+                Console.WriteLine("Press any key to crash the server...");
+                Console.ReadKey();
+                client.Crash(new CrashRequest());
             }
             else
             {
