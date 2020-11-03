@@ -58,6 +58,10 @@ namespace PuppetMaster {
             return value;
         }
 
+        public static bool IsServer(string name) {
+            return GetServer(name) != null;
+        }
+
         public static List<KeyValuePair<string, string>> GetAll() {
             List<KeyValuePair<string, string>> connections = servers.ToList();
 

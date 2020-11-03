@@ -28,14 +28,18 @@ namespace PuppetMaster.MVC {
         }
 
         public void AddServer(string name, string URL) {
+            bool existent = ConnectionInfo.IsServer(name);
+
             ConnectionInfo.AddServer(name, URL);
 
-            lock (mvcLock) {
-                foreach (var view in views) {
-                    this.form.Invoke(this.adderCombo, view, name);
-                }
+            if (existent) {
+                lock (mvcLock) {
+                    foreach (var view in views) {
+                        this.form.Invoke(this.adderCombo, view, name);
+                    }
 
-                this.form.Invoke(this.adderList, this.listView, name);
+                    this.form.Invoke(this.adderList, this.listView, name);
+                }
             }
         }
 
