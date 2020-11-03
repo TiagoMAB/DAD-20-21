@@ -11,7 +11,7 @@ message WriteRequest {
 }
 
 message WriteReply {
-  // Skeleton
+	bool ok = 1;
 }
 
 // READ operation request and response

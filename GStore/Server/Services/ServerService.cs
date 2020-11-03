@@ -7,6 +7,7 @@ using System.Linq;
 using Domain;
 using System.Threading.Tasks;
 using System.Collections;
+using System.Collections.Concurrent;
 
 namespace Server 
 {
@@ -16,9 +17,9 @@ namespace Server
         private readonly string id;
         private readonly string URL;
         private readonly int delay;
-
-        private Dictionary<string, string> network = new Dictionary<string, string>();                                  //  Dictionary<server_id, URL>
-        private Dictionary<string, Partition> partitions = new Dictionary<string, Partition>();                         //  Dictionary<partition_id, Partition>
+       
+        private ConcurrentDictionary<string, string> network = new ConcurrentDictionary<string, string>();                                  //  Dictionary<server_id, URL>
+        private ConcurrentDictionary<string, Partition> partitions = new ConcurrentDictionary<string, Partition>();                         //  Dictionary<partition_id, Partition>
 
         private bool frozen = false;
         private readonly object key = new object();
@@ -39,11 +40,33 @@ namespace Server
             AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
             GrpcChannel channel = GrpcChannel.ForAddress(otherURL);
             ServerCommunication.ServerCommunicationClient client = new ServerCommunication.ServerCommunicationClient(channel);
-            HandshakeReply reply = client.Handshake(new HandshakeRequest { Id = id, Url = URL });
+            HandshakeReply reply = null;
+
+            int attempts = 0;
+            while (attempts < 3)
+            {
+                try
+                {
+                    reply = client.Handshake(new HandshakeRequest { Id = id, Url = URL });
+                }
+                catch
+                {
+                    attempts++;
+                    Random r = new Random();
+                    int wait_time = r.Next(3000, 5000);
+                    Thread.Sleep(wait_time);
+                }
+            }
+
+            if (attempts >= 3)
+            {
+                Console.WriteLine("Server was not able to connect to the network, shutting down.");
+                Environment.Exit(-1);
+            }
 
             foreach (HandshakeReply.Types.Info info in reply.Network)
             {
-                this.network.Add(info.Id, info.Url);
+                this.network.TryAdd(info.Id, info.Url);
 
                 channel = GrpcChannel.ForAddress(info.Url);
                 client = new ServerCommunication.ServerCommunicationClient(channel);
@@ -51,7 +74,7 @@ namespace Server
 
             }
 
-            this.network.Add(otherId, otherURL);
+            this.network.TryAdd(otherId, otherURL);
         } 
 
         /*
@@ -126,10 +149,25 @@ namespace Server
         {
             delays();
 
-            //TO DO: Inform others of the crash
-            //TO DO: Return before exit ???
             Console.WriteLine("Crash()...");
-            Environment.Exit(-1);
+
+            Task t = Task.Run(() => 
+            { 
+                //informs other servers of the crash (works as a perfect failure detector)
+                foreach (string id in this.network.Keys)
+                {
+                    string server_url = network[id];
+
+                    AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+                    GrpcChannel channel = GrpcChannel.ForAddress(server_url);
+                    ServerCommunication.ServerCommunicationClient client = new ServerCommunication.ServerCommunicationClient(channel);
+                    client.SignalCrash(new SignalCrashRequest { Id = this.id });
+                } 
+
+                Console.WriteLine("Crash() all servers notified, crashing...");
+                Environment.Exit(-1);
+            });
+
             return new CrashResponse();
         }
 
@@ -153,13 +191,8 @@ namespace Server
             Console.WriteLine("Partition()...");
             string partition_name = request.Name;
             string master_id = request.Ids.First();
-
-            if (this.id != master_id)
-            {
-                //TO DO: Only masters can receive partition requests, they will then share the information with the rest of the network
-            }
-
             string master_url = this.URL;
+
             List<string> server_ids = request.Ids.ToList();
             bool own = server_ids.Contains(this.id);
             Partition p = new Partition(partition_name, master_id, master_url, own);
@@ -169,7 +202,7 @@ namespace Server
                 p.addId(id, this.id == id ? this.URL : network[id]);
             }
 
-            this.partitions.Add(partition_name, p);
+            this.partitions.TryAdd(partition_name, p);
 
             //partition is sent to all other members of the network
             foreach (string id in this.network.Keys)
@@ -236,7 +269,7 @@ namespace Server
 
             if (partition.masterID != this.id)
             {
-                //TO DO: only masters can write an object
+                return new WriteReply { Ok = false };
             }
 
             string objectId = request.ObjectId;
@@ -286,7 +319,7 @@ namespace Server
                 partition.locked = false;
             }
 
-            return new WriteReply();
+            return new WriteReply { Ok = true };
         }
 
         /*
@@ -431,7 +464,7 @@ namespace Server
                 reply.Network.Add(new HandshakeReply.Types.Info { Id = server.Key, Url = server.Value });
             }
 
-            network.Add(request.Id, request.Url);
+            network.TryAdd(request.Id, request.Url);
             return reply;
         }
 
@@ -439,7 +472,7 @@ namespace Server
         {
             Console.WriteLine("Register()...");
 
-            network.Add(request.Id, request.Url);
+            network.TryAdd(request.Id, request.Url);
             return new RegisterReply();
         }
 
@@ -461,9 +494,29 @@ namespace Server
                 p.addId(id, this.id == id ? this.URL : network[id]);
             }
 
-            this.partitions.Add(partition_name, p);
+            this.partitions.TryAdd(partition_name, p);
 
             return new SharePartitionReply();
+        }
+
+        public SignalCrashReply signalCrash(SignalCrashRequest request)
+        {
+            Console.WriteLine("SignalCrash()...");
+            string id;
+
+            this.network.TryRemove(request.Id, out id);
+            Console.WriteLine("SignalCrash() id removed from network...");
+
+            foreach (Partition p in partitions.Values)
+            {
+                if (p.replicas.ContainsKey(request.Id))
+                {
+                    p.replicas.Remove(request.Id);
+                }
+            }
+
+            Console.WriteLine("SignalCrash() finished...");
+            return new SignalCrashReply();
         }
 
         public void delays(bool unfreeze = false)

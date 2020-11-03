@@ -38,5 +38,10 @@ namespace Server
         {
             return Task.FromResult(server.sharePartition(request));
         }
+
+        public override Task<SignalCrashReply> SignalCrash(SignalCrashRequest request, ServerCallContext context)
+        {
+            return Task.FromResult(server.signalCrash(request));
+        }
     }
 }
