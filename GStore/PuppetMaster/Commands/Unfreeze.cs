@@ -36,6 +36,7 @@ namespace PuppetMaster.Commands {
                     Log(String.Format("Unfreezed server '{0}'", this.id));
 
                     await channel.ShutdownAsync();
+                    return;
                 } catch (RpcException e) {
                     switch (e.StatusCode) {
                         case StatusCode.Aborted:
