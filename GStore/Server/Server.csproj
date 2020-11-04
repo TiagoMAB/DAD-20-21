@@ -6,8 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Protobuf Include="..\Proto\gstore.proto" GrpcServices="Both" Link="Protos\gstore.proto" />
-    <Protobuf Include="..\Proto\PuppetMaster.proto" GrpcServices="Both" Link="Protos\puppetmaster.proto" />
+    <Protobuf Include="..\Proto\gstore.proto" GrpcServices="Server" Link="Protos\gstore.proto" />
+    <Protobuf Include="..\Proto\PuppetMaster.proto" GrpcServices="Server" Link="Protos\puppetmaster.proto" />
     <Protobuf Include="..\Proto\ServerCommunication.proto" GrpcServices="Both" Link="Protos\servercommunication.proto" />
     
     <PackageReference Include="Google.Protobuf" Version="3.13.0" />

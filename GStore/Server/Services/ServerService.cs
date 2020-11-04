@@ -307,7 +307,7 @@ namespace Server
                 AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
                 GrpcChannel channel = GrpcChannel.ForAddress(url);
                 var client = new ServerCommunication.ServerCommunicationClient(channel);
-                LockObjectReply reply = client.LockObject(new LockObjectRequest { PartitionId = partitionId, ObjectId = objectId });                   //TO DO: do it async and evaluate return value
+                LockObjectReply reply = client.LockObject(new LockObjectRequest { PartitionId = partitionId, ObjectId = objectId });              
 
             }
 
@@ -351,7 +351,7 @@ namespace Server
             if (!partitions.ContainsKey(partitionId))
             {
                 Console.WriteLine("Read() finished...");
-                return new ReadReply { Value = "N/A" };                 // TO DO: handle failure (partition doesn't exist)
+                return new ReadReply { Value = "N/A" };                
             }
             else
             {
@@ -407,7 +407,6 @@ namespace Server
             ListGlobalReply reply = new ListGlobalReply();
             List<string> neededPartitions = request.PartitionIds.ToList();
             
-            //TO DO: check if partitionsIds received exist in partitions stored in server
             foreach (string name in neededPartitions)
             {
                 Partition p = partitions[name];
@@ -427,7 +426,7 @@ namespace Server
         //Server-Server Communication
         //
 
-        public LockObjectReply lockObject(LockObjectRequest request)        //TO DO: handle failures
+        public LockObjectReply lockObject(LockObjectRequest request)        
         {
             delays();
 
@@ -454,7 +453,7 @@ namespace Server
             return new LockObjectReply { Ok = ok };
         }
 
-        public WriteObjectReply writeObject(WriteObjectRequest request)     //TO DO: handle failures
+        public WriteObjectReply writeObject(WriteObjectRequest request)    
         {
             delays();
 

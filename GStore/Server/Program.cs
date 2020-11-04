@@ -18,7 +18,6 @@ namespace Server
 
             string id = args[0];
             string URL = args[1];
-            string otherId = null, otherURL = null; //TO DO: Remove and insert in else
             int min_delay = int.Parse(args[2]);
             int max_delay = int.Parse(args[3]);
             Random r = new Random();
@@ -38,8 +37,8 @@ namespace Server
             }
             else
             {
-                otherId = args[4];
-                otherURL = args[5];
+                string otherId = args[4];
+                string otherURL = args[5];
                 ServerService = new ServerService(id, URL, delay, otherId, otherURL);
             }
 
@@ -65,17 +64,29 @@ namespace Server
 
             Console.WriteLine("GStore server running on " + host + " listening on port " + port + "");
 
-            //TO DO: Remove in final version
-            //debug(id, URL, host, port, otherURL);
-
             ConsoleKeyInfo k;
             do
             {
-                Console.WriteLine("Press 'p' if you want to create a new partition (current server will be the master).\nPress 's' to print the server status.\nPress 'e' to stop the server.");
+                Console.WriteLine("Press 'p' if you want to create a new partition (current server will be the master).\nPress 'f' freeze the server.\nPress 'u' to unfreeze the server status.\nPress 's' to print the server status.\nPress 'c' to crash the server.\nPress 'e' to stop the server.");
                 k = Console.ReadKey();
 
                 switch (k.KeyChar)
                 {
+                    case 'f':
+                        Console.WriteLine();
+                        ServerService.freeze(new FreezeRequest());
+                        break;
+
+                    case 'u':
+                        Console.WriteLine();
+                        ServerService.unfreeze(new UnfreezeRequest());
+                        break;
+
+                    case 'c':
+                        Console.WriteLine();
+                        ServerService.crash(new CrashRequest());
+                        break;
+                    
                     case 'p':
                         Console.WriteLine("\nWrite the name of the partition.");
                         string name = Console.ReadLine();
@@ -106,52 +117,6 @@ namespace Server
             } while (k.KeyChar != 'e');
 
             server.ShutdownAsync().Wait();
-        }
-
-        //TO DO: Remove in final version
-        static void debug(string id, string URL, string host, int port, string otherURL)
-        {
-            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-            GrpcChannel channel = GrpcChannel.ForAddress(URL);
-            PuppetMaster.PuppetMasterClient client = new PuppetMaster.PuppetMasterClient(channel);
-            GStore.GStore.GStoreClient client1 = new GStore.GStore.GStoreClient(channel);
-
-            client.Status(new StatusRequest());
-            if (otherURL == null)
-            {
-                Console.WriteLine("Press any key to partition the server...");
-                Console.ReadKey();
-                client.Partition(new PartitionRequest { Name = "partition1", Ids = { "server1", "server2" } });
-                Console.WriteLine("Press any key to write object the server...");
-                Console.ReadKey();
-                client1.Write(new WriteRequest { PartitionId = "partition1", ObjectId = "Object1", Value = "VALUE1" });
-                Console.WriteLine("Press any key to read object the server...");
-                Console.ReadKey();
-                Console.WriteLine("Value received: " + client1.Read(new ReadRequest { PartitionId = "partition1", ObjectId = "Object1" }).Value);
-            }
-            else if (id == "server2")
-            {
-                Console.WriteLine("Press any key to partition the server...");
-                Console.ReadKey();
-                client.Partition(new PartitionRequest { Name = "partition2", Ids = { "server2", "server3" } });
-                Console.WriteLine("Press any key to read object the server...");
-                Console.ReadKey();
-                Console.WriteLine("Value received: " + client1.Read(new ReadRequest { PartitionId = "partition1", ObjectId = "Object1" }).Value);
-                Console.WriteLine("Press any key to crash the server...");
-                Console.ReadKey();
-                client.Crash(new CrashRequest());
-            }
-            else
-            {
-                Console.WriteLine("Press any key to partition the server...");
-                Console.ReadKey();
-                client.Partition(new PartitionRequest { Name = "partition3", Ids = { "server3", "server1" } });
-            }
-            Console.WriteLine("Press any key to status the server...");
-            Console.ReadKey();
-            client.Status(new StatusRequest());
-            Console.WriteLine("Press any key to stop the server...");
-            Console.ReadKey();
         }
     }
 }
