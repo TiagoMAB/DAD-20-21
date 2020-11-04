@@ -17,6 +17,7 @@ namespace Client.Commands
         public void Execute()
         {
             ServerInfo serverInfo = ServerInfo.Instance();
+            string currentServerURL = serverInfo.CurrentServerURL;
 
             System.Diagnostics.Debug.WriteLine(String.Format("List objects stored in server \"{0}\"", this.serverId));
 
@@ -46,6 +47,8 @@ namespace Client.Commands
             {
                 Console.WriteLine("Server with id \"{0}\" failed with status \"{1}\". Proceeding to next operation...", this.serverId, e.StatusCode.ToString());
             }
+
+            serverInfo.CurrentServerURL =  currentServerURL;
         }
     }
 }

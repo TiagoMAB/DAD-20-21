@@ -14,6 +14,7 @@ namespace Client.Commands
             System.Diagnostics.Debug.WriteLine("Listing the partition and object identifiers of all objects stored on the system.");
 
             ServerInfo serverInfo = ServerInfo.Instance();
+            string currentServerURL = serverInfo.CurrentServerURL;
             List<string> partitionsToRequest = serverInfo.GetPartitionIds();
             List<string> urls = serverInfo.GetURLs();
             Random random = new Random();
@@ -57,6 +58,8 @@ namespace Client.Commands
             }
             if (urls.Count == 0 && partitionsToRequest.Count != 0)
                 throw new NonExistentServerException("No more servers available to contact.");
+
+            serverInfo.CurrentServerURL = currentServerURL;
 
             Console.WriteLine("Partition id:\t\t\tObject id:");
             foreach (ListGlobalReply listPartition in replies)

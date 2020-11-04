@@ -69,7 +69,7 @@ namespace Client
 
             try
             {
-                script = Parser.ParseScript(args[2]);
+                script = Parser.ParseScript(args[2] + ".txt");
             }
             catch (FileNotFoundException e)
             {
