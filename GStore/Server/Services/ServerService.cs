@@ -43,38 +43,47 @@ namespace Server
             HandshakeReply reply = null;
 
             int attempts = 0;
-            while (attempts < 3)
+            bool error = true;
+            while (attempts < 3 && error)
             {
                 try
                 {
                     reply = client.Handshake(new HandshakeRequest { Id = id, Url = URL });
+                    error = false;
                 }
                 catch
                 {
                     attempts++;
                     Random r = new Random();
                     int wait_time = r.Next(3000, 5000);
+
+                    Console.WriteLine("Server was not able to connect to the network, retrying in " + wait_time/1000 + " seconds.");
                     Thread.Sleep(wait_time);
                 }
             }
 
-            if (attempts >= 3)
+            if (error)
             {
                 Console.WriteLine("Server was not able to connect to the network, shutting down.");
                 Environment.Exit(-1);
             }
 
-            foreach (HandshakeReply.Types.Info info in reply.Network)
+            lock (this.network)
             {
-                this.network.TryAdd(info.Id, info.Url);
+                foreach (HandshakeReply.Types.Info info in reply.Network)
+                {
+                    this.network.TryAdd(info.Id, info.Url);
 
-                channel = GrpcChannel.ForAddress(info.Url);
-                client = new ServerCommunication.ServerCommunicationClient(channel);
-                client.Register(new RegisterRequest { Id = this.id, Url = this.URL });
+                    channel = GrpcChannel.ForAddress(info.Url);
+                    client = new ServerCommunication.ServerCommunicationClient(channel);
+                    client.Register(new RegisterRequest { Id = this.id, Url = this.URL });
 
+                }
+
+                this.network.TryAdd(otherId, otherURL);
             }
-
-            this.network.TryAdd(otherId, otherURL);
+            
+            Console.WriteLine("Server successfully connected to the network.");
         } 
 
         /*
@@ -216,7 +225,9 @@ namespace Server
                 p_request.Ids.AddRange(server_ids);
                 client.SharePartition(p_request);
             }
+            
 
+            Console.WriteLine("Partition() finished...");
             return new PartitionResponse();
         }
 
@@ -252,6 +263,7 @@ namespace Server
                 reply.Partition.Add(partition);
             }
 
+            Console.WriteLine("ServerInfo() finished...");
             return reply;
         }
 
@@ -269,6 +281,7 @@ namespace Server
 
             if (partition.masterID != this.id)
             {
+                Console.WriteLine("Write() finished...");
                 return new WriteReply { Ok = false };
             }
 
@@ -307,10 +320,10 @@ namespace Server
                     continue;
                 }
 
-                AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);   //TO DO: why is this necessary?
+                AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);   
                 GrpcChannel channel = GrpcChannel.ForAddress(url);
                 var client = new ServerCommunication.ServerCommunicationClient(channel);
-                WriteObjectReply reply = client.WriteObject(new WriteObjectRequest { PartitionId = partitionId, ObjectId = objectId, Value = value });                   //TO DO: do it async and evaluate return value
+                WriteObjectReply reply = client.WriteObject(new WriteObjectRequest { PartitionId = partitionId, ObjectId = objectId, Value = value });               
             }
 
             lock (partition)
@@ -319,6 +332,7 @@ namespace Server
                 partition.locked = false;
             }
 
+            Console.WriteLine("Write() finished...");
             return new WriteReply { Ok = true };
         }
 
@@ -336,6 +350,7 @@ namespace Server
 
             if (!partitions.ContainsKey(partitionId))
             {
+                Console.WriteLine("Read() finished...");
                 return new ReadReply { Value = "N/A" };                 // TO DO: handle failure (partition doesn't exist)
             }
             else
@@ -353,6 +368,7 @@ namespace Server
                     Monitor.Pulse(p);
                 }
 
+                Console.WriteLine("Read() finished...");
                 return new ReadReply { Value = value };
             }
         }
@@ -376,6 +392,7 @@ namespace Server
                 } 
             }
 
+            Console.WriteLine("ListServer() finished...");
             return reply;
         }
 
@@ -402,6 +419,7 @@ namespace Server
                 reply.Partitions.Add(list);
             }
 
+            Console.WriteLine("ListServer() finished...");
             return reply;
         }
 
@@ -421,7 +439,7 @@ namespace Server
             {
                 if (partitions[partitionId].locked == true)
                 {
-                    ok = false;                             //partition is locked (theoretically can't happen, TO DO: maybe remove)
+                    ok = false;                             //partition is locked 
                     Console.WriteLine("Partition " + partitionId + " is already locked by another request");
                 }
                 else
@@ -432,6 +450,7 @@ namespace Server
                 }
             }
 
+            Console.WriteLine("LockObject() finished...");
             return new LockObjectReply { Ok = ok };
         }
 
@@ -451,6 +470,7 @@ namespace Server
                 partitions[partitionId].locked = false;
             }
 
+            Console.WriteLine("WriteObject() finished...");
             return new WriteObjectReply { Ok = true };
         }
 
@@ -459,12 +479,18 @@ namespace Server
             Console.WriteLine("Handshake()...");
 
             HandshakeReply reply = new HandshakeReply();
-            foreach (KeyValuePair<string, string> server in network)
+
+            lock (this.network)
             {
-                reply.Network.Add(new HandshakeReply.Types.Info { Id = server.Key, Url = server.Value });
+                foreach (KeyValuePair<string, string> server in network)
+                {
+                    reply.Network.Add(new HandshakeReply.Types.Info { Id = server.Key, Url = server.Value });
+                }
+
+                network.TryAdd(request.Id, request.Url);
             }
 
-            network.TryAdd(request.Id, request.Url);
+            Console.WriteLine("Handshake() finished...");
             return reply;
         }
 
@@ -472,7 +498,12 @@ namespace Server
         {
             Console.WriteLine("Register()...");
 
-            network.TryAdd(request.Id, request.Url);
+            lock (this.network)
+            {
+                network.TryAdd(request.Id, request.Url);
+            }
+
+            Console.WriteLine("Register() finished...");
             return new RegisterReply();
         }
 
@@ -496,6 +527,7 @@ namespace Server
 
             this.partitions.TryAdd(partition_name, p);
 
+            Console.WriteLine("SharePartition() finished...");
             return new SharePartitionReply();
         }
 
