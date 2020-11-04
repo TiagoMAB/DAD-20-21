@@ -32,7 +32,7 @@ namespace PuppetMaster.MVC {
 
             ConnectionInfo.AddServer(name, URL);
 
-            if (existent) {
+            if (!existent) {
                 lock (mvcLock) {
                     foreach (var view in views) {
                         this.form.Invoke(this.adderCombo, view, name);
