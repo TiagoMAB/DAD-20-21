@@ -14,4 +14,10 @@ Partition 3 part5 server5 server1 server2
 
 Wait 2000
 
-Client client1 http://localhost:9001 clientScript1.txt
+Client client1 http://localhost:9001 ClientScript1
+
+Client client2 http://localhost:9002 ClientScript2
+
+Wait 3000
+
+Status

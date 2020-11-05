@@ -1,8 +1,8 @@
 wait 4000
 
-write part1 obj4 arch
-write part1 obj5 vim
-write part2 obj3 emacs
+write part1 obj4 "arch"
+write part1 obj5 "vim"
+write part2 obj3 "emacs"
 
 listGlobal
 listServer server3
