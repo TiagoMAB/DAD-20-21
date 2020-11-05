@@ -1,0 +1,35 @@
+ReplicationFactor 3
+
+Partition 3 fruits serv2 serv1 serv3
+Partition 3 cars serv4 serv1 serv3
+Partition 3 pets serv2 serv3 serv4
+Partition 3 places serv4 serv2 serv1
+
+Server serv1 http://localhost:8001 0 0
+Server serv2 http://localhost:8002 5000 5000
+Server serv3 http://localhost:8003 100 2000
+Server serv4 http://localhost:8004 0 4000
+
+Wait 6000
+
+Client client1 http://localhost:9001 clientScript3
+
+Wait 2000
+
+Freeze serv3
+
+Wait 5000
+
+Unfreeze serv3
+
+Wait 2000
+
+Client client2 http://localhost:9002 clientScript4
+
+Wait 3000
+
+Crash serv1
+
+Wait 3000
+
+Crash serv3

@@ -1,0 +1,20 @@
+write fruits banana "1.0$"
+write pets cat "Oh my favourite"
+write fruits apples "No Sir!"
+write cars Ferrari "vroom vroom"
+
+listGlobal
+
+listServer serv4
+
+wait 5000
+
+begin-repeat 10
+write fruits RottenBanana$i "Disgusting... $i times"
+end-repeat
+
+wait 10000
+
+begin-repeat 10
+read fruits RottenBanana$i serv1
+end-repeat
