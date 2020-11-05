@@ -30,6 +30,12 @@ namespace Client.Commands
                 List<string> serverPartitionIds = serverInfo.GetPartitionsByURL(url);
                 ListGlobalRequest listGlobal = new ListGlobalRequest();
 
+                if (serverPartitionIds == null)
+                {
+                    urls.Remove(url);
+                    continue;
+                }
+
                 foreach (string partitionId in serverPartitionIds)
                     if (partitionsToRequest.Contains(partitionId))
                         listGlobal.PartitionIds.Add(partitionId);
