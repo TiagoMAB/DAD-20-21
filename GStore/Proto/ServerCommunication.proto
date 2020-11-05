@@ -8,7 +8,6 @@ service ServerCommunication {
 	rpc LockObject (LockObjectRequest) returns (LockObjectReply);
 	rpc WriteObject (WriteObjectRequest) returns (WriteObjectReply);
 	rpc SharePartition (SharePartitionRequest) returns (SharePartitionReply);
-	rpc SignalCrash (SignalCrashRequest) returns (SignalCrashReply);
 }
 
 message HandshakeRequest {
