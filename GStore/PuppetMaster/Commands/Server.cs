@@ -1,6 +1,10 @@
 ﻿using Grpc.Core;
+using Grpc.Net.Client;
 using GStore;
+using PuppetMaster.Exceptions;
 using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace PuppetMaster.Commands {
     public class Server : Command {
@@ -13,34 +17,74 @@ namespace PuppetMaster.Commands {
         public Server(PuppetMaster form, string id, string URL, int minDelay, int maxDelay) : base(form) {
             string[] address = URL.Split(':');
 
-             // TODO: Assert correct format of address
+            if(!URL.StartsWith("http://") || address.Length != 3) {
+                throw new InvalidURLException("Server", URL);
+            }
 
             this.id = id;
-            this.host = address[0];
-            this.port = address[1];
+            this.host = address[0] + ":" + address[1];
+            this.port = address[2];
             this.minDelay = minDelay;
             this.maxDelay = maxDelay;
         }
 
-        protected override void DoWork() {
+        protected override async Task DoWork() {
             string URL = this.host + ":" + this.port;
 
-            ConnectionInfo.AddServer(this.id, URL);
-
-            Channel channel = new Channel(this.host + ":10000", ChannelCredentials.Insecure);
+            GrpcChannel channel = GrpcChannel.ForAddress(this.host + ":10000");
 
             PCS.PCSClient client = new PCS.PCSClient(channel);
 
-            try {
-                client.Server(new ServerRequest { Id = this.id, Url = URL, MaxDelay = this.maxDelay, MinDelay = this.minDelay });
-            } catch (RpcException e) {
-                // TODO: Improve error handling
-                System.Diagnostics.Debug.WriteLine(e);
+            KeyValuePair<string, string> connectURL = ConnectionInfo.GetRandomServer();
+
+            Random random = new Random();
+            String command = String.Format("Create server '{0}' at '{1}'", this.id, URL);
+
+            int remaining = TRIES;
+            do {
+                try {
+                    this.form.AddServer(this.id, URL);
+
+                    await client.ServerAsync(new ServerRequest { Id = this.id, Url = URL, MaxDelay = this.maxDelay, MinDelay = this.minDelay, OtherId = connectURL.Key, OtherUrl = connectURL.Value });
+
+                    Log(String.Format("Server '{0}' listening at '{1}'", this.id, URL));
+
+                    await channel.ShutdownAsync();
+                    return;
+                } catch (RpcException e) {
+                    ConnectionInfo.RemoveServer(this.id);
+
+                    switch (e.StatusCode) {
+                        case StatusCode.Aborted:
+                            Log(String.Format("ABORTED: {0}", command));
+                            break;
+                        case StatusCode.Cancelled:
+                            Log(String.Format("CANCELLED: {0}", command));
+                            break;
+                        case StatusCode.DeadlineExceeded:
+                            Log(String.Format("TIMEOUT: {0}", command));
+                            break;
+                        case StatusCode.Internal:
+                            Log(String.Format("INTERNAL ERROR: {0}", command));
+                            break;
+                        default:
+                            Log(String.Format("UNKNOWN ERROR: {0}", command));
+                            break;
+                    }
+                }
+
+                remaining -= 1;
+                if (remaining != 0) {
+                    Log(String.Format("RETRYING: {0}...", command));
+                }
+
+                await Task.Delay(random.Next(MIN_BACKOFF, MAX_BACKOFF));
+            } while (remaining != 0);
+
+            if(remaining == 0) {
+                Log(String.Format("MAX TRIES EXCEEDED: {0}", command));
+                this.form.RemoveServer(this.id);
             }
-
-            channel.ShutdownAsync().Wait();
-
-            Log(String.Format("Server '{0}' listening at '{1}'", this.id, URL));
         }
     }
 }

@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package GStore;
+
+service ServerCommunication {
+	rpc Handshake (HandshakeRequest) returns (HandshakeReply);
+	rpc Register (RegisterRequest) returns (RegisterReply);
+	rpc LockObject (LockObjectRequest) returns (LockObjectReply);
+	rpc WriteObject (WriteObjectRequest) returns (WriteObjectReply);
+	rpc SharePartition (SharePartitionRequest) returns (SharePartitionReply);
+}
+
+message HandshakeRequest {
+	string id = 1;
+	string url = 2;
+}
+
+message HandshakeReply {
+	repeated Info network = 1;
+
+	message Info {
+		string id = 1;
+		string url = 2;
+	}
+}
+
+message RegisterRequest {
+	string id = 1;
+	string url = 2;
+}
+
+message RegisterReply {
+}
+
+message LockObjectRequest {
+	string partitionId = 1;
+	string objectId = 2;
+}
+
+message LockObjectReply {
+	bool ok = 1;
+}
+
+message WriteObjectRequest {
+	string partitionId = 1;
+	string objectId = 2;
+	string value = 3;
+}
+
+message WriteObjectReply {
+	bool ok = 1;
+}
+
+message SharePartitionRequest {
+	int32 replicas = 1;
+	string name = 2;
+	repeated string ids = 3;
+}
+
+message SharePartitionReply {}

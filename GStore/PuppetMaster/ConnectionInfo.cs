@@ -2,8 +2,6 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using System;
-using System.Runtime.CompilerServices;
-using System.Xml.Serialization;
 
 namespace PuppetMaster {
     static class ConnectionInfo {
@@ -15,22 +13,39 @@ namespace PuppetMaster {
         }
 
         public static void AddServer(string name, string url) {
-            servers.TryAdd(name, url);
+            servers[name] = url;
         }
 
-        public static string GetRandomServer() {
+        public static List<string> RemoveServer(string name) {
+            servers.TryRemove(name, out _);
+
+            return new List<string>(servers.ToList().Select(i => i.Key));
+        }
+
+        public static List<string> RemoveIfServer(string name) {
+            if(servers.GetOrAdd(name, "") != "") {
+                return RemoveServer(name);
+            }
+
+            return null;
+        }
+
+        public static void RemoveClient(string name) {
+            clients.TryRemove(name, out _);
+        }
+
+        public static KeyValuePair<string, string> GetRandomServer() {
             Random r = new Random();
             int i = r.Next(0, servers.Count);
 
-            foreach(var server in servers) {
-                if(i == 0) {
-                    return server.Value;
+            foreach (var server in servers) {
+                if (i == 0) {
+                    return server;
                 }
 
                 i--;
             }
-
-            return null;
+            return new KeyValuePair<string, string>("", "");
         }
 
         public static string GetServer(string name) {
@@ -43,8 +58,8 @@ namespace PuppetMaster {
             return value;
         }
 
-        public static List<KeyValuePair<string, string>> GetAllServers() {
-            return servers.ToList();
+        public static bool IsServer(string name) {
+            return GetServer(name) != null;
         }
 
         public static List<KeyValuePair<string, string>> GetAll() {

@@ -11,7 +11,7 @@ message WriteRequest {
 }
 
 message WriteReply {
-  // Skeleton
+	bool ok = 1;
 }
 
 // READ operation request and response
@@ -32,9 +32,24 @@ message ListServerReply {
 	repeated ListValue values = 1;
 
 	message ListValue {
-		string value = 1;
-		bool isMaster = 2;
-		//maybe add the partitionId
+		string partitionId = 1;
+		string objectId = 2;
+		string value = 3;
+		bool isMaster = 4;
+	}
+}
+
+// LIST GLOBAL objects
+message ListGlobalRequest {
+	repeated string partitionIds = 1;
+}
+
+message ListGlobalReply {
+	repeated ListPartition partitions = 1;
+
+	message ListPartition {
+		string partitionId = 1;
+		repeated string objectId = 2;
 	}
 }
 
@@ -45,50 +60,24 @@ message ServerInfoRequest {
 
 message ServerInfoReply {
 	repeated Server servers = 1;
+	repeated Partition partition = 2;
 
 	message Server {
-		string serverId = 1;
-		string url = 2;
-		repeated string masterPartitionId = 3;
-		repeated string partitions = 4;
-	}
-}
-
-message HandshakeRequest {
-	
-	string id = 1;
-	string url = 2;
-
-}
-
-message HandshakeReply {
-
-	repeated Info network = 1;
-
-	message Info {
 		string id = 1;
 		string url = 2;
 	}
 
-}
-
-message RegisterRequest {
-	
-	string id = 1;
-	string url = 2;
-
-}
-
-message RegisterReply {
-
-	bool ok = 1;
+	message Partition {
+		string name = 1;
+		string master = 2;
+		repeated string serverIds = 3;
+	}
 }
 
 service GStore {
-  rpc read (ReadRequest) returns (ReadReply);
-  rpc write (WriteRequest) returns (WriteReply);
-  rpc listServer (ListServerRequest) returns (ListServerReply);
-  rpc serverInfo (ServerInfoRequest) returns (ServerInfoReply);
-  rpc handshake(HandshakeRequest) returns (HandshakeReply);
-  rpc register(RegisterRequest) returns (RegisterReply);
+  rpc Read (ReadRequest) returns (ReadReply);
+  rpc Write (WriteRequest) returns (WriteReply);
+  rpc ListServer (ListServerRequest) returns (ListServerReply);
+  rpc ListGlobal (ListGlobalRequest) returns (ListGlobalReply);
+  rpc ServerInfo (ServerInfoRequest) returns (ServerInfoReply);
 }

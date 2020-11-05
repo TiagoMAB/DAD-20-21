@@ -1,6 +1,7 @@
 ﻿using System;
-using Grpc.Net.Client;
+using Grpc.Core;
 using GStore;
+using Client.Exceptions;
 
 namespace Client.Commands
 {
@@ -15,17 +16,39 @@ namespace Client.Commands
 
         public void Execute()
         {
-            System.Diagnostics.Debug.WriteLine(String.Format("List objects stored in server {0}", this.serverId));
+            ServerInfo serverInfo = ServerInfo.Instance();
+            string currentServerURL = serverInfo.CurrentServerURL;
 
-            var channel = GrpcChannel.ForAddress("https://localhost:5001"); //server ports?
-            var client = new GStore.GStore.GStoreClient(channel);
+            System.Diagnostics.Debug.WriteLine(String.Format("List objects stored in server \"{0}\"", this.serverId));
 
-            var response = client.listServer(new ListServerRequest {} );
+            string url = serverInfo.GetURLByServerId(this.serverId);
+            if (url == null) {
+                Console.WriteLine("Server with id \"{0}\" not found.", this.serverId);
+                return;
+            }
 
-            Console.WriteLine("  Is Master?\tValue");
+            GStore.GStore.GStoreClient client = serverInfo.GetChannel(url);
+            try
+            {
+                Console.WriteLine("List server: Printing values of \"{0}\":", this.serverId);
 
-            foreach (var value in response.Values)
-                Console.WriteLine("  {1}\t{2}", (value.IsMaster)? "true":"false", value.Value);
+                ListServerReply response = client.ListServer(new ListServerRequest { });
+
+                foreach (ListServerReply.Types.ListValue value in response.Values)
+                    Console.WriteLine("\tPartition Id: {0}\n" +
+                        "\tObject Id: {1}\n" +
+                        "\tValue: {2}\n" +
+                        "\tIs this server the master of the object? {3}\n",
+                        value.PartitionId, value.ObjectId, value.Value, (value.IsMaster)? "true":"false");
+
+                Console.WriteLine("All values printed.\n\n");
+            }
+            catch (RpcException e)
+            {
+                Console.WriteLine("Server with id \"{0}\" failed with status \"{1}\". Proceeding to next operation...", this.serverId, e.StatusCode.ToString());
+            }
+
+            serverInfo.CurrentServerURL =  currentServerURL;
         }
     }
 }

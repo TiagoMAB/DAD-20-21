@@ -1,0 +1,23 @@
+wait 2000
+
+write part1 obj1 strawberry
+write part1 obj2 banana
+write part1 obj3 peach
+write part2 obj1 pineapple
+write part2 obj2 orange
+write part3 obj1 apple
+write part4 obj1 mango
+write part5 obj1 berry
+write part5 obj2 grape
+
+listGlobal
+listServer server1
+
+read part1 obj1 server2
+read part4 obj1 server4
+read part5 obj1 server5
+read part5 obj3 server5
+
+begin-repeat 3
+read part1 obj$i server3
+end-repeat

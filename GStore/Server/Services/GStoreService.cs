@@ -1,100 +1,42 @@
-using System;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 using Grpc.Core;
-using Grpc.Net.Client;
 using GStore;
-using System.Diagnostics;
 
 namespace Server
 {
     public class GStoreService : GStore.GStore.GStoreBase
     {
-        private readonly string id;
-        private readonly string URL;
-        private Dictionary<string, string> network = new Dictionary<string, string>();  // Dictionary<server_id, URL>
+
+        private ServerService server;
             
-        public GStoreService(string id, string URL, string otherId, string otherURL)
+        public GStoreService(ServerService server)
         {
-            this.id = id;
-            this.URL = URL;
-
-            //if server is the first in the network, handshake is not called
-            if (otherURL == null) 
-            {
-                return;
-            }
-
-            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);   //TO DO: why is this necessary?
-            GrpcChannel channel = GrpcChannel.ForAddress(otherURL);
-            GStore.GStore.GStoreClient client = new GStore.GStore.GStoreClient(channel);
-            HandshakeReply reply = client.handshake(new HandshakeRequest { Id = id, Url = URL });
-
-            foreach (HandshakeReply.Types.Info info in reply.Network) 
-            {
-                this.network.Add(info.Id, info.Url);    //TO DO: add lock if necessary, probably not
-
-                channel = GrpcChannel.ForAddress(info.Url);
-                client = new GStore.GStore.GStoreClient(channel);
-                client.register(new RegisterRequest { Id = this.id, Url = this.URL }); //TODO: check return value, if necessary
-
-            }
-
-            this.network.Add(otherId, otherURL);    //TO DO: add lock if necessary, probably not
-
-            //DEBUG:
-            foreach (KeyValuePair<string, string> server in this.network)
-            {
-                Console.WriteLine("Server with id - " + server.Key + " - with url - " + server.Value);
-            }
+            this.server = server;
         }
 
-        public override Task<GStore.HandshakeReply> handshake(HandshakeRequest request, ServerCallContext context)
+        public override Task<WriteReply> Write(WriteRequest request, ServerCallContext context)
         {
-            Console.WriteLine("Handshake request received");
-
-            HandshakeReply reply = new HandshakeReply();
-            foreach (KeyValuePair<string, string> server in this.network) 
-            {
-                reply.Network.Add(new HandshakeReply.Types.Info { Id = server.Key, Url = server.Value });
-            }
-
-            network.Add(request.Id, request.Url);
-            Console.WriteLine("Handshake reply sent");
-            return Task.FromResult(reply);
+            return Task.FromResult(server.write(request));
         }
 
-        public override Task<GStore.RegisterReply> register(RegisterRequest request, ServerCallContext context)
+        public override Task<ReadReply> Read(ReadRequest request, ServerCallContext context)
         {
-            Console.WriteLine("Register request received");
-            try
-            {
-                network.Add(request.Id, request.Url);
-
-                //DEBUG:
-                foreach (KeyValuePair<string, string> server in this.network)
-                {
-                    Console.WriteLine("Server with id - " + server.Key + " - with url - " + server.Value);
-                }
-
-                return Task.FromResult(new RegisterReply { Ok = true });
-            }
-            catch (Exception)
-            {
-                return Task.FromResult(new RegisterReply { Ok = false });
-            }
+            return Task.FromResult(server.read(request));
         }
 
-        public override Task<GStore.WriteReply> write(WriteRequest request, ServerCallContext context)
+        public override Task<ServerInfoReply> ServerInfo(ServerInfoRequest request, ServerCallContext context)
         {
-            Console.WriteLine("Write");
-            return Task.FromResult(new WriteReply());
+            return Task.FromResult(server.serverInfo(request));
         }
 
-        public override Task<GStore.ReadReply> read(ReadRequest request, ServerCallContext context)
+        public override Task<ListServerReply> ListServer(ListServerRequest request, ServerCallContext context)
         {
-            Console.WriteLine("Read");
-            return Task.FromResult(new ReadReply());
+            return Task.FromResult(server.listServer(request));
+        }
+
+        public override Task<ListGlobalReply> ListGlobal(ListGlobalRequest request, ServerCallContext context)
+        {
+            return Task.FromResult(server.listGlobal(request));
         }
     }
 }

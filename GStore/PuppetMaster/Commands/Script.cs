@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace PuppetMaster.Commands {
@@ -11,7 +12,7 @@ namespace PuppetMaster.Commands {
         }
 
         private async Task Await() {
-            await Task.WhenAll(this.tasks);
+            await Task.WhenAll(this.tasks).ConfigureAwait(false);
         }
 
         public void AddCommand(Command command) {
@@ -19,7 +20,32 @@ namespace PuppetMaster.Commands {
         }
 
         public async Task Execute() {
-            foreach (Command command in this.commands) {
+            
+            List<Command> toExecute = this.commands.FindAll(command => command.GetType().Name == "Server");
+            foreach (Command command in toExecute)
+            {
+                Task task = command.Execute();
+                Thread.Sleep(1500);
+
+                if (task != null)
+                {
+                    this.AddTask(task);
+                }
+            }
+
+            toExecute = this.commands.FindAll(command => command.GetType().Name == "Partition");
+            foreach (Command command in toExecute)
+            {
+                Task task = command.Execute();
+
+                if (task != null)
+                {
+                    this.AddTask(task);
+                }
+            }
+
+            toExecute = this.commands.FindAll(command => (command.GetType().Name != "Partition" && command.GetType().Name != "Server"));
+            foreach (Command command in toExecute) {
                 Task task = command.Execute();
 
                 if(task != null) {

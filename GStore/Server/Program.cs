@@ -1,6 +1,7 @@
 ﻿using System;
 using GStore;
 using Grpc.Core;
+using Grpc.Net.Client;
 
 namespace Server
 {
@@ -8,44 +9,112 @@ namespace Server
     {
         static void Main(string[] args)
         {
-            string id = null, URL = null, otherId = null, otherURL = null, host = null;
-            Int64 min_delay = 0, max_delay = 0;
-            int port = 0;
-
             if (args.Length != 4 && args.Length != 6) 
             {
-                Console.WriteLine("Wrong format. Should be: id url min_delay max_delay [otherId otherURL]\n otherId and otherURL are optional arguments used to connect to a pre-existing network.");
+                Console.WriteLine("Wrong format. Should be: id url min_delay max_delay [otherId otherURL]\n otherId and otherURL are optional arguments used to connect to a pre-existing network.\nPress any key to exit...");
                 Console.ReadLine();
-                //TO DO: exit ?
+                Environment.Exit(-1);
             }
-            
-            id = args[0];
-            URL = args[1];
-            min_delay = Int64.Parse(args[2]);
-            max_delay = Int64.Parse(args[3]);
-            
-            string[] details = URL.Split(':');
 
-            host = details[0];
-            port = int.Parse(details[1]);
-           
-            if (args.Length == 6) 
+            string id = args[0];
+            string URL = args[1];
+            int min_delay = int.Parse(args[2]);
+            int max_delay = int.Parse(args[3]);
+            Random r = new Random();
+            int delay = r.Next(min_delay, max_delay);
+
+            string[] details = URL.Split("//");
+            details = details[1].Split(':');
+
+            string host = details[0];
+            int port = int.Parse(details[1]);
+
+            ServerService ServerService;
+
+            if (args.Length == 4) 
             {
-                otherId = args[4];
-                otherURL = args[5];
+                ServerService = new ServerService(id, URL, delay);
             }
+            else
+            {
+                string otherId = args[4];
+                string otherURL = args[5];
+                ServerService = new ServerService(id, URL, delay, otherId, otherURL);
+            }
+
+            GStoreService gstoreservice = new GStoreService(ServerService);
+            PuppetMasterService puppetmasterservice = new PuppetMasterService(ServerService);
+            ServerCommunicationService servercommunicationservice = new ServerCommunicationService(ServerService);
 
             Grpc.Core.Server server = new Grpc.Core.Server
             {
-                Services = { GStore.GStore.BindService(new GStoreService(id, URL, otherId, otherURL))},
-                Ports = { new ServerPort(host, port, ServerCredentials.Insecure) }
+                Services = 
+                { 
+                    GStore.GStore.BindService(gstoreservice), 
+                    PuppetMaster.BindService(puppetmasterservice), 
+                    ServerCommunication.BindService(servercommunicationservice) 
+                },
+                Ports = 
+                { 
+                    new ServerPort(host, port, ServerCredentials.Insecure) 
+                }
             };
 
             server.Start();
 
-            Console.WriteLine("GStore server running on " + host + " listening on port " + port);
-            Console.WriteLine("Press any key to stop the server...");
-            Console.ReadKey();
+            Console.WriteLine("GStore server running on " + host + " listening on port " + port + "");
+
+            ConsoleKeyInfo k;
+            do
+            {
+                Console.WriteLine("Press 'p' if you want to create a new partition (current server will be the master).\nPress 'f' freeze the server.\nPress 'u' to unfreeze the server status.\nPress 's' to print the server status.\nPress 'c' to crash the server.\nPress 'e' to stop the server.");
+                k = Console.ReadKey();
+
+                switch (k.KeyChar)
+                {
+                    case 'f':
+                        Console.WriteLine();
+                        ServerService.freeze(new FreezeRequest());
+                        break;
+
+                    case 'u':
+                        Console.WriteLine();
+                        ServerService.unfreeze(new UnfreezeRequest());
+                        break;
+
+                    case 'c':
+                        Console.WriteLine();
+                        ServerService.crash(new CrashRequest());
+                        break;
+                    
+                    case 'p':
+                        Console.WriteLine("\nWrite the name of the partition.");
+                        string name = Console.ReadLine();
+
+                        Console.WriteLine("Write the ids of replicas belonging to the partition, separated by a comma. The first one must be the current server id.\nExample: server1,server2,server3");
+                        string line = Console.ReadLine();
+
+                    
+                        string[] ids = line.Split(',');
+                        PartitionRequest request = new PartitionRequest { Name = name};
+                        request.Ids.AddRange(ids);
+                        ServerService.partition(request);
+                        break;
+
+                    case 's':
+                        Console.WriteLine();
+                        ServerService.status(new StatusRequest());
+                        break;
+
+                    case 'e':
+                        break;
+
+                    default:
+                        Console.WriteLine("Command not recognized.");
+                        break;
+                }
+
+            } while (k.KeyChar != 'e');
 
             server.ShutdownAsync().Wait();
         }

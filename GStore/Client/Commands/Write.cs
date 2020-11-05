@@ -1,6 +1,7 @@
 ﻿using System;
-using Grpc.Net.Client;
+using Grpc.Core;
 using GStore;
+using Client.Exceptions;
 
 namespace Client.Commands
 {
@@ -19,17 +20,29 @@ namespace Client.Commands
 
         public void Execute()
         {
-            // TODO: Implement
-            System.Diagnostics.Debug.WriteLine(String.Format("Write in partition {0} with object id {1} and value {2}", this.partitionId, this.objectId, this.value));
+            ServerInfo serverInfo = ServerInfo.Instance();
 
-            var channel = GrpcChannel.ForAddress("https://localhost:5001"); //server ports?
-            var client = new GStore.GStore.GStoreClient(channel);
+            System.Diagnostics.Debug.WriteLine(String.Format("Write in partition \"{0}\" with object id \"{1}\" and value \"{2}\"", this.partitionId, this.objectId, this.value));
 
-            // TODO: Change to the master replica server
-            // write calls can be made asynchronously 
-            client.write(new WriteRequest { PartitionId = this.partitionId, ObjectId = this.objectId, Value = this.value } );
+            Console.WriteLine("Write in partition \"{0}\" with object id \"{1}\" and value \"{2}\"...", this.partitionId, this.objectId, this.value);
 
-            Console.WriteLine();
+            string masterURL = serverInfo.GetMasterURLByPartitionId(this.partitionId);
+            if (masterURL == null)
+                throw new NonExistentServerException(String.Format("Master server of partition \"{0}\" not found.", this.partitionId));
+
+            try
+            {
+                GStore.GStore.GStoreClient client = serverInfo.GetChannel(masterURL);
+                client.Write(new WriteRequest { PartitionId = this.partitionId, ObjectId = this.objectId, Value = this.value });
+            }
+            catch (RpcException e)
+            {
+                System.Diagnostics.Debug.WriteLine(String.Format("Master server with URL \"{0}\" failed with status \"{1}\". Exiting...", serverInfo.CurrentServerURL, e.StatusCode.ToString()));
+                Console.WriteLine("Master server with URL \"{0}\" failed with status \"{1}\". Exiting...", serverInfo.CurrentServerURL, e.StatusCode.ToString());
+                throw;
+            }
+
+            Console.WriteLine("Write of value \"{0}\" completed.\n", this.value);
         }
     }
 }
