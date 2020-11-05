@@ -161,19 +161,8 @@ namespace Server
             Console.WriteLine("Crash()...");
 
             Task t = Task.Run(() => 
-            { 
-                //informs other servers of the crash (works as a perfect failure detector)
-                foreach (string id in this.network.Keys)
-                {
-                    string server_url = network[id];
-
-                    AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-                    GrpcChannel channel = GrpcChannel.ForAddress(server_url);
-                    ServerCommunication.ServerCommunicationClient client = new ServerCommunication.ServerCommunicationClient(channel);
-                    client.SignalCrash(new SignalCrashRequest { Id = this.id });
-                } 
-
-                Console.WriteLine("Crash() all servers notified, crashing...");
+            {
+                Thread.Sleep(1000);
                 Environment.Exit(-1);
             });
 
@@ -307,9 +296,17 @@ namespace Server
                 AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
                 GrpcChannel channel = GrpcChannel.ForAddress(url);
                 var client = new ServerCommunication.ServerCommunicationClient(channel);
-                LockObjectReply reply = client.LockObject(new LockObjectRequest { PartitionId = partitionId, ObjectId = objectId });              
-
+                try
+                {
+                    client.LockObject(new LockObjectRequest { PartitionId = partitionId, ObjectId = objectId });
+                }
+                catch
+                {
+                    handleServerFailure(url);
+                }      
             }
+
+            Console.WriteLine("Write() all locks acquired, start writing...");
 
             partition.addObject(objectId, value);
 
@@ -323,8 +320,18 @@ namespace Server
                 AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);   
                 GrpcChannel channel = GrpcChannel.ForAddress(url);
                 var client = new ServerCommunication.ServerCommunicationClient(channel);
-                WriteObjectReply reply = client.WriteObject(new WriteObjectRequest { PartitionId = partitionId, ObjectId = objectId, Value = value });               
+                try
+                {
+                    client.WriteObject(new WriteObjectRequest { PartitionId = partitionId, ObjectId = objectId, Value = value });
+                }
+                catch (Exception e)
+                {
+                    handleServerFailure(url);
+                }
+           
             }
+
+            Console.WriteLine("Write() all objects written, unlocking master...");
 
             lock (partition)
             {
@@ -362,7 +369,7 @@ namespace Server
                 {
                     while (p.locked == true)
                     {
-                        Monitor.Wait(p);        //Write request is queued until lock is obtained
+                        Monitor.Wait(p);        //Read request is queued until lock is obtained
                     }
                     value = p.getObject(objectId);
                     Monitor.Pulse(p);
@@ -530,26 +537,6 @@ namespace Server
             return new SharePartitionReply();
         }
 
-        public SignalCrashReply signalCrash(SignalCrashRequest request)
-        {
-            Console.WriteLine("SignalCrash()...");
-            string id;
-
-            this.network.TryRemove(request.Id, out id);
-            Console.WriteLine("SignalCrash() id removed from network...");
-
-            foreach (Partition p in partitions.Values)
-            {
-                if (p.replicas.ContainsKey(request.Id))
-                {
-                    p.replicas.Remove(request.Id);
-                }
-            }
-
-            Console.WriteLine("SignalCrash() finished...");
-            return new SignalCrashReply();
-        }
-
         public void delays(bool unfreeze = false)
         {
             //Any incoming message is delayed by a predefined amount
@@ -570,6 +557,24 @@ namespace Server
                     Monitor.Pulse(key);
                 }
             }
+        }
+
+        void handleServerFailure(string url)
+        {
+            Console.WriteLine("handleServerFailure() server crashed at " + url);
+            string failed_server = this.network.First(id => id.Value == url).Key;
+            string fail;
+
+            Console.WriteLine("handleServerFailure() server identified with id: " + failed_server);
+
+            this.network.TryRemove(failed_server, out fail);
+
+            Console.WriteLine("handleServerFailure() server removed from the network...");
+            foreach (Partition p in partitions.Values)
+            {
+                p.replicas.Remove(failed_server);
+            }
+            Console.WriteLine("handleServerFailure() server removed from all partitions...");
         }
     }
 }

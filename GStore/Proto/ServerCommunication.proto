@@ -59,9 +59,3 @@ message SharePartitionRequest {
 }
 
 message SharePartitionReply {}
-
-message SignalCrashRequest {
-	string id = 1;
-}
-
-message SignalCrashReply {}

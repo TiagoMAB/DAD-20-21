@@ -1,0 +1,20 @@
+listServer serv3
+
+begin-repeat 3
+write cars car$i "formula $i"
+end-repeat
+
+wait 3000
+
+read pets iPhone -1
+write pets iPhone "Bad choice"
+
+wait 1000
+
+listGlobal
+
+read cars Ferrari serv3
+
+begin-repeat 2
+read cars car$i -1
+end-repeat
