@@ -16,7 +16,7 @@ namespace PuppetMaster.Commands {
         protected override async Task DoWork() {
             String URL = ConnectionInfo.GetServer(this.id);
 
-            if(URL == null) {
+            if (URL == null) {
                 Log(String.Format("ERROR: Unknown server '{0}' on command Crash", this.id));
                 throw new UnknownServerException("Crash", this.id);
             }
@@ -33,9 +33,12 @@ namespace PuppetMaster.Commands {
                 try {
                     await client.CrashAsync(new CrashRequest { });
 
-                    Log(String.Format("ERROR: Server not crashed '{0}'", this.id));
+                    Log(String.Format("Crashed server {0}", this.id));
 
+                    this.form.RemoveServer(this.id);
                     await channel.ShutdownAsync();
+
+                    return;
                 } catch (RpcException e) {
 
                     switch (e.StatusCode) {
@@ -49,10 +52,8 @@ namespace PuppetMaster.Commands {
                             Log(String.Format("TIMEOUT: {0}", command));
                             break;
                         case StatusCode.Internal:
-                            Log(String.Format("Crashed server {0}", this.id));
-
-                            this.form.RemoveServer(this.id);
-                            return;
+                            Log(String.Format("INTERNAL ERROR: {0}", command));
+                            break;
                         default:
                             Log(String.Format("UNKNOWN ERROR: {0}", command));
                             break;
@@ -67,7 +68,7 @@ namespace PuppetMaster.Commands {
                 await Task.Delay(random.Next(MIN_BACKOFF, MAX_BACKOFF));
             } while (remaining != 0);
 
-            if(remaining == 0) {
+            if (remaining == 0) {
                 Log(String.Format("MAX TRIES EXCEEDED: {0}\nAssuming server '{1}' is already dead", command, this.id));
                 this.form.RemoveServer(this.id);
             }
