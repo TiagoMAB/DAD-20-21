@@ -10,7 +10,7 @@ Server serv2 http://localhost:8002 5000 5000
 Server serv3 http://localhost:8003 100 2000
 Server serv4 http://localhost:8004 0 4000
 
-Wait 6000
+Wait 12000
 
 Client client1 http://localhost:9001 clientScript3
 
