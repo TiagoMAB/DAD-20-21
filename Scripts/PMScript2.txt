@@ -16,6 +16,6 @@ Server server8 http://localhost:8008 0 1000
 Server server7 http://localhost:8007 0 1000
 Server server11 http://localhost:8011 0 1000
 
-Wait 1000
+Wait 10000
 
-Client client1 http://localhost:9001 clientScript1.txt
+Client client1 http://localhost:9001 ClientScript1
