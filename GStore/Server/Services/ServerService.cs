@@ -403,32 +403,6 @@ namespace Server
             return reply;
         }
 
-        /*
-         * Sends client objects of asked partitions present in the server
-         */
-        public ListGlobalReply listGlobal(ListGlobalRequest request)
-        {
-            delays();
-
-            Console.WriteLine("ListServer()...");
-            ListGlobalReply reply = new ListGlobalReply();
-            List<string> neededPartitions = request.PartitionIds.ToList();
-            
-            foreach (string name in neededPartitions)
-            {
-                Partition p = partitions[name];
-                ListGlobalReply.Types.ListPartition list = new ListGlobalReply.Types.ListPartition { PartitionId = name };
-                foreach (string objectId in p.objects.Keys)
-                {
-                    list.ObjectId.Add(objectId);
-                }
-                reply.Partitions.Add(list);
-            }
-
-            Console.WriteLine("ListServer() finished...");
-            return reply;
-        }
-
         //
         //Server-Server Communication
         //
