@@ -34,15 +34,13 @@ namespace Client.Commands
             {
                 GStore.GStore.GStoreClient client = serverInfo.GetChannel(masterURL);
                 client.Write(new WriteRequest { PartitionId = this.partitionId, ObjectId = this.objectId, Value = this.value });
+                Console.WriteLine("Write of value \"{0}\" completed.\n", this.value);
             }
             catch (RpcException e)
             {
-                System.Diagnostics.Debug.WriteLine(String.Format("Master server with URL \"{0}\" failed with status \"{1}\". Exiting...", serverInfo.CurrentServerURL, e.StatusCode.ToString()));
-                Console.WriteLine("Master server with URL \"{0}\" failed with status \"{1}\". Exiting...", serverInfo.CurrentServerURL, e.StatusCode.ToString());
-                throw;
+                System.Diagnostics.Debug.WriteLine(String.Format("Master server with URL \"{0}\" failed with status \"{1}\".", serverInfo.CurrentServerURL, e.StatusCode.ToString()));
+                Console.WriteLine("Master server with URL \"{0}\" failed with status \"{1}\".", serverInfo.CurrentServerURL, e.StatusCode.ToString());
             }
-
-            Console.WriteLine("Write of value \"{0}\" completed.\n", this.value);
         }
     }
 }
