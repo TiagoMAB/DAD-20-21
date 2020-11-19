@@ -26,20 +26,24 @@ namespace Client.Commands
                 {
                     GStore.GStore.GStoreClient client = serverInfo.GetChannel(url);
 
-                    Console.WriteLine("\tList server: Printing values of \"{0}\":", url);
-
                     ListServerReply response = client.ListServer(new ListServerRequest { });
 
-                    foreach (ListServerReply.Types.ListValue value in response.Values)
-                        message += String.Format("\t\tPartition Id: {0}\n" +
-                            "\t\tObject Id: {1}\n" +
-                            "\t\tValue: {2}\n" +
-                            "\t\tIs this server the master of the object? {3}\n",
-                            value.PartitionId, value.ObjectId, value.Value, (value.IsMaster)? "true":"false");
+                    message += String.Format("\tPrinting values of \"{0}\":\n", url);
+
+                    if (response.Values.Count == 0)
+                        message += "\t\tNothing to display\n\n";
+                    else {
+                        foreach (ListServerReply.Types.ListValue value in response.Values)
+                            message += String.Format("\t\tPartition Id: {0}\n" +
+                                "\t\tObject Id: {1}\n" +
+                                "\t\tValue: {2}\n" +
+                                "\t\tIs this server the master of the object? {3}\n\n",
+                                value.PartitionId, value.ObjectId, value.Value, (value.IsMaster) ? "true" : "false");
+                    }
                 }
                 catch (RpcException e)
                 {
-                    Console.WriteLine("\tServer with URL \"{0}\" failed with status \"{1}\". Proceeding to next operation...", url, e.StatusCode.ToString());
+                    Console.WriteLine("\tFailed to contact server \"{0}\", error with status \"{1}\"", url, e.StatusCode.ToString());
                 }
             }
 
