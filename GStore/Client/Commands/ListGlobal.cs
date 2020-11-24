@@ -15,63 +15,41 @@ namespace Client.Commands
 
             ServerInfo serverInfo = ServerInfo.Instance();
             string currentServerURL = serverInfo.CurrentServerURL;
-            List<string> partitionsToRequest = serverInfo.GetPartitionIds();
+            string message = "";
             List<string> urls = serverInfo.GetURLs();
-            Random random = new Random();
-            List<ListGlobalReply> replies = new List<ListGlobalReply>();
 
-            Console.WriteLine("List Global: Printing all partition and object Ids:");
+            Console.WriteLine("List Global: Printing all servers:");
 
-            //Picks random server to ask for partition's information
-            while (partitionsToRequest.Count != 0 && urls.Count != 0)
+            foreach (string url in urls)
             {
-                string url = urls[random.Next(urls.Count)];
-
-                List<string> serverPartitionIds = serverInfo.GetPartitionsByURL(url);
-                ListGlobalRequest listGlobal = new ListGlobalRequest();
-
-                if (serverPartitionIds == null)
-                {
-                    urls.Remove(url);
-                    continue;
-                }
-
-                foreach (string partitionId in serverPartitionIds)
-                    if (partitionsToRequest.Contains(partitionId))
-                        listGlobal.PartitionIds.Add(partitionId);
-
-                if (listGlobal.PartitionIds.Count == 0)
-                {
-                    urls.Remove(url);
-                    continue;
-                }
-
                 try
                 {
                     GStore.GStore.GStoreClient client = serverInfo.GetChannel(url);
 
-                    replies.Add(client.ListGlobal(listGlobal));
+                    ListServerReply response = client.ListServer(new ListServerRequest { });
 
-                    urls.Remove(url);
-                    foreach (string partition in serverPartitionIds)
-                        partitionsToRequest.Remove(partition);
+                    message += String.Format("\tPrinting values of \"{0}\":\n", url);
+
+                    if (response.Values.Count == 0)
+                        message += "\t\tNothing to display\n\n";
+                    else {
+                        foreach (ListServerReply.Types.ListValue value in response.Values)
+                            message += String.Format("\t\tPartition Id: {0}\n" +
+                                "\t\tObject Id: {1}\n" +
+                                "\t\tValue: {2}\n" +
+                                "\t\tIs this server the master of the object? {3}\n\n",
+                                value.PartitionId, value.ObjectId, value.Value, (value.IsMaster) ? "true" : "false");
+                    }
                 }
                 catch (RpcException e)
                 {
-                    System.Diagnostics.Debug.WriteLine(String.Format("Server with URL \"{0}\" failed with status \"{1}\". Asking next server.", serverInfo.CurrentServerURL, e.StatusCode.ToString()));
-                    urls.Remove(url);
+                    Console.WriteLine("\tFailed to contact server \"{0}\", error with status \"{1}\"", url, e.StatusCode.ToString());
                 }
             }
-            if (urls.Count == 0 && partitionsToRequest.Count != 0)
-                throw new NonExistentServerException("No more servers available to contact.");
 
             serverInfo.CurrentServerURL = currentServerURL;
 
-            Console.WriteLine("Partition id:\t\t\tObject id:");
-            foreach (ListGlobalReply listPartition in replies)
-                foreach (ListGlobalReply.Types.ListPartition partition in listPartition.Partitions.ToList())
-                    foreach (string id in partition.ObjectId.ToList())
-                        Console.WriteLine("{0}\t\t\t\t{1}", partition.PartitionId, id);
+            Console.WriteLine(message);
             Console.WriteLine("All values printed.\n\n");
         }
     }

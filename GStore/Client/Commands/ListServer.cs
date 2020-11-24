@@ -27,9 +27,10 @@ namespace Client.Commands
                 return;
             }
 
-            GStore.GStore.GStoreClient client = serverInfo.GetChannel(url);
             try
             {
+                GStore.GStore.GStoreClient client = serverInfo.GetChannel(url);
+
                 Console.WriteLine("List server: Printing values of \"{0}\":", this.serverId);
 
                 ListServerReply response = client.ListServer(new ListServerRequest { });
