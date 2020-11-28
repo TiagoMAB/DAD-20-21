@@ -1,7 +1,8 @@
 ﻿using System;
 using Grpc.Core;
 using GStore;
-using Client.Exceptions;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Client.Commands
 {
@@ -20,27 +21,47 @@ namespace Client.Commands
 
         public void Execute()
         {
+            Random random = new Random();
             ServerInfo serverInfo = ServerInfo.Instance();
-
-            System.Diagnostics.Debug.WriteLine(String.Format("Write in partition \"{0}\" with object id \"{1}\" and value \"{2}\"", this.partitionId, this.objectId, this.value));
 
             Console.WriteLine("Write in partition \"{0}\" with object id \"{1}\" and value \"{2}\"...", this.partitionId, this.objectId, this.value);
 
-            string masterURL = serverInfo.GetMasterURLByPartitionId(this.partitionId);
-            if (masterURL == null)
-                throw new NonExistentServerException(String.Format("Master server of partition \"{0}\" not found.", this.partitionId));
+            List<string> urls = null;
 
-            try
+            foreach (int retries in Enumerable.Range(1, serverInfo.numOfRetries).Reverse())
             {
-                GStore.GStore.GStoreClient client = serverInfo.GetChannel(masterURL);
-                client.Write(new WriteRequest { PartitionId = this.partitionId, ObjectId = this.objectId, Value = this.value });
-                Console.WriteLine("Write of value \"{0}\" completed.\n", this.value);
+                urls = serverInfo.GetURLsWithPartitionId(this.partitionId);
+                if (urls.Count == 0)
+                {
+                    Console.WriteLine("Server with partitionId \"{0}\" not found. Retrying {1} more time(s) in {2}ms...\n", this.partitionId, retries, serverInfo.backoffTime);
+                    System.Threading.Thread.Sleep(serverInfo.backoffTime);
+                    serverInfo.GetServerInfo();
+                }
+                else break;
             }
-            catch (RpcException e)
+
+            if (urls == null || urls.Count == 0)
             {
-                System.Diagnostics.Debug.WriteLine(String.Format("Master server with URL \"{0}\" failed with status \"{1}\".", serverInfo.CurrentServerURL, e.StatusCode.ToString()));
-                Console.WriteLine("Master server with URL \"{0}\" failed with status \"{1}\".", serverInfo.CurrentServerURL, e.StatusCode.ToString());
+                Console.WriteLine("No more retries will be done. Proceeding...\n");
+                return;
             }
+
+            foreach (string url in urls.OrderBy(randomURL => random.Next()))
+            {
+                try
+                {
+                    GStore.GStore.GStoreClient client = serverInfo.GetChannel(url);
+                    client.Write(new WriteRequest { PartitionId = this.partitionId, ObjectId = this.objectId, Value = this.value });
+                    Console.WriteLine("Write of value \"{0}\" completed.\n", this.value);
+                    return;
+                }
+                catch (RpcException e)
+                {
+                    System.Diagnostics.Debug.WriteLine(String.Format("Master server with URL \"{0}\" failed with status \"{1}\".", serverInfo.CurrentServerURL, e.StatusCode.ToString()));
+                    Console.WriteLine("Master server with URL \"{0}\" failed with status \"{1}\". Retrying write...", serverInfo.CurrentServerURL, e.StatusCode.ToString());
+                }
+            }
+            Console.WriteLine("No more retries will be done.Proceeding...\n");
         }
     }
 }

@@ -22,9 +22,15 @@ namespace Client.Commands
             System.Diagnostics.Debug.WriteLine(String.Format("List objects stored in server \"{0}\"", this.serverId));
 
             string url = serverInfo.GetURLByServerId(this.serverId);
+
             if (url == null) {
-                Console.WriteLine("Server with id \"{0}\" not found.", this.serverId);
-                return;
+                serverInfo.GetServerInfo();
+                url = serverInfo.GetURLByServerId(this.serverId);
+                if (url == null)
+                {
+                    Console.WriteLine("Server with id \"{0}\" not found.", this.serverId);
+                    return;
+                }
             }
 
             try
@@ -39,8 +45,8 @@ namespace Client.Commands
                     Console.WriteLine("\tPartition Id: {0}\n" +
                         "\tObject Id: {1}\n" +
                         "\tValue: {2}\n" +
-                        "\tIs this server the master of the object? {3}\n",
-                        value.PartitionId, value.ObjectId, value.Value, (value.IsMaster)? "true":"false");
+                        "\tIs this server the master of the object? yes\n",
+                        value.PartitionId, value.ObjectId, value.Value /*, (value.IsMaster)? "true":"false"*/);
 
                 Console.WriteLine("All values printed.\n\n");
             }

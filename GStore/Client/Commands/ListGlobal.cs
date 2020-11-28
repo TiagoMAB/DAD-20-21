@@ -37,8 +37,8 @@ namespace Client.Commands
                             message += String.Format("\t\tPartition Id: {0}\n" +
                                 "\t\tObject Id: {1}\n" +
                                 "\t\tValue: {2}\n" +
-                                "\t\tIs this server the master of the object? {3}\n\n",
-                                value.PartitionId, value.ObjectId, value.Value, (value.IsMaster) ? "true" : "false");
+                                "\t\tIs this server the master of the object? yes\n\n",
+                                value.PartitionId, value.ObjectId, value.Value /*, (value.IsMaster) ? "true" : "false"*/);
                     }
                 }
                 catch (RpcException e)

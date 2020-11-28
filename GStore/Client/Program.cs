@@ -102,6 +102,11 @@ namespace Client
                 Console.WriteLine(e.Message);
                 Console.ReadKey(); return;
             } 
+            catch (ConflictingTimestampsException e)
+            {
+                Console.WriteLine(e.Message);
+                Console.ReadKey(); return;
+            }
             catch (RpcException)
             {
                 Console.ReadKey(); return;
