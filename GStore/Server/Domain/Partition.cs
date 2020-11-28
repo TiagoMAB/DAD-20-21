@@ -7,19 +7,15 @@ namespace Domain
     public class Partition
     {
         public string name { get; }
-        public string masterID { get; set; }
-        public string masterURL { get; set; }
         public bool own { get; }
         public bool locked { get; set; }
 
         public Dictionary<string, string> replicas { get; set; }    //  Dictionary<replica_id, replica_url>
         public Dictionary<string, string> objects { get; set; }     //  Dictionary<object_id, value>
 
-        public Partition(string name, string id, string url, bool own)
+        public Partition(string name, bool own)
         {
             this.name = name;
-            this.masterID = id;
-            this.masterURL = url;
             this.own = own;
             this.locked = false;
             this.replicas = new Dictionary<string, string>();
@@ -57,7 +53,7 @@ namespace Domain
 
         public override string ToString()
         {
-            string ret = "Name: " + name + " | Master: " + masterID + " | Own: " + own + "\nIds: ";
+            string ret = "Name: " + name + " | Own: " + own + "\nIds: ";
             
             foreach (string id in replicas.Keys)
             {
