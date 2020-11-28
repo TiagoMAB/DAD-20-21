@@ -46,13 +46,20 @@ namespace Client.Commands
                 return;
             }
 
+            string uniqueId = serverInfo.UniqueId;
+
             foreach (string url in urls.OrderBy(randomURL => random.Next()))
             {
                 try
                 {
                     GStore.GStore.GStoreClient client = serverInfo.GetChannel(url);
-                    client.Write(new WriteRequest { PartitionId = this.partitionId, ObjectId = this.objectId, Value = this.value });
+                    WriteRequest request = new WriteRequest { PartitionId = this.partitionId, ObjectId = this.objectId, Value = this.value, UniqueId = uniqueId };
+                    request.Timestamp.AddRange(serverInfo.partitionTimestamp(this.partitionId));
+                    WriteReply reply = client.Write(request);
+
                     Console.WriteLine("Write of value \"{0}\" completed.\n", this.value);
+
+                    serverInfo.updatePartitionTimestamp(this.partitionId, reply.Timestamp.ToArray());
                     return;
                 }
                 catch (RpcException e)

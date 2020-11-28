@@ -24,11 +24,20 @@ namespace Client
 
         Dictionary<string, GrpcChannel> channels = new Dictionary<string, GrpcChannel>();                                       // <URL, channel>
 
-        Dictionary<string, int[]> replicaTimestamps = new Dictionary<string, int[]>();                                          // <partitionId, timestamps>
+        Dictionary<string, int[]> partitionTimestamps = new Dictionary<string, int[]>();                                        // <partitionId, timestamps>
+
+        private int uniqueId = 0;
 
         public string CurrentServerURL { get; set; }
         public bool ExecFinish { get; set; }
         public string UserName { get; set; }
+        public string UniqueId
+        {
+            get
+            {
+                return UserName + uniqueId++;
+            }
+        }
 
         public static ServerInfo Instance()
         {
@@ -101,8 +110,8 @@ namespace Client
                 else partitionIds.Add(name);
             }
 
-            if (!replicaTimestamps.ContainsKey(name))
-                replicaTimestamps.Add(name, new int[numOfServers]);
+            if (!partitionTimestamps.ContainsKey(name))
+                partitionTimestamps.Add(name, new int[numOfServers]);
         }
 
         private void ClearChannels()
@@ -115,8 +124,8 @@ namespace Client
 
         public void updatePartitionTimestamp(string partitionId, int[] serverTimestamp)
         {
-            replicaTimestamps.TryGetValue(partitionId, out int[] partTimestamp);
-            if (serverTimestamp.Length != partTimestamp.Length) //TODO: maybe this can be removed if timestamp is always checked in "isOlderTimestamp"
+            partitionTimestamps.TryGetValue(partitionId, out int[] partTimestamp);
+            if (serverTimestamp.Length != partTimestamp.Length)
                 throw new ConflictingTimestampsException("Given timestamp has different size from ");
 
             foreach (int replica in Enumerable.Range(0, serverTimestamp.Length - 1))
@@ -126,7 +135,7 @@ namespace Client
 
         public bool isOlderTimestamp(string partitionId, int[] serverTimestamp)
         {
-            replicaTimestamps.TryGetValue(partitionId, out int[] partTimestamp);
+            partitionTimestamps.TryGetValue(partitionId, out int[] partTimestamp);
             if (serverTimestamp.Length != partTimestamp.Length)
                 throw new ConflictingTimestampsException("Given timestamp has different size from ");
 
@@ -134,6 +143,12 @@ namespace Client
                 if (serverTimestamp[replica] < partTimestamp[replica])
                     return true;
             return false;
+        }
+
+        public int[] partitionTimestamp(string partitionId)
+        {
+            partitionTimestamps.TryGetValue(partitionId, out int[] partTimestamp);
+            return partTimestamp;
         }
 
         public void GetServerInfo()
