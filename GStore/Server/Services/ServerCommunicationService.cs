@@ -24,11 +24,6 @@ namespace Server
             return Task.FromResult(server.register(request));
         }
 
-        public override Task<LockObjectReply> LockObject(LockObjectRequest request, ServerCallContext context)
-        {
-            return Task.FromResult(server.lockObject(request));
-        }
-
         public override Task<WriteObjectReply> WriteObject(WriteObjectRequest request, ServerCallContext context)
         {
             return Task.FromResult(server.writeObject(request));
