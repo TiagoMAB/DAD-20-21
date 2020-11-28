@@ -11,15 +11,6 @@ using System.Collections.Concurrent;
 
 namespace Server 
 {
-    /*
-    private static async Task<Boolean> replicate(ServerCommunication.ServerCommunicationClient replica)
-    {
-        replica.Wr
-
-        return new Egg();
-    }
-    */
-
     public class ServerService {
 
         private readonly string id;
