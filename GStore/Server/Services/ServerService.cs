@@ -11,6 +11,14 @@ using System.Collections.Concurrent;
 
 namespace Server 
 {
+    /*
+    private static async Task<Boolean> replicate(ServerCommunication.ServerCommunicationClient replica)
+    {
+        replica.Wr
+
+        return new Egg();
+    }
+    */
 
     public class ServerService {
 
@@ -18,8 +26,8 @@ namespace Server
         private readonly string URL;
         private readonly int delay;
        
-        private ConcurrentDictionary<string, string> network = new ConcurrentDictionary<string, string>();                                  //  Dictionary<server_id, URL>
-        private ConcurrentDictionary<string, Partition> partitions = new ConcurrentDictionary<string, Partition>();                         //  Dictionary<partition_id, Partition>
+        private ConcurrentDictionary<string, string> network = new ConcurrentDictionary<string, string>();              //  Dictionary<server_id, URL>
+        private ConcurrentDictionary<string, Partition> partitions = new ConcurrentDictionary<string, Partition>();     //  Dictionary<partition_id, Partition>
 
         private bool frozen = false;
         private readonly object key = new object();
@@ -187,13 +195,11 @@ namespace Server
             delays();
 
             Console.WriteLine("Partition()...");
-            string partition_name = request.Name;
-            string master_id = request.Ids.First();
-            string master_url = this.URL;
 
+            string partition_name = request.Name;
             List<string> server_ids = request.Ids.ToList();
             bool own = server_ids.Contains(this.id);
-            Partition p = new Partition(partition_name, master_id, master_url, own);
+            Partition p = new Partition(partition_name, own);
 
             foreach (string id in server_ids)
             {
@@ -243,7 +249,7 @@ namespace Server
 
             foreach (Partition p in this.partitions.Values)
             {
-                ServerInfoReply.Types.Partition partition = new ServerInfoReply.Types.Partition { Name = p.name, Master = p.masterID };
+                ServerInfoReply.Types.Partition partition = new ServerInfoReply.Types.Partition { Name = p.name, Master = "N/A" }; //TO DO: check master
                 foreach (string server in p.replicas.Keys)
                 {
                     partition.ServerIds.Add(server);
@@ -260,7 +266,7 @@ namespace Server
         /*
          * Writes an object in all servers of a partition
          */
-        public WriteReply write(WriteRequest request)
+        public async Task<WriteReply> write(WriteRequest request)
         {
             delays();
 
@@ -268,15 +274,10 @@ namespace Server
             string partitionId = request.PartitionId;
             Partition partition = partitions[partitionId];
 
-            if (partition.masterID != this.id)
-            {
-                Console.WriteLine("Write() finished...");
-                return new WriteReply { Ok = false };
-            }
-
             string objectId = request.ObjectId;
             string value = request.Value;
 
+            //Locks partition until at least one replication acknowledgement is received
             lock (partition)
             {
                 while (partition.locked == true)
@@ -285,6 +286,8 @@ namespace Server
                 }
                 partition.locked = true;
             }
+
+            List<Task> write_requests = new List<Task>();
 
             foreach (string url in partition.replicas.Values)
             {
@@ -296,42 +299,40 @@ namespace Server
                 AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
                 GrpcChannel channel = GrpcChannel.ForAddress(url);
                 var client = new ServerCommunication.ServerCommunicationClient(channel);
-                try
+
+                Task write_request = Task.Run(() =>
                 {
-                    client.LockObject(new LockObjectRequest { PartitionId = partitionId, ObjectId = objectId });
-                }
-                catch
-                {
-                    handleServerFailure(url);
-                }      
+                    try
+                    {
+                        WriteObjectReply reply = client.WriteObject(new WriteObjectRequest { PartitionId = partitionId, ObjectId = objectId, Value = value });
+                        if (reply.Ok == false)
+                        {
+                            throw new Exception();
+                        }
+                    }
+                    catch
+                    {
+                        handleServerFailure(url);
+                        throw new Exception();
+                    }
+                });
+
+                write_requests.Add(write_request);
             }
 
-            Console.WriteLine("Write() all locks acquired, start writing...");
+            //Awaits for first reply to return to client
+            Task ack = null;
+            do
+            {
+                ack = await Task.WhenAny(write_requests);
+                write_requests.Remove(ack);
+
+            } 
+            while (ack.IsFaulted);
 
             partition.addObject(objectId, value);
 
-            foreach (string url in partition.replicas.Values)
-            {
-                if (url == this.URL)
-                {
-                    continue;
-                }
-
-                AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);   
-                GrpcChannel channel = GrpcChannel.ForAddress(url);
-                var client = new ServerCommunication.ServerCommunicationClient(channel);
-                try
-                {
-                    client.WriteObject(new WriteObjectRequest { PartitionId = partitionId, ObjectId = objectId, Value = value });
-                }
-                catch (Exception e)
-                {
-                    handleServerFailure(url);
-                }
-           
-            }
-
-            Console.WriteLine("Write() all objects written, unlocking master...");
+            Console.WriteLine("Write() replication successful, unlocking partition...");
 
             lock (partition)
             {
@@ -355,29 +356,18 @@ namespace Server
             string partitionId = request.PartitionId;
             string objectId = request.ObjectId;
 
+            ReadReply reply = new ReadReply();
             if (!partitions.ContainsKey(partitionId))
             {
-                Console.WriteLine("Read() finished...");
-                return new ReadReply { Value = "N/A" };                
+                reply.Value = "N/A";              
             }
             else
             {
-                Partition p = partitions[partitionId];
-                string value;
-
-                lock (p)
-                {
-                    while (p.locked == true)
-                    {
-                        Monitor.Wait(p);        //Read request is queued until lock is obtained
-                    }
-                    value = p.getObject(objectId);
-                    Monitor.Pulse(p);
-                }
-
-                Console.WriteLine("Read() finished...");
-                return new ReadReply { Value = value };
+                reply.Value = partitions[partitionId].getObject(objectId);
             }
+
+            Console.WriteLine("Read() finished...");
+            return reply;
         }
 
         /*
@@ -392,10 +382,9 @@ namespace Server
 
             foreach (Partition p in partitions.Values)
             {
-                bool isMaster = p.masterID == this.id;
                 foreach (KeyValuePair<string, string> o in p.objects)
                 {
-                    reply.Values.Add(new ListServerReply.Types.ListValue { PartitionId = p.name, ObjectId = o.Key, Value = o.Value, IsMaster = isMaster });
+                    reply.Values.Add(new ListServerReply.Types.ListValue { PartitionId = p.name, ObjectId = o.Key, Value = o.Value, IsMaster = true });
                 } 
             }
 
@@ -406,33 +395,6 @@ namespace Server
         //
         //Server-Server Communication
         //
-
-        public LockObjectReply lockObject(LockObjectRequest request)        
-        {
-            delays();
-
-            Console.WriteLine("LockObject()...");
-            bool ok;
-            string partitionId = request.PartitionId;
-
-            lock (partitions[partitionId])
-            {
-                if (partitions[partitionId].locked == true)
-                {
-                    ok = false;                             //partition is locked 
-                    Console.WriteLine("Partition " + partitionId + " is already locked by another request");
-                }
-                else
-                {
-                    partitions[partitionId].locked = true;  //partition will be locked
-                    ok = true;
-                    Console.WriteLine("Partition " + partitionId + " was locked successfully");
-                }
-            }
-
-            Console.WriteLine("LockObject() finished...");
-            return new LockObjectReply { Ok = ok };
-        }
 
         public WriteObjectReply writeObject(WriteObjectRequest request)    
         {
@@ -446,6 +408,7 @@ namespace Server
             
             lock (partitions[partitionId])
             {
+                partitions[partitionId].locked = true;
                 partitions[partitionId].addObject(objectId, value);
                 partitions[partitionId].locked = false;
             }
@@ -498,7 +461,7 @@ namespace Server
 
             List<string> server_ids = request.Ids.ToList();
             bool own = server_ids.Contains(this.id);
-            Partition p = new Partition(partition_name, master_id, master_url, own);
+            Partition p = new Partition(partition_name, own);
 
             foreach (string id in server_ids)
             {

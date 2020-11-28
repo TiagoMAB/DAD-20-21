@@ -16,7 +16,7 @@ namespace Server
 
         public override Task<WriteReply> Write(WriteRequest request, ServerCallContext context)
         {
-            return Task.FromResult(server.write(request));
+            return server.write(request);
         }
 
         public override Task<ReadReply> Read(ReadRequest request, ServerCallContext context)
