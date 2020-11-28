@@ -13,7 +13,6 @@ message WriteRequest {
 }
 
 message WriteReply {
-	bool ok = 1;
 	repeated int32 timestamp = 2;
 }
 
