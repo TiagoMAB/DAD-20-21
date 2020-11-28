@@ -8,7 +8,7 @@ message WriteRequest {
 	string partitionId = 1;
 	string objectId = 2;
 	string value = 3;
-	string username = 4;
+	string uniqueId = 4;
 	repeated int32 timestamp = 5;
 }
 
