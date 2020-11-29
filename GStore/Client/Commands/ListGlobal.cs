@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using Grpc.Core;
 using GStore;
-using Client.Exceptions;
 using System.Linq;
 
 namespace Client.Commands
@@ -16,6 +15,9 @@ namespace Client.Commands
             ServerInfo serverInfo = ServerInfo.Instance();
             string currentServerURL = serverInfo.CurrentServerURL;
             string message = "";
+
+            serverInfo.GetServerInfo();
+
             List<string> urls = serverInfo.GetURLs();
 
             Console.WriteLine("List Global: Printing all servers:");
@@ -38,8 +40,11 @@ namespace Client.Commands
                                 "\t\tObject Id: {1}\n" +
                                 "\t\tValue: {2}\n" +
                                 "\t\tIs this server the master of the object? yes\n\n",
-                                value.PartitionId, value.ObjectId, value.Value /*, (value.IsMaster) ? "true" : "false"*/);
+                                value.PartitionId, value.ObjectId, value.Value);
                     }
+
+                    foreach (ListServerReply.Types.Timestamps part in response.PartTimestamps)
+                        serverInfo.updatePartitionTimestamp(part.PartitionId, part.Timestamp.ToArray());
                 }
                 catch (RpcException e)
                 {
@@ -47,7 +52,8 @@ namespace Client.Commands
                 }
             }
 
-            serverInfo.CurrentServerURL = currentServerURL;
+            if (urls.Contains(currentServerURL))
+                serverInfo.CurrentServerURL = currentServerURL;
 
             Console.WriteLine(message);
             Console.WriteLine("All values printed.\n\n");

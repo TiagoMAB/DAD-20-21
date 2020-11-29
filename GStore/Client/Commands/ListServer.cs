@@ -1,7 +1,7 @@
 ﻿using System;
 using Grpc.Core;
 using GStore;
-using Client.Exceptions;
+using System.Linq;
 
 namespace Client.Commands
 {
@@ -21,16 +21,24 @@ namespace Client.Commands
 
             System.Diagnostics.Debug.WriteLine(String.Format("List objects stored in server \"{0}\"", this.serverId));
 
-            string url = serverInfo.GetURLByServerId(this.serverId);
+            string url = null;
 
-            if (url == null) {
-                serverInfo.GetServerInfo();
+            foreach (int retries in Enumerable.Range(1, serverInfo.numOfRetries).Reverse())
+            {
                 url = serverInfo.GetURLByServerId(this.serverId);
                 if (url == null)
                 {
                     Console.WriteLine("Server with id \"{0}\" not found.", this.serverId);
-                    return;
+                    System.Threading.Thread.Sleep(serverInfo.backoffTime);
+                    serverInfo.GetServerInfo();
                 }
+                else break;
+            }
+
+            if (url == null)
+            {
+                Console.WriteLine("No more retries will be done. Proceeding...\n");
+                return;
             }
 
             try
@@ -46,16 +54,20 @@ namespace Client.Commands
                         "\tObject Id: {1}\n" +
                         "\tValue: {2}\n" +
                         "\tIs this server the master of the object? yes\n",
-                        value.PartitionId, value.ObjectId, value.Value /*, (value.IsMaster)? "true":"false"*/);
+                        value.PartitionId, value.ObjectId, value.Value);
 
                 Console.WriteLine("All values printed.\n\n");
+
+                foreach (ListServerReply.Types.Timestamps part in response.PartTimestamps)
+                    serverInfo.updatePartitionTimestamp(part.PartitionId, part.Timestamp.ToArray());
             }
             catch (RpcException e)
             {
                 Console.WriteLine("Server with id \"{0}\" failed with status \"{1}\". Proceeding to next operation...", this.serverId, e.StatusCode.ToString());
             }
 
-            serverInfo.CurrentServerURL =  currentServerURL;
+            if (serverInfo.GetURLs().Contains(currentServerURL))
+                serverInfo.CurrentServerURL = currentServerURL;
         }
     }
 }

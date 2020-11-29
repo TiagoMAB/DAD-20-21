@@ -33,11 +33,17 @@ message ListServerRequest {
 
 message ListServerReply {
 	repeated ListValue values = 1;
+	repeated Timestamps partTimestamps = 2;
 
 	message ListValue {
 		string partitionId = 1;
 		string objectId = 2;
 		string value = 3;
+	}
+
+	message Timestamps {
+		string partitionId = 1;
+		repeated int32 timestamp = 2;
 	}
 }
 
