@@ -240,7 +240,7 @@ namespace Server
 
             foreach (Partition p in this.partitions.Values)
             {
-                ServerInfoReply.Types.Partition partition = new ServerInfoReply.Types.Partition { Name = p.name, NumOfServers = p.replicas.Count };
+                ServerInfoReply.Types.Partition partition = new ServerInfoReply.Types.Partition { Name = p.name };
                 foreach (string server in p.replicas.Keys)
                 {
                     partition.ServerIds.Add(server);
@@ -362,7 +362,7 @@ namespace Server
                     reply.Values.Add(new ListServerReply.Types.ListValue { PartitionId = p.name, ObjectId = o.Key, Value = o.Value });
                 }
 
-                reply.PartTimestamps.Add(new ListServerReply.Types.Timestamps { PartitionId = p.name, Timestamp = p.getTimestamp() });
+                reply.PartTimestamp.Add(new ListServerReply.Types.Timestamps { PartitionId = p.name, Timestamp = p.getTimestamp() });
             }
 
             Console.WriteLine("ListServer() finished...");
