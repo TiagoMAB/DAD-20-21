@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Grpc.Core;
 using GStore;
-using Client.Exceptions;
 
 namespace Client.Commands
 {
@@ -39,10 +38,10 @@ namespace Client.Commands
                     client = serverInfo.GetChannel(serverInfo.CurrentServerURL);
                     response = client.Read(new ReadRequest { PartitionId = this.partitionId, ObjectId = this.objectId });
 
-                    if (!serverInfo.isOlderTimestamp(this.partitionId, response.Timestamp.ToArray()))
+                    if (!serverInfo.isOlderTimestamp(this.partitionId, response.Timestamp))
                     {
                         Console.WriteLine("Contacted server with URL \"{0}\"\nThe requested value: {1}\n\n", serverInfo.CurrentServerURL, response.Value);
-                        serverInfo.updatePartitionTimestamp(this.partitionId, response.Timestamp.ToArray());
+                        serverInfo.updatePartitionTimestamp(this.partitionId, response.Timestamp);
                         return;
                     }
                 }
@@ -75,10 +74,10 @@ namespace Client.Commands
                         client = serverInfo.GetChannel(nextURL);
                         response = client.Read(new ReadRequest { PartitionId = this.partitionId, ObjectId = this.objectId });
 
-                        if (!serverInfo.isOlderTimestamp(this.partitionId, response.Timestamp.ToArray()))
+                        if (!serverInfo.isOlderTimestamp(this.partitionId, response.Timestamp))
                         {
                             Console.WriteLine("Contacted server with URL \"{0}\"\nThe requested value: {1}\n\n", serverInfo.CurrentServerURL, response.Value);
-                            serverInfo.updatePartitionTimestamp(this.partitionId, response.Timestamp.ToArray());
+                            serverInfo.updatePartitionTimestamp(this.partitionId, response.Timestamp);
                             return;
                         }
                     }
@@ -119,10 +118,10 @@ namespace Client.Commands
                     client = serverInfo.GetChannel(url);
                     response = client.Read(new ReadRequest { PartitionId = this.partitionId, ObjectId = this.objectId });
 
-                    if (!serverInfo.isOlderTimestamp(this.partitionId, response.Timestamp.ToArray()))
+                    if (!serverInfo.isOlderTimestamp(this.partitionId, response.Timestamp))
                     {
                         Console.WriteLine("Contacted server with URL \"{0}\"\nThe requested value: {1}\n\n", serverInfo.CurrentServerURL, response.Value);
-                        serverInfo.updatePartitionTimestamp(this.partitionId, response.Timestamp.ToArray());
+                        serverInfo.updatePartitionTimestamp(this.partitionId, response.Timestamp);
                         return;
                     }
                 }

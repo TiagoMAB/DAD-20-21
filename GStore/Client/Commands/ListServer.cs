@@ -58,8 +58,8 @@ namespace Client.Commands
 
                 Console.WriteLine("All values printed.\n\n");
 
-                foreach (ListServerReply.Types.Timestamps part in response.PartTimestamps)
-                    serverInfo.updatePartitionTimestamp(part.PartitionId, part.Timestamp.ToArray());
+                foreach (ListServerReply.Types.Timestamps part in response.PartTimestamp)
+                    serverInfo.updatePartitionTimestamp(part.PartitionId, part.Timestamp);
             }
             catch (RpcException e)
             {

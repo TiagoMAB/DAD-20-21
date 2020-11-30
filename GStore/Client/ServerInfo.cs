@@ -24,7 +24,7 @@ namespace Client
 
         Dictionary<string, GrpcChannel> channels = new Dictionary<string, GrpcChannel>();                                       // <URL, channel>
 
-        Dictionary<string, int[]> partitionTimestamps = new Dictionary<string, int[]>();                                        // <partitionId, timestamps>
+        Dictionary<string, int> partitionTimestamp = new Dictionary<string, int>();                                             // <partitionId, timestamp>
 
         private int uniqueId = 0;
 
@@ -97,7 +97,7 @@ namespace Client
             return urls;
         }
 
-        public void RegisterPartition(string name, List<string> serverIds, int numOfServers)
+        public void RegisterPartition(string name, List<string> serverIds)
         {
             foreach (string serverId in serverIds) {
                 string url = GetURLByServerId(serverId);
@@ -110,8 +110,8 @@ namespace Client
                 else partitionIds.Add(name);
             }
 
-            if (!partitionTimestamps.ContainsKey(name))
-                partitionTimestamps.Add(name, new int[numOfServers]);
+            if (!partitionTimestamp.ContainsKey(name))
+                partitionTimestamp.Add(name, 0);
         }
 
         private void ClearChannels()
@@ -122,33 +122,26 @@ namespace Client
             channels.Clear();
         }
 
-        public void updatePartitionTimestamp(string partitionId, int[] serverTimestamp)
+        public void updatePartitionTimestamp(string partitionId, int serverTimestamp)
         {
-            partitionTimestamps.TryGetValue(partitionId, out int[] partTimestamp);
-            if (serverTimestamp.Length != partTimestamp.Length)
-                throw new ConflictingTimestampsException("Given timestamp has different size from ");
-
-            foreach (int replica in Enumerable.Range(0, serverTimestamp.Length - 1))
-                if (partTimestamp[replica] < serverTimestamp[replica])
-                    partTimestamp[replica] = serverTimestamp[replica];
+            if (partitionTimestamp.TryGetValue(partitionId, out int partTimestamp))
+                if (partTimestamp < serverTimestamp)
+                    partitionTimestamp[partitionId] = serverTimestamp;
         }
 
-        public bool isOlderTimestamp(string partitionId, int[] serverTimestamp)
+        public bool isOlderTimestamp(string partitionId, int serverTimestamp)
         {
-            partitionTimestamps.TryGetValue(partitionId, out int[] partTimestamp);
-            if (serverTimestamp.Length != partTimestamp.Length)
-                throw new ConflictingTimestampsException("Given timestamp has different size from ");
-
-            foreach (int replica in Enumerable.Range(0, serverTimestamp.Length - 1))
-                if (serverTimestamp[replica] < partTimestamp[replica])
+            if (partitionTimestamp.TryGetValue(partitionId, out int partTimestamp))
+                if (serverTimestamp < partTimestamp)
                     return true;
             return false;
         }
 
-        public int[] partitionTimestamp(string partitionId)
+        public int GetPartitionTimestamp(string partitionId)
         {
-            partitionTimestamps.TryGetValue(partitionId, out int[] partTimestamp);
-            return partTimestamp;
+            if (partitionTimestamp.TryGetValue(partitionId, out int partTimestamp))
+                return partTimestamp;
+            else return -1; //certificar que isto nao dá merda
         }
 
         public void GetServerInfo()
@@ -178,7 +171,7 @@ namespace Client
                         serverURL.Add(value.Id, value.Url);
 
                     foreach (var value in response.Partition)
-                        RegisterPartition(value.Name, value.ServerIds.ToList(), value.NumOfServers);
+                        RegisterPartition(value.Name, value.ServerIds.ToList());
 
                     Console.WriteLine("Information about the network obtained.");
                     return;

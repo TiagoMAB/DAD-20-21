@@ -53,13 +53,14 @@ namespace Client.Commands
                 try
                 {
                     GStore.GStore.GStoreClient client = serverInfo.GetChannel(url);
-                    WriteRequest request = new WriteRequest { PartitionId = this.partitionId, ObjectId = this.objectId, Value = this.value, UniqueId = uniqueId };
-                    request.Timestamp.AddRange(serverInfo.partitionTimestamp(this.partitionId));
+                    WriteRequest request = new WriteRequest
+                        { PartitionId = this.partitionId, ObjectId = this.objectId, Value = this.value, UniqueId = uniqueId, Timestamp = serverInfo.GetPartitionTimestamp(this.partitionId) };
+
                     WriteReply reply = client.Write(request);
 
                     Console.WriteLine("Write of value \"{0}\" completed.\n", this.value);
 
-                    serverInfo.updatePartitionTimestamp(this.partitionId, reply.Timestamp.ToArray());
+                    serverInfo.updatePartitionTimestamp(this.partitionId, reply.Timestamp);
                     return;
                 }
                 catch (RpcException e)

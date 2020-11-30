@@ -43,8 +43,8 @@ namespace Client.Commands
                                 value.PartitionId, value.ObjectId, value.Value);
                     }
 
-                    foreach (ListServerReply.Types.Timestamps part in response.PartTimestamps)
-                        serverInfo.updatePartitionTimestamp(part.PartitionId, part.Timestamp.ToArray());
+                    foreach (ListServerReply.Types.Timestamps part in response.PartTimestamp)
+                        serverInfo.updatePartitionTimestamp(part.PartitionId, part.Timestamp);
                 }
                 catch (RpcException e)
                 {
