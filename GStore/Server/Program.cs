@@ -2,11 +2,14 @@
 using GStore;
 using Grpc.Core;
 using Grpc.Net.Client;
+using System.Threading.Tasks;
 
 namespace Server
 {
     class Program
     {
+        private const int GOSSIP_DELAY = 20;
+
         static void Main(string[] args)
         {
             if (args.Length != 4 && args.Length != 6) 
@@ -42,6 +45,8 @@ namespace Server
                 ServerService = new ServerService(id, URL, delay, otherId, otherURL);
             }
 
+            new System.Threading.Timer((e) => ServerService.gossip(), null, 0, GOSSIP_DELAY * 1000);
+
             GStoreService gstoreservice = new GStoreService(ServerService);
             PuppetMasterService puppetmasterservice = new PuppetMasterService(ServerService);
             ServerCommunicationService servercommunicationservice = new ServerCommunicationService(ServerService);
@@ -67,7 +72,7 @@ namespace Server
             ConsoleKeyInfo k;
             do
             {
-                Console.WriteLine("Press 'p' if you want to create a new partition (current server will be the master).\nPress 'f' freeze the server.\nPress 'u' to unfreeze the server status.\nPress 's' to print the server status.\nPress 'c' to crash the server.\nPress 'e' to stop the server.");
+                Console.WriteLine("Press 'p' if you want to create a new partition (current server will be the master).\nPress 'f' freeze the server.\nPress 'u' to unfreeze the server status.\nPress 's' to print the server status.\nPress 'c' to crash the server.\nPress 'w' to write an object.\nPress 'r' to read an object.\nPress 'e' to stop the server.");
                 k = Console.ReadKey();
 
                 switch (k.KeyChar)
@@ -104,6 +109,29 @@ namespace Server
                     case 's':
                         Console.WriteLine();
                         ServerService.status(new StatusRequest());
+                        break;
+
+                    case 'w':
+                        Console.WriteLine("\nWrite the partition id.");
+                        string partition_id = Console.ReadLine();
+
+                        Console.WriteLine("\nWrite the object id.");
+                        string object_id = Console.ReadLine();
+
+                        Console.WriteLine("\nWrite the object value.");
+                        string value = Console.ReadLine();
+
+                        Task t = ServerService.write(new WriteRequest { PartitionId = partition_id, ObjectId = object_id, Value = value});
+                        break;
+
+                    case 'r':
+                        Console.WriteLine("\nWrite the partition id.");
+                        string read_partition_id = Console.ReadLine();
+
+                        Console.WriteLine("\nWrite the object id.");
+                        string read_object_id = Console.ReadLine();
+
+                        ServerService.read(new ReadRequest { PartitionId = read_partition_id, ObjectId = read_object_id });
                         break;
 
                     case 'e':
