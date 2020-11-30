@@ -8,8 +8,6 @@ message WriteRequest {
 	string partitionId = 1;
 	string objectId = 2;
 	string value = 3;
-	string uniqueId = 4;
-	int32 timestamp = 5;
 }
 
 message WriteReply {

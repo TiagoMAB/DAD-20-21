@@ -137,13 +137,6 @@ namespace Client
             return false;
         }
 
-        public int GetPartitionTimestamp(string partitionId)
-        {
-            if (partitionTimestamp.TryGetValue(partitionId, out int partTimestamp))
-                return partTimestamp;
-            else return -1; //certificar que isto nao dá merda
-        }
-
         public void GetServerInfo()
         {
             Random random = new Random();
