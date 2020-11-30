@@ -9,11 +9,11 @@ message WriteRequest {
 	string objectId = 2;
 	string value = 3;
 	string uniqueId = 4;
-	repeated int32 timestamp = 5;
+	int32 timestamp = 5;
 }
 
 message WriteReply {
-	repeated int32 timestamp = 2;
+	int32 timestamp = 2;
 }
 
 // READ operation request and response
@@ -24,7 +24,7 @@ message ReadRequest {
 
 message ReadReply {
 	string value = 1;
-	repeated int32 timestamp = 3;
+	int32 timestamp = 3;
 }
 
 // LIST SERVER objects
@@ -43,7 +43,7 @@ message ListServerReply {
 
 	message Timestamps {
 		string partitionId = 1;
-		repeated int32 timestamp = 2;
+		int32 timestamp = 2;
 	}
 }
 

@@ -6,10 +6,7 @@ using Grpc.Net.Client;
 using System.Linq;
 using Domain;
 using System.Threading.Tasks;
-using System.Collections;
 using System.Collections.Concurrent;
-using Server.Domain;
-using Timestamp = Server.Domain.Timestamp;
 using Record = Server.Domain.Record;
 
 namespace Server 
@@ -271,16 +268,6 @@ namespace Server
             string objectId = request.ObjectId;
             string value = request.Value;
 
-            //Locks partition until at least one replication acknowledgement is received
-            lock (partition)
-            {
-                while (partition.locked == true)
-                {
-                    Monitor.Wait(partition);        //Write request is queued until lock is obtained
-                }
-                partition.locked = true;
-            }
-
             List<Task> write_requests = new List<Task>();
 
             foreach (string url in partition.replicas.Values)
@@ -326,16 +313,8 @@ namespace Server
 
             partition.addObject(objectId, value);
 
-            Console.WriteLine("Write() replication successful, unlocking partition...");
-
-            lock (partition)
-            {
-                Monitor.Pulse(partition);
-                partition.locked = false;
-            }
-
             Console.WriteLine("Write() finished...");
-            return new WriteReply { Timestamp = { partition.getTimestamp().getValue() } };
+            return new WriteReply { Timestamp = partition.getTimestamp() };
         }
 
         /*
@@ -360,7 +339,7 @@ namespace Server
                 value = partitions[partitionId].getObject(objectId);
             }
 
-            ReadReply reply = new ReadReply{ Timestamp = { partitions[partitionId].getTimestamp().getValue() }, Value = value };
+            ReadReply reply = new ReadReply{ Timestamp = partitions[partitionId].getTimestamp(), Value = value };
 
             Console.WriteLine("Read() finished...");
             return reply;
@@ -383,7 +362,7 @@ namespace Server
                     reply.Values.Add(new ListServerReply.Types.ListValue { PartitionId = p.name, ObjectId = o.Key, Value = o.Value });
                 }
 
-                reply.PartTimestamps.Add(new ListServerReply.Types.Timestamps { PartitionId = p.name, Timestamp = { p.getTimestamp().getValue() } });
+                reply.PartTimestamps.Add(new ListServerReply.Types.Timestamps { PartitionId = p.name, Timestamp = p.getTimestamp() });
             }
 
             Console.WriteLine("ListServer() finished...");
@@ -396,6 +375,7 @@ namespace Server
 
         public WriteObjectReply writeObject(WriteObjectRequest request)    
         {
+            // TODO: REMOVE?????
             delays();
 
             Console.WriteLine("WriteObject()...");
@@ -479,19 +459,21 @@ namespace Server
         {
             delays();
 
-            Timestamp ts = new Timestamp(request.Ts.Value.ToArray());
+            int ts = request.Ts;
 
             Partition p = this.partitions[request.PartitionId];
+
+            // Get list of records to send
             List<GStore.Record> records = p.getUpdateLog()
                 .Where(r => r.getTimestamp() > ts)
-                .Select(r => new GStore.Record { Ts = new GStore.Timestamp { Value = { r.getTimestamp().getValue() } }, ObjectId = r.getObject(), Value = r.getValue() })
+                .Select(r => new GStore.Record { Ts = r.getTimestamp(), ObjectId = r.getObject(), Value = r.getValue() })
                 .OrderByDescending(r => r.Ts)
                 .ToList();
 
             // Current timestamp
-            Timestamp cur = p.getTimestamp();
+            int cur = p.getTimestamp();
 
-            return new GossipReply { Updates = { records } , Ts = new GStore.Timestamp { Value = { cur.getValue() } }, ReplicaNumber = p.getReplicaNumber() };
+            return new GossipReply { Updates = { records } , Ts = cur, ReplicaNumber = p.getReplicaNumber() };
         }
 
         /*
@@ -505,10 +487,11 @@ namespace Server
             {
                 foreach(string url in p.replicas.Values)
                 {
-                    if (url == this.URL || !p.own) 
+                    if (url == this.URL || !p.own)  // TODO: or master....
                     { 
                         continue; 
                     }
+
                     requests.Add(Task.Run(() =>
                     {
 
@@ -518,17 +501,13 @@ namespace Server
 
                         try
                         {
-                            GossipReply reply = server.Gossip(new GossipRequest { PartitionId = p.name, Ts = new GStore.Timestamp { Value = { p.getTimestamp().getValue() } } });
+                            GossipReply reply = server.Gossip(new GossipRequest { PartitionId = p.name, Ts = p.getTimestamp() });
 
                             // Update current server
-                            lock(p.getTimestamp())
-                            {
-                                p.setTimestamp(reply.ReplicaNumber, new Timestamp(reply.Ts.Value.ToArray()));
-                                p.update(reply.Updates.ToList().Select(r => new Record(
-                                    new Timestamp(r.Ts.Value.ToArray()), r.ObjectId, r.Value)).ToList(), reply.ReplicaNumber);
-                            }
+                            p.setTimestamp(reply.ReplicaNumber, reply.Ts);
+                            p.update(reply.Updates.ToList().Select(r => new Record(r.Ts, r.ObjectId, r.Value)).ToList());
 
-                            lock(p.getUpdateLog())
+                            lock(p.updateLock)
                             {
                                 p.cleanLog();
                             }
@@ -592,11 +571,13 @@ namespace Server
             foreach (Partition p in partitions.Values)
             {
                 int index;
-                if ((index = p.order.FindIndex(s => s == failed_server)) != -1) {
+                if ((index = p.getServerIndex(failed_server)) != -1) {
                     p.replicas.Remove(failed_server);
+
                     if (p.own)
                     {
-                        p.setCurTimestamp(index, int.MaxValue);
+                        // Set timestamp to never mess with the others
+                        p.setTimestamp(index, int.MaxValue);
                     }
                 }
             }

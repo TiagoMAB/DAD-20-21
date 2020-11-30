@@ -6,18 +6,18 @@ namespace Server.Domain
 {
     public class Record
     {
-        private readonly Timestamp ts;
+        private readonly int ts;
         private readonly string obj;
         private readonly string val;
 
-        public Record(Timestamp ts, string obj, string val)
+        public Record(int ts, string obj, string val)
         {
             this.ts = ts;
             this.obj = obj;
             this.val = val;
         }
 
-        public Timestamp getTimestamp()
+        public int getTimestamp()
         {
             return this.ts;
         }

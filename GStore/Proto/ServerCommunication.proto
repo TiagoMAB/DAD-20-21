@@ -60,23 +60,19 @@ message SharePartitionRequest {
 
 message SharePartitionReply {}
 
-message Timestamp {
-	repeated int32 value = 1;
-}
-
 message Record {
-	Timestamp ts = 1;
+	int32 ts = 1;
 	string objectId = 2;
 	string value = 3;
 }
 
 message GossipRequest {
-	Timestamp ts = 1;
+	int32 ts = 1;
 	string partitionId = 2;
 }
 
 message GossipReply {
-	Timestamp ts = 1;
+	int32 ts = 1;
 	repeated Record updates = 2;
 	int32 replicaNumber = 3;
 }
