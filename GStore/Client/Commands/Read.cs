@@ -38,7 +38,7 @@ namespace Client.Commands
                     client = serverInfo.GetChannel(serverInfo.CurrentServerURL);
                     response = client.Read(new ReadRequest { PartitionId = this.partitionId, ObjectId = this.objectId });
 
-                    if (!serverInfo.isOlderTimestamp(this.partitionId, response.Timestamp))
+                    if (serverInfo.IsNewerTimestamp(this.partitionId, response.Timestamp))
                     {
                         Console.WriteLine("Contacted server with URL \"{0}\"\nThe requested value: {1}\n\n", serverInfo.CurrentServerURL, response.Value);
                         serverInfo.updatePartitionTimestamp(this.partitionId, response.Timestamp);
@@ -74,7 +74,7 @@ namespace Client.Commands
                         client = serverInfo.GetChannel(nextURL);
                         response = client.Read(new ReadRequest { PartitionId = this.partitionId, ObjectId = this.objectId });
 
-                        if (!serverInfo.isOlderTimestamp(this.partitionId, response.Timestamp))
+                        if (serverInfo.IsNewerTimestamp(this.partitionId, response.Timestamp))
                         {
                             Console.WriteLine("Contacted server with URL \"{0}\"\nThe requested value: {1}\n\n", serverInfo.CurrentServerURL, response.Value);
                             serverInfo.updatePartitionTimestamp(this.partitionId, response.Timestamp);
@@ -118,7 +118,7 @@ namespace Client.Commands
                     client = serverInfo.GetChannel(url);
                     response = client.Read(new ReadRequest { PartitionId = this.partitionId, ObjectId = this.objectId });
 
-                    if (!serverInfo.isOlderTimestamp(this.partitionId, response.Timestamp))
+                    if (serverInfo.IsNewerTimestamp(this.partitionId, response.Timestamp))
                     {
                         Console.WriteLine("Contacted server with URL \"{0}\"\nThe requested value: {1}\n\n", serverInfo.CurrentServerURL, response.Value);
                         serverInfo.updatePartitionTimestamp(this.partitionId, response.Timestamp);
