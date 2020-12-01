@@ -24,11 +24,6 @@ namespace Server
             return Task.FromResult(server.register(request));
         }
 
-        public override Task<WriteObjectReply> WriteObject(WriteObjectRequest request, ServerCallContext context)
-        {
-            return Task.FromResult(server.writeObject(request));
-        }
-
         public override Task<SharePartitionReply> SharePartition(SharePartitionRequest request, ServerCallContext context)
         {
             return Task.FromResult(server.sharePartition(request));
@@ -37,6 +32,16 @@ namespace Server
         public override Task<GossipReply> Gossip(GossipRequest request, ServerCallContext context)
         {
             return Task.FromResult(server.gossip(request));
+        }
+
+        public override Task<GetUniqueIdReply> GetUniqueId(GetUniqueIdRequest request, ServerCallContext context)
+        {
+            return Task.FromResult(server.getUniqueId(request));
+        }
+
+        public override Task<GetDelayReply> GetDelay(GetDelayRequest request, ServerCallContext context)
+        {
+            return Task.FromResult(server.getDelay(request));
         }
     }
 }

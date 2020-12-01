@@ -7,9 +7,14 @@ namespace Domain
 {
     public class Partition
     {
+        public string masterID { get; set; }
+
+        public string masterURL { get; set; }
         public string name { get; }
         public bool own { get; }
         public bool locked { get; set; }
+
+        public int uniqueId { get; set; }
 
         public Dictionary<string, string> replicas { get; set; }    //  Dictionary<replica_id, replica_url>
         public ConcurrentDictionary<string, string> objects { get; set; }     //  Dictionary<object_id, value>
@@ -39,19 +44,25 @@ namespace Domain
             this.objectsLock = new Object();
             this.updateLock = new Object();
             this.order = servers;
+            this.uniqueId = 0;
         }
 
         public void addId(string id, string url)
         {
+            if (replicas.Count == 0)
+            {
+                masterID = id;
+                masterURL = url;
+            }
             replicas.Add(id, url);
         }
 
-        public void addObject(string key, string value)
+        public int getUniqueId()
         {
-            // TODO: Request to master server to get Id
-            // and check if I'm not master
-            // id = new Id;
-            int id = 0;
+            return ++uniqueId;
+        }
+        public void addObject(string key, string value, int id)
+        {
             update(new Record(id, key, value));
         }
 
@@ -63,9 +74,10 @@ namespace Domain
                 this.updateLog.Add(r);
 
                 // Apply update if its the next one
-                if (r.getTimestamp() == getTimestamp())
+                if (r.getTimestamp() == getTimestamp() + 1)
                 {
                     objects[r.getObject()] = r.getValue();
+                    setCurTimestamp(r.getTimestamp());
                 }
             }
         }
@@ -122,7 +134,7 @@ namespace Domain
 
         public override string ToString()
         {
-            string ret = "Name: " + name + " | Own: " + own + "\nIds: ";
+            string ret = "Name: " + name + " | Master: " + masterID + " | Own: " + own + "\nIds: ";
 
             foreach (string id in replicas.Keys)
             {
