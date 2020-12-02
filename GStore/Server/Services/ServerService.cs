@@ -291,19 +291,22 @@ namespace Server
                     //Adds update to partition
                     partition.addObject(objectId, value, uniqueId);
 
-                    //Shares update with another server
-                    string url = partition.replicas.ElementAt(1).Value;
-                    AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-                    GrpcChannel channel = GrpcChannel.ForAddress(url);
-                    var replica = new ServerCommunication.ServerCommunicationClient(channel);
+                    //Shares update with another server (if there is one)
+                    if (partition.replicas.Count > 1)
+                    {
+                        string url = partition.replicas.ElementAt(1).Value;
+                        AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+                        GrpcChannel channel = GrpcChannel.ForAddress(url);
+                        var replica = new ServerCommunication.ServerCommunicationClient(channel);
 
-                    try
-                    {
-                        replica.ShareUpdate(new ShareUpdateRequest { PartitionId = partitionId, ObjectId = objectId, Value = value, UniqueId = uniqueId });
-                    }
-                    catch
-                    {
-                        handleServerFailure(url);
+                        try
+                        {
+                            replica.ShareUpdate(new ShareUpdateRequest { PartitionId = partitionId, ObjectId = objectId, Value = value, UniqueId = uniqueId });
+                        }
+                        catch
+                        {
+                            handleServerFailure(url);
+                        }
                     }
                 }
                 else
@@ -374,12 +377,16 @@ namespace Server
 
             foreach (Partition p in partitions.Values)
             {
-                foreach (KeyValuePair<string, string> o in p.objects)
+                if (p.own)
                 {
-                    reply.Values.Add(new ListServerReply.Types.ListValue { PartitionId = p.name, ObjectId = o.Key, Value = o.Value });
-                }
 
-                reply.PartTimestamp.Add(new ListServerReply.Types.Timestamps { PartitionId = p.name, Timestamp = p.getTimestamp() });
+                    foreach (KeyValuePair<string, string> o in p.objects)
+                    {
+                        reply.Values.Add(new ListServerReply.Types.ListValue { PartitionId = p.name, ObjectId = o.Key, Value = o.Value });
+                    }
+
+                    reply.PartTimestamp.Add(new ListServerReply.Types.Timestamps { PartitionId = p.name, Timestamp = p.getTimestamp() });
+                }
             }
 
             Console.WriteLine("ListServer() finished...");
