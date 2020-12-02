@@ -279,14 +279,56 @@ namespace Server
             string objectId = request.ObjectId;
             string value = request.Value;
 
-            //Gets unique id from master
-            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-            GrpcChannel channel = GrpcChannel.ForAddress(partition.masterURL);
-            var master = new ServerCommunication.ServerCommunicationClient(channel);
-            GetUniqueIdReply reply = master.GetUniqueId(new GetUniqueIdRequest { PartitionId = partitionId, ObjectId = objectId, Value = value });
+            bool error;
+            do
+            {
+                error = false;
+                if (id == partition.masterID)
+                {
+                    //Gets unique id directly because is master
+                    int uniqueId = partition.getUniqueId();
 
-            //Adds update to partition
-            partition.addObject(objectId, value, reply.Id);
+                    //Adds update to partition
+                    partition.addObject(objectId, value, uniqueId);
+
+                    //Shares update with another server
+                    string url = partition.replicas.ElementAt(1).Value;
+                    AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+                    GrpcChannel channel = GrpcChannel.ForAddress(url);
+                    var replica = new ServerCommunication.ServerCommunicationClient(channel);
+
+                    try
+                    {
+                        replica.ShareUpdate(new ShareUpdateRequest { PartitionId = partitionId, ObjectId = objectId, Value = value, UniqueId = uniqueId });
+                    }
+                    catch
+                    {
+                        handleServerFailure(url);
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        //Gets unique id from master
+                        AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+                        GrpcChannel channel = GrpcChannel.ForAddress(partition.masterURL);
+                        var master = new ServerCommunication.ServerCommunicationClient(channel);
+                        GetUniqueIdReply reply = master.GetUniqueId(new GetUniqueIdRequest { PartitionId = partitionId, ObjectId = objectId, Value = value });
+
+                        //Adds update to partition
+                        partition.addObject(objectId, value, reply.Id);
+                    }
+                    catch
+                    {
+                        handleServerFailure(partition.masterURL);
+                        Console.WriteLine("Write()... master failed, retrying in {0} seconds.", delay);
+                        Thread.Sleep(delay);
+                        error = true;
+                    }
+                }
+            }
+            while (error);
 
             Console.WriteLine("Write() finished...");
             return new WriteReply { Timestamp = partition.getTimestamp() };
@@ -457,7 +499,7 @@ namespace Server
 
                             p.update(reply.Updates.ToList().Select(r => new Record(r.Ts, r.ObjectId, r.Value)).ToList());
 
-                            lock(p.updateLock)
+                            lock (p.updateLock)
                             {
                                 p.cleanLog();
                             }
@@ -520,20 +562,29 @@ namespace Server
             Console.WriteLine("handleServerFailure() server removed from the network...");
             foreach (Partition p in partitions.Values)
             {
-                int index;
-                if ((index = p.getServerIndex(failed_server)) != -1) {
-                    p.replicas.Remove(failed_server);
-
-                    if (!p.replicas.ContainsKey(p.masterID))
+                lock (p)
+                {
+                    int index;
+                    if ((index = p.getServerIndex(failed_server)) != -1)
                     {
-                        p.masterID = p.replicas.First().Key;
-                        p.masterURL = p.replicas.First().Value;
-                    }
+                        p.replicas.Remove(failed_server);
 
-                    if (p.own)
-                    {
-                        // Set timestamp to never mess with the others
-                        p.setTimestamp(index, int.MaxValue);
+                        if (!p.replicas.ContainsKey(p.masterID))
+                        {
+                            p.masterID = p.replicas.First().Key;
+                            p.masterURL = p.replicas.First().Value;
+
+                            if (id == p.masterID)
+                            {
+                                updatePartitionUniqueId(p);
+                            }
+                        }
+
+                        if (p.own)
+                        {
+                            // Set timestamp to never mess with the others
+                            p.setTimestamp(index, int.MaxValue);
+                        }
                     }
                 }
             }
@@ -545,19 +596,72 @@ namespace Server
             string partition = request.PartitionId;
             string objectId = request.ObjectId;
             string value = request.Value;
+            int id;
 
-            //gets id for write
-            int id = partitions[partition].getUniqueId();
-
+            lock (partitions[partition])
+            {
+                //gets id for write
+                id = partitions[partition].getUniqueId();
+            }
+               
             //saves update in partition
             partitions[partition].addObject(objectId, value, id);
-
+   
             return new GetUniqueIdReply { Id = id };
         }
 
         public GetDelayReply getDelay(GetDelayRequest request)
         {
             return new GetDelayReply { Delay = delay };
+        }
+
+        public void updatePartitionUniqueId(Partition p)
+        {
+            int uniqueId = p.getTimestamp();
+
+            foreach(Record record in p.getUpdateLog())
+            {
+                uniqueId = uniqueId > record.getTimestamp() ? uniqueId : record.getTimestamp();
+            }
+
+            foreach (string url in p.replicas.Values)
+            {
+                if (url == this.URL)
+                {
+                    continue;
+                }
+
+                Console.WriteLine("Contacting replica at {0} for max known id.", url);
+                AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+                GrpcChannel channel = GrpcChannel.ForAddress(url);
+                var server = new ServerCommunication.ServerCommunicationClient(channel);
+
+                var reply = server.MaxKnownId(new MaxKnownIdRequest { Partition = p.name });
+
+                uniqueId = uniqueId > reply.Id ? uniqueId : reply.Id;
+            }
+
+            p.uniqueId = uniqueId;
+        }
+
+        public MaxKnownIdReply maxKnownId(MaxKnownIdRequest request)
+        {
+
+            int id = partitions[request.Partition].getMaxKnownId();
+
+            return new MaxKnownIdReply { Id = id };
+        }
+
+        public ShareUpdateReply shareUpdate(ShareUpdateRequest request)
+        {
+            string partition = request.PartitionId;
+            string objectId = request.ObjectId;
+            string value = request.Value;
+            int uniqueId = request.UniqueId;
+
+            partitions[partition].addObject(objectId, value, uniqueId);
+
+            return new ShareUpdateReply();
         }
     }
 }

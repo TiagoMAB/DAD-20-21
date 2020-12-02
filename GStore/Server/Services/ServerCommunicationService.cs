@@ -43,5 +43,15 @@ namespace Server
         {
             return Task.FromResult(server.getDelay(request));
         }
+
+        public override Task<MaxKnownIdReply> MaxKnownId(MaxKnownIdRequest request, ServerCallContext context)
+        {
+            return Task.FromResult(server.maxKnownId(request));
+        }
+
+        public override Task<ShareUpdateReply> ShareUpdate(ShareUpdateRequest request, ServerCallContext context)
+        {
+            return Task.FromResult(server.shareUpdate(request));
+        }
     }
 }

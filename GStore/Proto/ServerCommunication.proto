@@ -10,6 +10,8 @@ service ServerCommunication {
 	rpc Gossip (GossipRequest) returns (GossipReply);
 	rpc GetUniqueId (GetUniqueIdRequest) returns (GetUniqueIdReply);
 	rpc GetDelay (GetDelayRequest) returns (GetDelayReply);
+	rpc MaxKnownId (MaxKnownIdRequest) returns (MaxKnownIdReply);
+	rpc ShareUpdate (ShareUpdateRequest) returns (ShareUpdateReply);
 }
 
 message HandshakeRequest {
@@ -84,4 +86,23 @@ message GetDelayRequest {
 
 message GetDelayReply {
 	int32 delay = 1;
+}
+
+message MaxKnownIdRequest {
+	string partition = 1;
+}
+
+message MaxKnownIdReply {
+	int32 id = 1;
+}
+
+message ShareUpdateRequest {
+	string partitionId = 1;
+	string objectId = 2;
+	string value = 3;
+	int32 uniqueId = 4;
+}
+
+message ShareUpdateReply {
+
 }

@@ -61,6 +61,19 @@ namespace Domain
         {
             return ++uniqueId;
         }
+
+        public int getMaxKnownId()
+        {
+            int maxId = getTimestamp();
+            
+            foreach (Record record in this.updateLog)
+            {
+                maxId = maxId > record.getTimestamp() ? maxId : record.getTimestamp();
+            }
+
+            return maxId;
+        }
+
         public void addObject(string key, string value, int id)
         {
             update(new Record(id, key, value));
@@ -80,11 +93,11 @@ namespace Domain
 
         private void applyUpdate(Record r)
         {
-                if (r.getTimestamp() == getTimestamp() + 1)
-                {
-                    objects[r.getObject()] = r.getValue();
-                    setCurTimestamp(r.getTimestamp());
-                }
+            if (r.getTimestamp() == getTimestamp() + 1)
+            {
+                objects[r.getObject()] = r.getValue();
+                setCurTimestamp(r.getTimestamp());
+            }
         }
 
         public string getObject(string id)
@@ -140,7 +153,7 @@ namespace Domain
 
         public override string ToString()
         {
-            string ret = "\nName: " + name + " | Master: " + masterID + " | Own: " + own + "\nIds: ";
+            string ret = "\nName: " + name + " | Master: " + masterID + " | Own: " + own + " | UniqueId: " + uniqueId + "\nIds: ";
 
             foreach (string id in replicas.Keys)
             {
