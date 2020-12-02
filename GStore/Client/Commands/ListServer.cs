@@ -63,7 +63,7 @@ namespace Client.Commands
             }
             catch (RpcException e)
             {
-                Console.WriteLine("Server with id \"{0}\" failed with status \"{1}\". Proceeding to next operation...", this.serverId, e.StatusCode.ToString());
+                Console.WriteLine("Server with id \"{0}\" failed with status \"{1}\". Proceeding to next operation...\n", this.serverId, e.StatusCode.ToString());
             }
 
             if (serverInfo.GetURLs().Contains(currentServerURL))

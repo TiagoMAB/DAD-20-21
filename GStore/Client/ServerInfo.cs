@@ -167,7 +167,7 @@ namespace Client
                     foreach (var value in response.Partition)
                         RegisterPartition(value.Name, value.ServerIds.ToList());
 
-                    Console.WriteLine("Information about the network obtained.");
+                    Console.WriteLine("Information about the network obtained.\n");
                     return;
                 }
                 catch (RpcException e)
