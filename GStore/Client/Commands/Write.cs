@@ -46,17 +46,16 @@ namespace Client.Commands
                 return;
             }
 
-            string uniqueId = serverInfo.UniqueId;
+            //TODO: In case uniqueId is reused
+            //string uniqueId = serverInfo.UniqueId;
 
             foreach (string url in urls.OrderBy(randomURL => random.Next()))
             {
                 try
                 {
                     GStore.GStore.GStoreClient client = serverInfo.GetChannel(url);
-                    WriteRequest request = new WriteRequest
-                        { PartitionId = this.partitionId, ObjectId = this.objectId, Value = this.value, UniqueId = uniqueId, Timestamp = serverInfo.GetPartitionTimestamp(this.partitionId) };
 
-                    WriteReply reply = client.Write(request);
+                    WriteReply reply = client.Write( new WriteRequest { PartitionId = this.partitionId, ObjectId = this.objectId, Value = this.value /*, UniqueId = uniqueId*/ } );
 
                     Console.WriteLine("Write of value \"{0}\" completed.\n", this.value);
 

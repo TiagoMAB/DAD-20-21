@@ -26,11 +26,11 @@ namespace Client
 
         Dictionary<string, int> partitionTimestamp = new Dictionary<string, int>();                                             // <partitionId, timestamp>
 
-        private int uniqueId = 0;
-
         public string CurrentServerURL { get; set; }
         public bool ExecFinish { get; set; }
         public string UserName { get; set; }
+
+        /* TODO: maybe this will be needed eventually
         public string UniqueId
         {
             get
@@ -38,6 +38,7 @@ namespace Client
                 return UserName + uniqueId++;
             }
         }
+        */
 
         public static ServerInfo Instance()
         {
@@ -129,19 +130,12 @@ namespace Client
                     partitionTimestamp[partitionId] = serverTimestamp;
         }
 
-        public bool isOlderTimestamp(string partitionId, int serverTimestamp)
+        public bool IsNewerTimestamp(string partitionId, int serverTimestamp)
         {
             if (partitionTimestamp.TryGetValue(partitionId, out int partTimestamp))
-                if (serverTimestamp < partTimestamp)
+                if (serverTimestamp >= partTimestamp)
                     return true;
             return false;
-        }
-
-        public int GetPartitionTimestamp(string partitionId)
-        {
-            if (partitionTimestamp.TryGetValue(partitionId, out int partTimestamp))
-                return partTimestamp;
-            else return -1; //certificar que isto nao dá merda
         }
 
         public void GetServerInfo()
