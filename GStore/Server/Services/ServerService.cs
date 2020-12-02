@@ -374,12 +374,16 @@ namespace Server
 
             foreach (Partition p in partitions.Values)
             {
-                foreach (KeyValuePair<string, string> o in p.objects)
+                if (p.own)
                 {
-                    reply.Values.Add(new ListServerReply.Types.ListValue { PartitionId = p.name, ObjectId = o.Key, Value = o.Value });
-                }
 
-                reply.PartTimestamp.Add(new ListServerReply.Types.Timestamps { PartitionId = p.name, Timestamp = p.getTimestamp() });
+                    foreach (KeyValuePair<string, string> o in p.objects)
+                    {
+                        reply.Values.Add(new ListServerReply.Types.ListValue { PartitionId = p.name, ObjectId = o.Key, Value = o.Value });
+                    }
+
+                    reply.PartTimestamp.Add(new ListServerReply.Types.Timestamps { PartitionId = p.name, Timestamp = p.getTimestamp() });
+                }
             }
 
             Console.WriteLine("ListServer() finished...");

@@ -72,7 +72,7 @@ namespace Server
             ConsoleKeyInfo k;
             do
             {
-                Console.WriteLine("Press 'p' if you want to create a new partition (current server will be the master).\nPress 'f' freeze the server.\nPress 'u' to unfreeze the server status.\nPress 's' to print the server status.\nPress 'c' to crash the server.\nPress 'w' to write an object.\nPress 'r' to read an object.\nPress 'e' to stop the server.");
+                Console.WriteLine("Press 'p' if you want to create a new partition.\nPress 'f' freeze the server.\nPress 'u' to unfreeze the server status.\nPress 's' to print the server status.\nPress 'c' to crash the server.\nPress 'w' to write an object.\nPress 'r' to read an object.\nPress 'e' to stop the server.");
                 k = Console.ReadKey();
 
                 switch (k.KeyChar)
@@ -96,7 +96,7 @@ namespace Server
                         Console.WriteLine("\nWrite the name of the partition.");
                         string name = Console.ReadLine();
 
-                        Console.WriteLine("Write the ids of replicas belonging to the partition, separated by a comma. The first one must be the current server id.\nExample: server1,server2,server3");
+                        Console.WriteLine("Write the ids of replicas belonging to the partition, separated by a comma.\nExample: server1,server2,server3");
                         string line = Console.ReadLine();
 
                     
