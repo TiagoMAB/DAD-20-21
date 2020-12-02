@@ -286,7 +286,11 @@ namespace Server
                 if (id == partition.masterID)
                 {
                     //Gets unique id directly because is master
-                    int uniqueId = partition.getUniqueId();
+                    int uniqueId;
+                    lock (partition)
+                    {
+                        uniqueId = partition.getUniqueId();
+                    }
 
                     //Adds update to partition
                     partition.addObject(objectId, value, uniqueId);
