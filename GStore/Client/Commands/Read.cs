@@ -111,24 +111,29 @@ namespace Client.Commands
                 return;
             }
 
-            foreach (string url in serversWithPartition.OrderBy(randomURL => random.Next()))
+            foreach (int retries in Enumerable.Range(1, serverInfo.numOfRetries))
             {
-                try
+                foreach (string url in serversWithPartition.OrderBy(randomURL => random.Next()))
                 {
-                    client = serverInfo.GetChannel(url);
-                    response = client.Read(new ReadRequest { PartitionId = this.partitionId, ObjectId = this.objectId });
-
-                    if (serverInfo.IsNewerTimestamp(this.partitionId, response.Timestamp))
+                    try
                     {
-                        Console.WriteLine("Contacted server with URL \"{0}\"\nThe requested value: {1}\n\n", serverInfo.CurrentServerURL, response.Value);
-                        serverInfo.updatePartitionTimestamp(this.partitionId, response.Timestamp);
-                        return;
+                        client = serverInfo.GetChannel(url);
+                        response = client.Read(new ReadRequest { PartitionId = this.partitionId, ObjectId = this.objectId });
+
+                        if (serverInfo.IsNewerTimestamp(this.partitionId, response.Timestamp))
+                        {
+                            Console.WriteLine("Contacted server with URL \"{0}\"\nThe requested value: {1}\n\n", serverInfo.CurrentServerURL, response.Value);
+                            serverInfo.updatePartitionTimestamp(this.partitionId, response.Timestamp);
+                            return;
+                        }
+                    }
+                    catch (RpcException e)
+                    {
+                        System.Diagnostics.Debug.WriteLine(String.Format("Server with URL \"{0}\" failed with status \"{1}\", trying random server.", url, e.StatusCode.ToString()));
                     }
                 }
-                catch (RpcException e)
-                {
-                    System.Diagnostics.Debug.WriteLine(String.Format("Server with URL \"{0}\" failed with status \"{1}\", trying random server.", url, e.StatusCode.ToString()));
-                }
+
+                System.Threading.Thread.Sleep(serverInfo.backoffTime);
             }
 
             Console.WriteLine("No server with recent enough timestamp was found.\n\n");
