@@ -291,19 +291,22 @@ namespace Server
                     //Adds update to partition
                     partition.addObject(objectId, value, uniqueId);
 
-                    //Shares update with another server
-                    string url = partition.replicas.ElementAt(1).Value;
-                    AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-                    GrpcChannel channel = GrpcChannel.ForAddress(url);
-                    var replica = new ServerCommunication.ServerCommunicationClient(channel);
+                    //Shares update with another server (if there is one)
+                    if (partition.replicas.Count > 1)
+                    {
+                        string url = partition.replicas.ElementAt(1).Value;
+                        AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+                        GrpcChannel channel = GrpcChannel.ForAddress(url);
+                        var replica = new ServerCommunication.ServerCommunicationClient(channel);
 
-                    try
-                    {
-                        replica.ShareUpdate(new ShareUpdateRequest { PartitionId = partitionId, ObjectId = objectId, Value = value, UniqueId = uniqueId });
-                    }
-                    catch
-                    {
-                        handleServerFailure(url);
+                        try
+                        {
+                            replica.ShareUpdate(new ShareUpdateRequest { PartitionId = partitionId, ObjectId = objectId, Value = value, UniqueId = uniqueId });
+                        }
+                        catch
+                        {
+                            handleServerFailure(url);
+                        }
                     }
                 }
                 else
