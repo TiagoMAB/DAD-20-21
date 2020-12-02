@@ -6,9 +6,12 @@ service ServerCommunication {
 	rpc Handshake (HandshakeRequest) returns (HandshakeReply);
 	rpc Register (RegisterRequest) returns (RegisterReply);
 	rpc LockObject (LockObjectRequest) returns (LockObjectReply);
-	rpc WriteObject (WriteObjectRequest) returns (WriteObjectReply);
 	rpc SharePartition (SharePartitionRequest) returns (SharePartitionReply);
 	rpc Gossip (GossipRequest) returns (GossipReply);
+	rpc GetUniqueId (GetUniqueIdRequest) returns (GetUniqueIdReply);
+	rpc GetDelay (GetDelayRequest) returns (GetDelayReply);
+	rpc MaxKnownId (MaxKnownIdRequest) returns (MaxKnownIdReply);
+	rpc ShareUpdate (ShareUpdateRequest) returns (ShareUpdateReply);
 }
 
 message HandshakeRequest {
@@ -42,16 +45,6 @@ message LockObjectReply {
 	bool ok = 1;
 }
 
-message WriteObjectRequest {
-	string partitionId = 1;
-	string objectId = 2;
-	string value = 3;
-}
-
-message WriteObjectReply {
-	bool ok = 1;
-}
-
 message SharePartitionRequest {
 	int32 replicas = 1;
 	string name = 2;
@@ -75,4 +68,41 @@ message GossipReply {
 	int32 ts = 1;
 	repeated Record updates = 2;
 	int32 replicaNumber = 3;
+}
+
+message GetUniqueIdRequest {
+	string partitionId = 1;
+	string objectId = 2;
+	string value = 3;
+}
+
+message GetUniqueIdReply {
+	int32 id = 1;
+}
+
+message GetDelayRequest {
+
+}
+
+message GetDelayReply {
+	int32 delay = 1;
+}
+
+message MaxKnownIdRequest {
+	string partition = 1;
+}
+
+message MaxKnownIdReply {
+	int32 id = 1;
+}
+
+message ShareUpdateRequest {
+	string partitionId = 1;
+	string objectId = 2;
+	string value = 3;
+	int32 uniqueId = 4;
+}
+
+message ShareUpdateReply {
+
 }

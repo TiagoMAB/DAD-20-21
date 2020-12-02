@@ -7,9 +7,14 @@ namespace Domain
 {
     public class Partition
     {
+        public string masterID { get; set; }
+
+        public string masterURL { get; set; }
         public string name { get; }
         public bool own { get; }
         public bool locked { get; set; }
+
+        public int uniqueId { get; set; }
 
         public Dictionary<string, string> replicas { get; set; }    //  Dictionary<replica_id, replica_url>
         public ConcurrentDictionary<string, string> objects { get; set; }     //  Dictionary<object_id, value>
@@ -39,19 +44,38 @@ namespace Domain
             this.objectsLock = new Object();
             this.updateLock = new Object();
             this.order = servers;
+            this.uniqueId = 0;
         }
 
         public void addId(string id, string url)
         {
+            if (replicas.Count == 0)
+            {
+                masterID = id;
+                masterURL = url;
+            }
             replicas.Add(id, url);
         }
 
-        public void addObject(string key, string value)
+        public int getUniqueId()
         {
-            // TODO: Request to master server to get Id
-            // and check if I'm not master
-            // id = new Id;
-            int id = 0;
+            return ++uniqueId;
+        }
+
+        public int getMaxKnownId()
+        {
+            int maxId = getTimestamp();
+            
+            foreach (Record record in this.updateLog)
+            {
+                maxId = maxId > record.getTimestamp() ? maxId : record.getTimestamp();
+            }
+
+            return maxId;
+        }
+
+        public void addObject(string key, string value, int id)
+        {
             update(new Record(id, key, value));
         }
 
@@ -63,10 +87,16 @@ namespace Domain
                 this.updateLog.Add(r);
 
                 // Apply update if its the next one
-                if (r.getTimestamp() == getTimestamp())
-                {
-                    objects[r.getObject()] = r.getValue();
-                }
+                applyUpdate(r);
+            }
+        }
+
+        private void applyUpdate(Record r)
+        {
+            if (r.getTimestamp() == getTimestamp() + 1)
+            {
+                objects[r.getObject()] = r.getValue();
+                setCurTimestamp(r.getTimestamp());
             }
         }
 
@@ -106,9 +136,10 @@ namespace Domain
         {
             this.updateLog.RemoveAll(r =>
             {
+                applyUpdate(r);
                 foreach(int ts in this.ts)
                 {
-                    if (ts > getTimestamp())
+                    if (r.getTimestamp() > ts)
                     {
                         return false;
                     }
@@ -122,7 +153,7 @@ namespace Domain
 
         public override string ToString()
         {
-            string ret = "Name: " + name + " | Own: " + own + "\nIds: ";
+            string ret = "\nName: " + name + " | Master: " + masterID + " | Own: " + own + " | UniqueId: " + uniqueId + "\nIds: ";
 
             foreach (string id in replicas.Keys)
             {
@@ -131,6 +162,29 @@ namespace Domain
 
             if (own)
             {
+                ret += String.Format("\nMy Timestamp: {0}", getTimestamp());
+
+                ret += "\nEstimated Timestamps: [";
+
+                int len = this.ts.Length - 1;
+
+                for (int i = 0; i <= len; i++)
+                {
+                    ret += i + (i != len ? ", " : "");
+                }
+
+                ret += "]\nUpdates:\n[";
+
+                int j = 0;
+
+                foreach(Record r in this.updateLog)
+                {
+                    ret += "\n" + r.ToString() + "; ";
+                    j++;
+                }
+
+                ret += "\n]";
+
                 ret = ret + "\nObjects:";
 
                 foreach (KeyValuePair<string, string> info in this.objects)
@@ -139,7 +193,7 @@ namespace Domain
                 }
             }
 
-            return ret;
+            return ret + "\n";
         }
     }
 }
