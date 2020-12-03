@@ -352,18 +352,22 @@ namespace Server
 
             string partitionId = request.PartitionId;
             string objectId = request.ObjectId;
+            ReadReply reply;
 
-            string value;
-            if (!partitions.ContainsKey(partitionId))
+            lock (partitions[partitionId].updateLock)
             {
-                value = "N/A";              
-            }
-            else
-            {
-                value = partitions[partitionId].getObject(objectId);
-            }
+                string value;
+                if (!partitions.ContainsKey(partitionId))
+                {
+                    value = "N/A";
+                }
+                else
+                {
+                    value = partitions[partitionId].getObject(objectId);
+                }
 
-            ReadReply reply = new ReadReply{ Timestamp = partitions[partitionId].getTimestamp(), Value = value };
+                reply = new ReadReply { Timestamp = partitions[partitionId].getTimestamp(), Value = value };
+            }
 
             Console.WriteLine("Read() finished...");
             return reply;
@@ -505,13 +509,11 @@ namespace Server
                         {
                             GossipReply reply = server.Gossip(new GossipRequest { PartitionId = p.name, Ts = p.getTimestamp() });
 
-                            // Update current server
-                            p.setTimestamp(reply.ReplicaNumber, reply.Ts);
-
-                            p.update(reply.Updates.ToList().Select(r => new Record(r.Ts, r.ObjectId, r.Value)).ToList());
-
                             lock (p.updateLock)
                             {
+                                // Update current server
+                                p.setTimestamp(reply.ReplicaNumber, reply.Ts);
+                                p.update(reply.Updates.ToList().Select(r => new Record(r.Ts, r.ObjectId, r.Value)).ToList());
                                 p.cleanLog();
                             }
                         } 
