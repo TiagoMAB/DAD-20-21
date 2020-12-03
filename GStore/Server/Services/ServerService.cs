@@ -305,7 +305,7 @@ namespace Server
 
                         try
                         {
-                            replica.ShareUpdate(new ShareUpdateRequest { PartitionId = partitionId, ObjectId = objectId, Value = value, UniqueId = uniqueId });
+                            await replica.ShareUpdateAsync(new ShareUpdateRequest { PartitionId = partitionId, ObjectId = objectId, Value = value, UniqueId = uniqueId });
                         }
                         catch
                         {
@@ -479,7 +479,7 @@ namespace Server
             // Current timestamp
             int cur = p.getTimestamp();
 
-            return new GossipReply { Updates = { records } , Ts = cur, ReplicaNumber = p.getReplicaNumber() };
+            return new GossipReply { Updates = { records } , Ts = cur, Replica = this.id };
         }
 
         /*
@@ -493,9 +493,16 @@ namespace Server
             {
                 foreach(string url in p.replicas.Values)
                 {
-                    if (url == this.URL || !p.own)  // TODO: or master....
-                    { 
-                        continue; 
+                    if (url == this.URL)
+                    {
+                        lock (p.updateLock)
+                        {
+                            p.cleanLog();
+                        }
+                            continue;
+                    }else if (!p.own)
+                    {
+                        continue;
                     }
 
                     requests.Add(Task.Run(() =>
@@ -512,7 +519,7 @@ namespace Server
                             lock (p.updateLock)
                             {
                                 // Update current server
-                                p.setTimestamp(reply.ReplicaNumber, reply.Ts);
+                                p.setTimestamp(p.getIndex(reply.Replica), reply.Ts);
                                 p.update(reply.Updates.ToList().Select(r => new Record(r.Ts, r.ObjectId, r.Value)).ToList());
                                 p.cleanLog();
                             }

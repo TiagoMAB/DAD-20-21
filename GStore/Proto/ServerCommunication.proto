@@ -67,7 +67,7 @@ message GossipRequest {
 message GossipReply {
 	int32 ts = 1;
 	repeated Record updates = 2;
-	int32 replicaNumber = 3;
+	string replica = 3;
 }
 
 message GetUniqueIdRequest {
