@@ -30,6 +30,6 @@ Wait 3000
 
 Crash serv1
 
-Wait 3000
+Wait 21000
 
 Crash serv3

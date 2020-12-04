@@ -46,16 +46,13 @@ namespace Client.Commands
                 return;
             }
 
-            //TODO: In case uniqueId is reused
-            //string uniqueId = serverInfo.UniqueId;
-
             foreach (string url in urls.OrderBy(randomURL => random.Next()))
             {
                 try
                 {
                     GStore.GStore.GStoreClient client = serverInfo.GetChannel(url);
 
-                    WriteReply reply = client.Write( new WriteRequest { PartitionId = this.partitionId, ObjectId = this.objectId, Value = this.value /*, UniqueId = uniqueId*/ } );
+                    WriteReply reply = client.Write( new WriteRequest { PartitionId = this.partitionId, ObjectId = this.objectId, Value = this.value } );
 
                     Console.WriteLine("Write of value \"{0}\" completed.\n", this.value);
 
@@ -65,8 +62,10 @@ namespace Client.Commands
                 catch (RpcException e)
                 {
                     System.Diagnostics.Debug.WriteLine(String.Format("Master server with URL \"{0}\" failed with status \"{1}\".", serverInfo.CurrentServerURL, e.StatusCode.ToString()));
-                    Console.WriteLine("Master server with URL \"{0}\" failed with status \"{1}\". Retrying write...", serverInfo.CurrentServerURL, e.StatusCode.ToString());
+                    Console.WriteLine("Server with URL \"{0}\" failed with status \"{1}\". Retrying write...", serverInfo.CurrentServerURL, e.StatusCode.ToString());
                 }
+
+                serverInfo.GetServerInfo();
             }
             Console.WriteLine("No more retries will be done.Proceeding...\n");
         }

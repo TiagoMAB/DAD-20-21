@@ -30,16 +30,6 @@ namespace Client
         public bool ExecFinish { get; set; }
         public string UserName { get; set; }
 
-        /* TODO: maybe this will be needed eventually
-        public string UniqueId
-        {
-            get
-            {
-                return UserName + uniqueId++;
-            }
-        }
-        */
-
         public static ServerInfo Instance()
         {
             if (serverInfo == null)
